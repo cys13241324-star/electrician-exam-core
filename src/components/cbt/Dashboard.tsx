@@ -59,6 +59,17 @@ export default function Dashboard() {
         </div>
       </section>
 
+      {/* 데모 데이터 안내 */}
+      <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <span className="text-base leading-none">🧪</span>
+        <p>
+          <strong className="font-semibold">데모용 샘플 데이터</strong> · 아래
+          학습 요약·최근 응시 기록·취약 영역은 실제 기록이 아닌 예시(가짜)
+          데이터입니다. 정식 데이터 연동 전까지 화면 구성 확인용으로만
+          참고하세요.
+        </p>
+      </div>
+
       {/* 학습 가이드 — 무엇에 집중 / 왜 중요한가 */}
       <CbtGuide />
 
@@ -69,7 +80,7 @@ export default function Dashboard() {
       <div className="mb-6">
         <SectionCard
           title="최근 응시 기록"
-          subtitle="최근 5회"
+          subtitle="최근 5회 · 샘플 데이터"
           action={
             <Link
               href="/cbt/exams"
@@ -152,9 +163,9 @@ function SummaryStrip({ stats }: { stats: LearningStats | null }) {
         : "응시 후 표시됩니다",
     },
     {
-      label: "응시 회차",
+      label: "응시 횟수",
       value: hasData ? `${attempts}회` : "—",
-      hint: hasData ? "꾸준함이 합격의 핵심" : "첫 회차를 풀어보세요",
+      hint: hasData ? "꾸준함이 합격의 핵심" : "첫 모의고사를 풀어보세요",
     },
     {
       label: "누적 학습 시간",
