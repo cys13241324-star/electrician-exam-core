@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>변압기 권수비 시뮬레이터</title>
+<link rel="stylesheet" href="/samples/_tailwind.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+:root {
+    --bg-0: #0d1117;
+    --bg-1: #11161d;
+    --panel: #131922;
+    --panel-2: #161d27;
+    --border: rgba(148, 163, 184, 0.16);
+    --border-soft: rgba(148, 163, 184, 0.10);
+    --grid: rgba(125, 211, 252, 0.055);
+    --grid-strong: rgba(125, 211, 252, 0.10);
+    --teal: #5eddd6;
+    --amber: #e0a458;
+    --slate-txt: #c4ccd6;
+    --ink: #aab4c0;
+}
+html, body { height: 100%; }
+body {
+    background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    color: #d3dae3;
+    font-family: 'Pretendard', system-ui, sans-serif;
+    overflow: hidden;
+}
+
+/* 한 화면 셸 — 페이지 스크롤 금지, 컬럼 내부에서만 스크롤 */
+.sim-shell {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.sim-main {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    gap: 1rem;
+    overflow: hidden;
+}
+.sim-left {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    overflow: hidden;
+}
+.sim-right {
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding-right: 4px;
+}
+.sim-right::-webkit-scrollbar { width: 7px; }
+.sim-right::-webkit-scrollbar-thumb {
+    background: rgba(148,163,184,0.22);
+    border-radius: 9999px;
+}
+.sim-right::-webkit-scrollbar-track { background: transparent; }
+
+.canvas-card { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.canvas-card .canvas-wrap { flex: 1 1 auto; min-height: 0; }
+.canvas-card canvas#main { width: 100%; height: 100%; }
+
+@media (max-width: 1023px) {
+    body { overflow: auto; }
+    .sim-shell { height: auto; min-height: 100vh; overflow: visible; }
+    .sim-main {
+        grid-template-columns: 1fr;
+        overflow: visible;
+    }
+    .sim-left, .sim-right { overflow: visible; }
+    .canvas-card { min-height: 360px; }
+}
+
+.canvas-wrap {
+    position: relative;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #0b0f15;
+    overflow: hidden;
+}
+canvas#main {
+    display: block;
+    width: 100%;
+    height: 660px;
+    border-radius: 9px;
+    background: #0b0f15;
+}
+.glass {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
+}
+.status-dot {
+    display: inline-block;
+    width: 7px; height: 7px; border-radius: 9999px;
+    background: var(--teal);
+    box-shadow: 0 0 5px rgba(94, 221, 214, 0.55);
+}
+input[type=range] {
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.22);
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: #cdd5df;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+    cursor: pointer;
+    border: 3px solid #2a3340;
+}
+input[type=range]:focus { outline: none; }
+input[type=range]:focus::-webkit-slider-thumb { background: var(--teal); }
+.chip { background: var(--panel-2); border: 1px solid var(--border-soft); }
+.chip-n1 { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(94,221,214,0.55); color: var(--slate-txt); }
+.chip-n2 { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(120,200,150,0.55); color: var(--slate-txt); }
+.chip-v1 { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(224,164,88,0.6); color: var(--slate-txt); }
+.chip-r  { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(148,163,184,0.5); color: var(--slate-txt); }
+.live-pill { background: var(--panel-2); border: 1px solid var(--border-soft); }
+.live-num {
+    font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    color: #d8f3f0;
+    letter-spacing: 0.01em;
+}
+.formula-card {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    border-top: 2px solid rgba(94, 221, 214, 0.35);
+}
+</style>
+</head>
+<body class="p-4 md:p-8">
+
+<div class="sim-shell max-w-7xl mx-auto w-full relative">
+    <header class="mb-3 flex-none" id="hdr">
+        <div class="flex items-center gap-2 text-[11px] font-semibold tracking-widest" style="color:#7d8a97">
+            <span class="status-dot"></span>
+            TRANSFORMER · TURNS RATIO · DUAL VIEW
+        </div>
+        <h1 class="mt-1 text-xl md:text-2xl font-bold" style="color:#e3e9f0">
+            변압기 권수비 시뮬레이터
+        </h1>
+    </header>
+
+    <div id="livePanel" class="mb-3 grid grid-cols-2 sm:grid-cols-4 gap-2 flex-none">
+        <div class="live-pill rounded-lg px-3 py-2">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">권수비 a</p>
+            <p class="mt-0.5 text-base font-bold"><span id="aVal" class="live-num">—</span></p>
+        </div>
+        <div class="live-pill rounded-lg px-3 py-2">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">2차 전압 V₂</p>
+            <p class="mt-0.5 text-base font-bold"><span id="v2Val" class="live-num">—</span></p>
+        </div>
+        <div class="live-pill rounded-lg px-3 py-2">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">2차 전류 I₂</p>
+            <p class="mt-0.5 text-base font-bold"><span id="i2Val" class="live-num">—</span></p>
+        </div>
+        <div class="live-pill rounded-lg px-3 py-2">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">출력 전력 P</p>
+            <p class="mt-0.5 text-base font-bold"><span id="pVal" class="live-num">—</span></p>
+        </div>
+    </div>
+
+    <div class="sim-main">
+        <div class="sim-left">
+            <div class="glass rounded-xl p-3 canvas-card" id="canvasCard">
+                <div class="flex items-center justify-between mb-2 flex-none">
+                    <span class="text-[11px] font-semibold text-slate-400 tracking-wide">위 — 변압기 단면 · 아래 — 1차/2차 파형 비교</span>
+                </div>
+                <div class="canvas-wrap">
+                    <canvas id="main"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="sim-right glass rounded-xl p-5 space-y-4" id="controlPanel">
+            <h2 class="font-bold text-sm tracking-wider" style="color:#9fb0c0">변수 조절</h2>
+            <div class="chip-n1 chip rounded-lg p-3">
+                <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>1차 권수 N₁</span><span id="n1Disp" class="font-mono text-base">200</span></label>
+                <input type="range" id="n1" min="50" max="1000" step="10" value="200" class="w-full mt-2 cursor-pointer">
+                <p class="text-[10px] text-slate-500 mt-1 text-right">회</p>
+            </div>
+            <div class="chip-n2 chip rounded-lg p-3">
+                <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>2차 권수 N₂</span><span id="n2Disp" class="font-mono text-base">100</span></label>
+                <input type="range" id="n2" min="50" max="1000" step="10" value="100" class="w-full mt-2 cursor-pointer">
+                <p class="text-[10px] text-slate-500 mt-1 text-right">회</p>
+            </div>
+            <div class="chip-v1 chip rounded-lg p-3">
+                <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>1차 전압 V₁</span><span id="v1Disp" class="font-mono text-base">220</span></label>
+                <input type="range" id="v1" min="10" max="500" step="10" value="220" class="w-full mt-2 cursor-pointer">
+                <p class="text-[10px] text-slate-500 mt-1 text-right">V</p>
+            </div>
+            <div class="chip-r chip rounded-lg p-3">
+                <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>부하 R</span><span id="rDisp" class="font-mono text-base">10</span></label>
+                <input type="range" id="r" min="1" max="100" value="10" class="w-full mt-2 cursor-pointer">
+                <p class="text-[10px] text-slate-500 mt-1 text-right">Ω</p>
+            </div>
+
+            <div class="formula-card rounded-xl p-3 space-y-1.5 text-[11px]">
+                <p class="text-slate-300"><span class="font-bold" style="color:#5eddd6">1차</span> · V₁ = <span id="d_v1" class="font-mono">—</span> · I₁ = <span id="d_i1" class="font-mono">—</span></p>
+                <p class="text-slate-300"><span class="font-bold" style="color:#78c896">2차</span> · V₂ = <span id="d_v2" class="font-mono">—</span> · I₂ = <span id="d_i2" class="font-mono">—</span></p>
+                <p class="text-slate-400 text-[10px] pt-1 border-t border-white/5"><span id="modeLabel">강압</span> 변압기 (a = N₁/N₂)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $('main');
+const ctx = canvas.getContext('2d');
+
+const TF_H = 380;       // 변압기 단면도 영역
+const WAVE_H = 280;     // sin파 영역
+const TOTAL_H = TF_H + WAVE_H;
+
+let state = { N1: 200, N2: 100, V1: 220, R: 10, t: 0 };
+let fluxParticles = [];
+let coreRect = { x: 0, y: 0, w: 0, h: 0, innerX: 0, innerY: 0, innerW: 0, innerH: 0 };
+
+function resize() {
+    canvas.width = canvas.parentElement.clientWidth - 2;
+    canvas.height = TOTAL_H;
+    layoutCore();
+    seedFluxParticles();
+}
+window.addEventListener('resize', resize);
+
+function layoutCore() {
+    const W = canvas.width;
+    const padX = 80;
+    const cx = W / 2;
+    const cWidth = Math.min(W - padX * 2 - 160, 420);
+    const cHeight = TF_H - 100;
+    coreRect.x = cx - cWidth / 2;
+    coreRect.y = 60;
+    coreRect.w = cWidth;
+    coreRect.h = cHeight;
+    // 안쪽 창 (윈도우)
+    const innerPad = 28;
+    coreRect.innerX = coreRect.x + innerPad;
+    coreRect.innerY = coreRect.y + innerPad;
+    coreRect.innerW = coreRect.w - innerPad * 2;
+    coreRect.innerH = coreRect.h - innerPad * 2;
+}
+
+// 자속 입자: 철심 둘레(외곽 경로)를 따라 회전
+let coreLoopLen = 0;
+let coreLoopSegs = [];
+function buildCoreLoop() {
+    // 단순 원형 경로 (외곽 사각형의 둘레 중심선)
+    const r = coreRect;
+    // 외곽 둘레: r.y+r.h/2 가운데에 두께 (innerPad/2) 정도 떨어진 사각형 둘레
+    const offset = 14; // 외곽 살짝 안쪽
+    const pts = [
+        { x: r.x + offset, y: r.y + offset },
+        { x: r.x + r.w - offset, y: r.y + offset },
+        { x: r.x + r.w - offset, y: r.y + r.h - offset },
+        { x: r.x + offset, y: r.y + r.h - offset },
+        { x: r.x + offset, y: r.y + offset },
+    ];
+    coreLoopLen = 0;
+    coreLoopSegs = [];
+    for (let k = 0; k < pts.length - 1; k++) {
+        const a = pts[k], b = pts[k + 1];
+        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        coreLoopSegs.push({ a, b, len, start: coreLoopLen });
+        coreLoopLen += len;
+    }
+}
+function coreLoopPointAt(progress) {
+    let p = ((progress % coreLoopLen) + coreLoopLen) % coreLoopLen;
+    for (const s of coreLoopSegs) {
+        if (p <= s.start + s.len) {
+            const t = (p - s.start) / s.len;
+            return { x: s.a.x + (s.b.x - s.a.x) * t, y: s.a.y + (s.b.y - s.a.y) * t };
+        }
+    }
+    return coreLoopSegs[0].a;
+}
+function seedFluxParticles() {
+    buildCoreLoop();
+    fluxParticles = [];
+    const count = 30;
+    for (let i = 0; i < count; i++) {
+        fluxParticles.push({ progress: (i / count) * coreLoopLen, size: 1.6 + Math.random() * 1.0 });
+    }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+
+// 위쪽 영역 (변압기 단면) 배경 — 오실로스코프 모눈
+function drawTfBg() {
+    ctx.save();
+    ctx.fillStyle = '#0b0f15';
+    ctx.fillRect(0, 0, canvas.width, TF_H);
+    // 미세 그리드 20px
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.055)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < canvas.width; i += 20) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, TF_H); ctx.stroke();
+    }
+    for (let i = 0; i < TF_H; i += 20) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+    }
+    // 강조 그리드 100px
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.10)';
+    for (let i = 0; i < canvas.width; i += 100) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, TF_H); ctx.stroke();
+    }
+    for (let i = 0; i < TF_H; i += 100) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+    }
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = 'rgba(116, 128, 141, 0.85)';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('TRANSFORMER CROSS-SECTION', 12, 10);
+    ctx.restore();
+}
+
+// 철심 (차분한 강철 톤, 절제된 표현)
+function drawCore() {
+    const r = coreRect;
+    ctx.save();
+    // 외부 (어두운 강철 톤)
+    const gExt = ctx.createLinearGradient(r.x, r.y, r.x + r.w, r.y + r.h);
+    gExt.addColorStop(0, '#3a434f');
+    gExt.addColorStop(0.5, '#5b6675');
+    gExt.addColorStop(1, '#2f3742');
+    ctx.fillStyle = gExt;
+    roundRect(ctx, r.x, r.y, r.w, r.h, 10);
+    ctx.fill();
+    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = 'rgba(148,163,184,0.30)';
+    ctx.stroke();
+    ctx.restore();
+
+    // 내부 창(window) — 잘라낸 공간
+    ctx.save();
+    ctx.fillStyle = '#0b0f15';
+    roundRect(ctx, r.innerX, r.innerY, r.innerW, r.innerH, 6);
+    ctx.fill();
+    ctx.restore();
+
+    // 철심 적층(라미네이션) 라인
+    ctx.save();
+    ctx.strokeStyle = 'rgba(148,163,184,0.07)';
+    ctx.lineWidth = 1;
+    const step = 6;
+    for (let y = r.y + 6; y < r.y + r.h; y += step) {
+        ctx.beginPath(); ctx.moveTo(r.x + 3, y); ctx.lineTo(r.x + r.w - 3, y); ctx.stroke();
+    }
+    ctx.restore();
+}
+
+// 코일 (1차/2차) — 입체 ellipse 반복
+function drawCoils() {
+    const r = coreRect;
+    // 코일은 철심의 좌우 기둥 위에 감김
+    const leftCx = r.x + 14;
+    const rightCx = r.x + r.w - 14;
+    const colTop = r.y + 22;
+    const colBot = r.y + r.h - 22;
+
+    // 1차: 좌측 기둥
+    drawCoil(leftCx, colTop, colBot, state.N1, '#5eddd6', '#5eddd6');
+    // 2차: 우측 기둥
+    drawCoil(rightCx, colTop, colBot, state.N2, '#78c896', '#78c896');
+
+    // 라벨
+    ctx.save();
+    ctx.font = 'bold 11px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    // N1
+    {
+        const label = `N₁ = ${state.N1}회`;
+        const tw = ctx.measureText(label).width;
+        ctx.fillStyle = 'rgba(19, 25, 34, 0.92)';
+        roundRect(ctx, leftCx - tw/2 - 6, r.y - 24, tw + 12, 20, 6);
+        ctx.fill();
+        ctx.fillStyle = '#5eddd6';
+        ctx.fillText(label, leftCx, r.y - 14);
+    }
+    // N2
+    {
+        const label = `N₂ = ${state.N2}회`;
+        const tw = ctx.measureText(label).width;
+        ctx.fillStyle = 'rgba(19, 25, 34, 0.92)';
+        roundRect(ctx, rightCx - tw/2 - 6, r.y - 24, tw + 12, 20, 6);
+        ctx.fill();
+        ctx.fillStyle = '#78c896';
+        ctx.fillText(label, rightCx, r.y - 14);
+    }
+    // 철심 라벨
+    {
+        const lab = '철심 (Iron Core)';
+        const tw = ctx.measureText(lab).width;
+        ctx.fillStyle = 'rgba(19, 25, 34, 0.85)';
+        roundRect(ctx, r.x + r.w/2 - tw/2 - 6, r.y + r.h + 6, tw + 12, 18, 6);
+        ctx.fill();
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText(lab, r.x + r.w/2, r.y + r.h + 15);
+    }
+    ctx.restore();
+}
+function drawCoil(cx, yTop, yBot, N, baseColor, glowColor) {
+    // turn 수 시각화 (실제 N에 비례, 최대 22개 정도로 캡)
+    const turns = Math.min(22, Math.max(4, Math.round(N / 50)));
+    const span = yBot - yTop;
+    const step = span / turns;
+    ctx.save();
+    for (let i = 0; i < turns; i++) {
+        const y = yTop + (i + 0.5) * step;
+        // ellipse (절제된 단색)
+        ctx.strokeStyle = baseColor;
+        ctx.globalAlpha = 0.85;
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.ellipse(cx, y, 26, 5, 0, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+// 자속 흐름 (철심 외곽 경로 따라 회전)
+function drawFluxFlow() {
+    // 자속 방향은 시간에 따라 sin파처럼 진동하지만, 시각화에선 한 방향 회전으로 표현
+    // 속도 ∝ V1 (자속 진폭에 비례)
+    const speed = 0.6 + (state.V1 / 220) * 2.5;
+    ctx.save();
+    for (const p of fluxParticles) {
+        p.progress = (p.progress + speed) % coreLoopLen;
+        const pt = coreLoopPointAt(p.progress);
+        ctx.fillStyle = 'rgba(94, 221, 214, 0.7)';
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+
+    // 자속 방향 화살표 (4면에 하나씩)
+    ctx.save();
+    ctx.fillStyle = 'rgba(94, 221, 214, 0.7)';
+    const r = coreRect;
+    const offset = 14;
+    const phase = Math.sin(state.t * 0.05) * 0.5 + 0.5;
+    // 상단 → 우측, 우측 → 하단 ... 시계방향
+    const arrows = [
+        { x: r.x + r.w / 2, y: r.y + offset, ang: 0 },                 // 위쪽 (우향)
+        { x: r.x + r.w - offset, y: r.y + r.h / 2, ang: Math.PI / 2 }, // 우측 (아래)
+        { x: r.x + r.w / 2, y: r.y + r.h - offset, ang: Math.PI },     // 아래 (좌향)
+        { x: r.x + offset, y: r.y + r.h / 2, ang: -Math.PI / 2 },      // 좌측 (위)
+    ];
+    for (const a of arrows) {
+        ctx.save();
+        ctx.translate(a.x, a.y);
+        ctx.rotate(a.ang);
+        ctx.globalAlpha = 0.5 + phase * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(8, 0);
+        ctx.lineTo(-6, -4);
+        ctx.lineTo(-6, 4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+    // Φ 라벨 (자속) 중앙 상단
+    ctx.globalAlpha = 0.9;
+    ctx.font = 'bold 12px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const label = 'Φ 자속';
+    const tw = ctx.measureText(label).width;
+    ctx.fillStyle = 'rgba(19, 25, 34, 0.9)';
+    roundRect(ctx, r.x + r.w/2 - tw/2 - 6, r.y + r.h/2 - 9, tw + 12, 18, 6);
+    ctx.fill();
+    ctx.fillStyle = '#5eddd6';
+    ctx.fillText(label, r.x + r.w/2, r.y + r.h/2);
+    ctx.restore();
+}
+
+// AC 전원 (좌측) + 부하 R (우측)
+function drawACAndLoad() {
+    const r = coreRect;
+    const ACx = r.x - 64;
+    const ACy = r.y + r.h / 2;
+    // AC 전원 (원)
+    ctx.save();
+    ctx.fillStyle = 'rgba(16,21,28,0.9)';
+    ctx.beginPath();
+    ctx.arc(ACx, ACy, 28, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = '#e0a458';
+    ctx.stroke();
+    // sin 기호
+    ctx.lineWidth = 1.8;
+    ctx.strokeStyle = '#e0a458';
+    ctx.beginPath();
+    for (let dx = -14; dx <= 14; dx += 1) {
+        const dy = Math.sin((dx + state.t * 4) * 0.28) * 7;
+        if (dx === -14) ctx.moveTo(ACx + dx, ACy + dy); else ctx.lineTo(ACx + dx, ACy + dy);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // 연결선 (AC → 1차 코일 양 끝)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(127, 140, 153, 0.85)';
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'round';
+    const leftCx = r.x + 14;
+    ctx.beginPath();
+    ctx.moveTo(ACx, ACy - 28); ctx.lineTo(ACx, r.y - 16); ctx.lineTo(leftCx - 4, r.y - 16);
+    ctx.moveTo(ACx, ACy + 28); ctx.lineTo(ACx, r.y + r.h + 16); ctx.lineTo(leftCx - 4, r.y + r.h + 16);
+    ctx.stroke();
+    ctx.restore();
+
+    // AC 라벨
+    ctx.save();
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    const lab = `V₁ = ${state.V1.toFixed(0)} V`;
+    const tw = ctx.measureText(lab).width;
+    ctx.fillStyle = 'rgba(19, 25, 34, 0.9)';
+    roundRect(ctx, ACx - tw/2 - 6, ACy + 36, tw + 12, 18, 6);
+    ctx.fill();
+    ctx.fillStyle = '#e0a458';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(lab, ACx, ACy + 45);
+    ctx.restore();
+
+    // 부하 R (우측)
+    const Rx = r.x + r.w + 60;
+    const Ry = r.y + r.h / 2;
+    ctx.save();
+    ctx.fillStyle = 'rgba(16,21,28,0.9)';
+    roundRect(ctx, Rx - 24, Ry - 16, 48, 32, 4);
+    ctx.fill();
+    ctx.strokeStyle = '#e0a458';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    // zig-zag
+    ctx.strokeStyle = '#e0a458';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    const zs = Rx - 16, ze = Rx + 16;
+    for (let k = 0; k <= 6; k++) {
+        const x = zs + ((ze - zs) * k) / 6;
+        const y = Ry + (k % 2 === 0 ? -5 : 5);
+        if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // 연결선 (2차 코일 → R)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(120, 200, 150, 0.7)';
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'round';
+    const rightCx = r.x + r.w - 14;
+    ctx.beginPath();
+    ctx.moveTo(rightCx + 4, r.y - 16); ctx.lineTo(Rx, r.y - 16); ctx.lineTo(Rx, Ry - 16);
+    ctx.moveTo(rightCx + 4, r.y + r.h + 16); ctx.lineTo(Rx, r.y + r.h + 16); ctx.lineTo(Rx, Ry + 16);
+    ctx.stroke();
+    ctx.restore();
+
+    // R 라벨
+    ctx.save();
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    const lab2 = `R = ${state.R} Ω`;
+    const tw2 = ctx.measureText(lab2).width;
+    ctx.fillStyle = 'rgba(19, 25, 34, 0.9)';
+    roundRect(ctx, Rx - tw2/2 - 6, Ry + 24, tw2 + 12, 18, 6);
+    ctx.fill();
+    ctx.fillStyle = '#e0a458';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(lab2, Rx, Ry + 33);
+    ctx.restore();
+}
+
+// 아래: 1차/2차 sin파 비교
+function drawWaves() {
+    const W = canvas.width;
+    const top = TF_H + 50;
+    const baseY = TF_H + WAVE_H / 2 + 20;
+    const plotW = W - 80;
+    const plotX = 40;
+
+    // 배경
+    ctx.save();
+    ctx.fillStyle = '#0b0f15';
+    ctx.fillRect(0, TF_H, W, WAVE_H);
+    // 오실로스코프 모눈
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.055)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < W; i += 20) {
+        ctx.beginPath(); ctx.moveTo(i, TF_H); ctx.lineTo(i, TOTAL_H); ctx.stroke();
+    }
+    for (let i = TF_H; i < TOTAL_H; i += 20) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.10)';
+    for (let i = 0; i < W; i += 100) {
+        ctx.beginPath(); ctx.moveTo(i, TF_H); ctx.lineTo(i, TOTAL_H); ctx.stroke();
+    }
+    for (let i = TF_H; i < TOTAL_H; i += 100) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
+    }
+
+    // 분할선
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.16)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, TF_H); ctx.lineTo(W, TF_H);
+    ctx.stroke();
+
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = 'rgba(116, 128, 141, 0.85)';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('WAVEFORM · 1차/2차 전압 sin파 비교', 12, TF_H + 10);
+    ctx.restore();
+
+    // 기준선 (0V)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.18)';
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(plotX, baseY); ctx.lineTo(plotX + plotW, baseY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // 진폭 (V1, V2)
+    const maxV = Math.max(state.V1, state.V2 || 0, 50);
+    const ampScale = (WAVE_H / 2 - 50) / maxV;
+    const V1 = state.V1;
+    const V2 = state.V2;
+    const cycles = 2;
+    const freq = (cycles * 2 * Math.PI) / plotW;
+    const phase = state.t * 0.04;
+
+    // V1 (앰버)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(224, 164, 88, 0.95)';
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= plotW; i += 2) {
+        const x = plotX + i;
+        const y = baseY - V1 * ampScale * Math.sin(i * freq - phase);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // V2 (틸)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(94, 221, 214, 0.95)';
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= plotW; i += 2) {
+        const x = plotX + i;
+        const y = baseY - V2 * ampScale * Math.sin(i * freq - phase);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // 진폭 라벨 (좌측)
+    ctx.save();
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(116, 128, 141, 0.85)';
+    ctx.fillText(`+${maxV.toFixed(0)}V`, plotX - 6, baseY - maxV * ampScale);
+    ctx.fillText(`0`, plotX - 6, baseY);
+    ctx.fillText(`−${maxV.toFixed(0)}V`, plotX - 6, baseY + maxV * ampScale);
+    ctx.restore();
+
+    // 범례
+    ctx.save();
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    const ly = TF_H + 18;
+    ctx.fillStyle = 'rgba(224, 164, 88, 0.95)';
+    ctx.fillRect(plotX + plotW - 220, ly, 14, 3);
+    ctx.fillStyle = '#e0a458';
+    ctx.fillText(`V₁ = ${V1.toFixed(0)} V (1차)`, plotX + plotW - 202, ly + 1);
+
+    ctx.fillStyle = 'rgba(94, 221, 214, 0.95)';
+    ctx.fillRect(plotX + plotW - 90, ly, 14, 3);
+    ctx.fillStyle = '#5eddd6';
+    ctx.fillText(`V₂ = ${V2.toFixed(0)} V (2차)`, plotX + plotW - 72, ly + 1);
+    ctx.restore();
+}
+
+function compute() {
+    state.N1 = +$('n1').value;
+    state.N2 = +$('n2').value;
+    state.V1 = +$('v1').value;
+    state.R  = +$('r').value;
+
+    state.a = state.N1 / state.N2;
+    state.V2 = state.V1 / state.a;
+    state.I2 = state.V2 / state.R;
+    state.I1 = state.I2 / state.a;
+    state.P = state.V2 * state.I2;
+
+    $('n1Disp').textContent = state.N1;
+    $('n2Disp').textContent = state.N2;
+    $('v1Disp').textContent = state.V1;
+    $('rDisp').textContent  = state.R;
+
+    $('aVal').textContent = state.a.toFixed(2);
+    $('v2Val').textContent = `${state.V2.toFixed(1)} V`;
+    $('i2Val').textContent = `${state.I2.toFixed(2)} A`;
+    $('pVal').textContent  = `${state.P.toFixed(1)} W`;
+
+    $('d_v1').textContent = `${state.V1} V`;
+    $('d_i1').textContent = `${state.I1.toFixed(2)} A`;
+    $('d_v2').textContent = `${state.V2.toFixed(1)} V`;
+    $('d_i2').textContent = `${state.I2.toFixed(2)} A`;
+
+    $('modeLabel').textContent = state.a > 1 ? '강압 (Step-down)' : state.a < 1 ? '승압 (Step-up)' : '1:1';
+}
+
+function flashCard() {
+    if (window.gsap) gsap.fromTo('#canvasCard',
+        { borderColor: 'rgba(94,221,214,0.35)' },
+        { borderColor: 'rgba(148,163,184,0.16)', duration: 0.7, ease: 'power2.out' });
+}
+
+['n1','n2','v1','r'].forEach(id => {
+    $(id).addEventListener('input', () => { compute(); flashCard(); });
+});
+
+function animate() {
+    state.t++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawTfBg();
+    drawCore();
+    drawACAndLoad();
+    drawCoils();
+    drawFluxFlow();
+    drawWaves();
+
+    requestAnimationFrame(animate);
+}
+
+window.onload = () => {
+    resize();
+    compute();
+    animate();
+    if (window.gsap) {
+        gsap.from('#hdr', { y: -10, opacity: 0, duration: 0.5, ease: 'power2.out' });
+        gsap.from('#livePanel > *', { y: 8, opacity: 0, duration: 0.45, stagger: 0.05, delay: 0.1, ease: 'power2.out' });
+        gsap.from('#canvasCard', { opacity: 0, duration: 0.55, delay: 0.15, ease: 'power2.out' });
+        gsap.from('#controlPanel', { y: 10, opacity: 0, duration: 0.45, delay: 0.25, ease: 'power2.out' });
+    }
+};
+</script>
+</body>
+</html>

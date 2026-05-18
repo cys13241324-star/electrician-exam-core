@@ -1,0 +1,133 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --font-pretendard: "Pretendard Variable", Pretendard, -apple-system,
+    BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕",
+    sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* 다크 모드는 콘텐츠와 충돌이 있어 일단 라이트 톤 고정 */
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-pretendard);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+}
+
+*:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 스크롤바 살짝 정돈 */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 9999px;
+  border: 3px solid #f8fafc;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
+}
+
+/* 셀렉션 컬러 */
+::selection {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+/* 카드/패널 부드러운 등장 (플립카드 정답 노출 시) */
+@keyframes flashUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes flashUp {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+/* AI 코치 가이드 말풍선 — 반짝이는 빛 통과 효과 */
+@keyframes shimmerSlide {
+  0% { transform: translateX(-100%); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateX(200%); opacity: 0; }
+}
+
+@keyframes hintBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes hintEnter {
+  from { opacity: 0; transform: translateX(20px) scale(0.9); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes shimmerSlide { from { opacity: 1 } to { opacity: 1 } }
+  @keyframes hintBob { from { transform: none } to { transform: none } }
+  @keyframes hintEnter { from { opacity: 0 } to { opacity: 1 } }
+}
+
+/* KaTeX 분수·루트 들어간 줄 행간 보강 — 좁아 보이는 문제 해결 */
+.katex-inline {
+  display: inline-block;
+  line-height: 1;
+  vertical-align: middle;
+  padding: 0 0.1em;
+  /* 분수·루트가 위아래 줄에 닿지 않도록 inline-block 자체에 여유 추가 */
+  margin-block: 0.35em;
+}
+.katex-inline .katex {
+  font-size: 1.05em;
+}
+
+/* 수식이 포함된 텍스트 컨테이너는 행간 확보 */
+:where(p, li, div, span):has(> .katex-inline),
+:where(p, li, div, span):has(> span > .katex-inline) {
+  line-height: 1.9;
+}

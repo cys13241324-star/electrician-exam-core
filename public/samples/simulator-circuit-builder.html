@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전기기능사 - 회로 종합 분석 시뮬레이터</title>
+<link rel="stylesheet" href="/samples/_tailwind.css">
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+:root {
+    --bg-0: #0d1117;
+    --bg-1: #11161d;
+    --panel: #131922;
+    --panel-2: #161d27;
+    --border: rgba(148, 163, 184, 0.16);
+    --border-soft: rgba(148, 163, 184, 0.10);
+    --grid: rgba(125, 211, 252, 0.055);
+    --grid-strong: rgba(125, 211, 252, 0.10);
+    --teal: #5eddd6;
+    --amber: #e0a458;
+    --slate-txt: #c4ccd6;
+    --ink: #aab4c0;
+}
+html, body { height: 100%; }
+body {
+    background:
+        linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    color: #d3dae3;
+    font-family: 'Pretendard', system-ui, sans-serif;
+    overflow: hidden;
+}
+
+/* 한 화면 셸 — 페이지 스크롤 금지, 컬럼 내부에서만 스크롤 */
+.sim-shell {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.sim-main {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    gap: 1rem;
+    overflow: hidden;
+}
+.sim-left {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    overflow: hidden;
+}
+/* 우측 컨트롤 컬럼 — 길어지면 이 컬럼만 내부 스크롤 */
+.sim-right {
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding-right: 4px;
+}
+.sim-right::-webkit-scrollbar { width: 7px; }
+.sim-right::-webkit-scrollbar-thumb {
+    background: rgba(148,163,184,0.22);
+    border-radius: 9999px;
+}
+.sim-right::-webkit-scrollbar-track { background: transparent; }
+
+/* 좌측: 시각화는 가용 높이를 채우고, 측정 출력은 아래 고정 */
+.canvas-card { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.canvas-card .canvas-wrap { flex: 1 1 auto; min-height: 0; }
+.canvas-card #circuit { width: 100%; height: 100%; }
+
+@media (max-width: 1023px) {
+    body { overflow: auto; }
+    .sim-shell { height: auto; min-height: 100vh; overflow: visible; }
+    .sim-main {
+        grid-template-columns: 1fr;
+        overflow: visible;
+    }
+    .sim-left, .sim-right { overflow: visible; }
+    .canvas-card { min-height: 360px; }
+}
+
+/* 계측기 카드 — 솔리드에 가까운 차분한 패널 */
+.instrument {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
+}
+.instrument-2 {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+}
+
+/* 회로 캔버스 — 오실로스코프 그리드 */
+.canvas-wrap {
+    position: relative;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #0b0f15;
+    overflow: hidden;
+}
+#circuit {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background:
+        linear-gradient(var(--grid-strong) 1px, transparent 1px) 0 0 / 100px 100px,
+        linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px) 0 0 / 100px 100px,
+        linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 20px 20px,
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 20px 20px,
+        #0b0f15;
+}
+#circuit line, #circuit rect, #circuit path { stroke-linecap: round; stroke-linejoin: round; }
+
+/* 상태 표시 점 — 작고 은은하게 */
+.status-dot {
+    display: inline-block;
+    width: 7px; height: 7px; border-radius: 9999px;
+    background: var(--teal);
+    box-shadow: 0 0 5px rgba(94, 221, 214, 0.55);
+}
+
+/* 슬라이더 — 계측기 톤 */
+input[type=range] {
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.22);
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: #cdd5df;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+    cursor: pointer;
+    border: 3px solid #2a3340;
+}
+input[type=range]:focus { outline: none; }
+input[type=range]:focus::-webkit-slider-thumb { background: var(--teal); }
+
+.chip-v { background: var(--panel-2); border: 1px solid rgba(224,164,88,0.30); border-left: 2px solid rgba(224,164,88,0.7); }
+.chip-r { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(94,221,214,0.55); }
+
+/* 측정 readout — 멀티미터/스코프 디스플레이 */
+.live-pill {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    transition: border-color 200ms;
+}
+.live-pill.verified { border-color: rgba(94, 221, 214, 0.40); }
+.readout-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: #74808d;
+    font-weight: 700;
+}
+.live-num {
+    font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    color: #d8f3f0;
+    letter-spacing: 0.01em;
+}
+
+.math-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 2px solid rgba(94, 221, 214, 0.35);
+}
+.math-container { font-size: 1.0rem; color: #cdd5df; }
+
+.feature-row {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    transition: border-color 180ms;
+}
+.feature-row:hover { border-color: rgba(94, 221, 214, 0.30); }
+
+.reset-btn {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--slate-txt);
+    transition: border-color 160ms, color 160ms;
+}
+.reset-btn:hover { border-color: rgba(94, 221, 214, 0.5); color: #d8f3f0; }
+
+.pattern-btn {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    color: var(--ink);
+    transition: border-color 160ms, color 160ms, background 160ms;
+    cursor: pointer;
+}
+.pattern-btn:hover { border-color: var(--border); color: var(--slate-txt); }
+.pattern-btn.active {
+    background: rgba(94, 221, 214, 0.10);
+    border-color: rgba(94, 221, 214, 0.55);
+    color: #d8f3f0;
+}
+
+.divider {
+    height: 1px;
+    background: var(--border-soft);
+}
+.law-box {
+    border-radius: 8px;
+    padding: 0.65rem 0.8rem;
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    border-left: 2px solid var(--accent, rgba(148,163,184,0.4));
+}
+.law-ohm   { --accent: rgba(94, 221, 214, 0.6); }
+.law-kvl   { --accent: rgba(120, 200, 150, 0.6); }
+.law-share { --accent: rgba(224, 164, 88, 0.6); }
+.law-power { --accent: rgba(190, 165, 215, 0.6); }
+.measure-table th { color: #74808d; font-weight: 700; }
+.measure-table tr { border-bottom: 1px solid var(--border-soft); }
+.measure-table td { font-family: ui-monospace, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+.mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
+.eyebrow { color: #74808d; }
+</style>
+</head>
+<body class="p-3 md:p-4">
+
+<div class="sim-shell max-w-7xl mx-auto w-full relative">
+    <header class="mb-3 flex-none" id="hdr">
+        <div class="flex items-center gap-2 text-[11px] font-semibold tracking-widest" style="color:#7d8a97">
+            <span class="status-dot"></span>
+            CIRCUIT ANALYSIS · OHM / KCL / KVL
+        </div>
+        <h1 class="mt-1 text-xl md:text-2xl font-bold" style="color:#e3e9f0">
+            회로 종합 분석 시뮬레이터
+        </h1>
+    </header>
+
+    <div id="livePanel" class="mb-3 grid grid-cols-2 sm:grid-cols-4 gap-2 flex-none">
+        <div class="live-pill rounded-lg px-3 py-2" id="pill-r">
+            <p class="readout-label">합성 저항 R<sub>eq</sub></p>
+            <p class="mt-0.5 text-base font-bold"><span id="rTotal" class="live-num">— Ω</span></p>
+        </div>
+        <div class="live-pill rounded-lg px-3 py-2" id="pill-i">
+            <p class="readout-label">총 전류 I</p>
+            <p class="mt-0.5 text-base font-bold"><span id="iTotal" class="live-num">— A</span></p>
+        </div>
+        <div class="live-pill rounded-lg px-3 py-2" id="pill-v">
+            <p class="readout-label">전압원 V</p>
+            <p class="mt-0.5 text-base font-bold"><span id="vDisp" class="live-num">— V</span></p>
+        </div>
+        <div class="live-pill rounded-lg px-3 py-2" id="pill-p">
+            <p class="readout-label">총 소비 전력 P</p>
+            <p class="mt-0.5 text-base font-bold"><span id="pTotal" class="live-num">— W</span></p>
+        </div>
+    </div>
+
+    <div class="sim-main">
+        <!-- 좌: 회로 시각화 + 실시간 측정 출력 -->
+        <div class="sim-left">
+            <div class="instrument rounded-xl p-3 canvas-card" id="canvasCard">
+                <div class="flex items-center justify-between mb-2 gap-3 flex-wrap flex-none">
+                    <span class="text-[11px] font-semibold eyebrow tracking-wide mono" id="circuitLabel">CIRCUIT · 전원 + R₁ (단일 저항)</span>
+                    <button id="resetBtn" class="reset-btn rounded-md px-3 py-1 text-xs font-bold">초기화</button>
+                </div>
+                <div class="canvas-wrap">
+                    <svg id="circuit" viewBox="0 0 720 320" preserveAspectRatio="xMidYMid meet"></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- 우: 변수 조절 패널 + 실시간 검증 출력 (이 컬럼만 내부 스크롤) -->
+        <div class="sim-right" id="sideCol">
+            <div class="instrument rounded-xl p-3 flex-none">
+                <div class="text-[11px] font-semibold eyebrow tracking-widest mb-2">회로 패턴 선택</div>
+                <div class="flex flex-wrap gap-1.5">
+                    <button data-pattern="single" class="pattern-btn rounded-md px-2.5 py-1.5 text-xs font-bold">단일 저항</button>
+                    <button data-pattern="series3" class="pattern-btn rounded-md px-2.5 py-1.5 text-xs font-bold">직렬 3개</button>
+                    <button data-pattern="parallel3" class="pattern-btn rounded-md px-2.5 py-1.5 text-xs font-bold">병렬 3개</button>
+                    <button data-pattern="hybrid-sp" class="pattern-btn rounded-md px-2.5 py-1.5 text-xs font-bold">R₁ + (R₂∥R₃)</button>
+                    <button data-pattern="hybrid-ps" class="pattern-btn rounded-md px-2.5 py-1.5 text-xs font-bold">(R₁∥R₂) + R₃</button>
+                </div>
+            </div>
+
+            <div class="instrument rounded-xl p-3 flex-none">
+                <h2 class="text-sm font-bold" style="color:#e3e9f0">변수 조절</h2>
+                <div class="chip-v rounded-md p-2.5 mt-2">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>전압원 V</span><span id="vVal" class="mono text-sm" style="color:#e0a458">12</span></label>
+                    <input type="range" id="v" min="1" max="30" value="12" class="w-full mt-2 cursor-pointer">
+                    <p class="text-[10px] eyebrow mt-0.5 text-right">V</p>
+                </div>
+                <div id="rControls" class="space-y-2 mt-2"></div>
+            </div>
+
+            <div class="instrument rounded-xl p-3 flex-none">
+                <h3 class="text-sm font-bold mb-2" style="color:#e3e9f0">각 저항별 측정값</h3>
+                <table class="measure-table w-full text-xs" style="font-variant-numeric: tabular-nums;">
+                    <thead><tr class="text-left text-[11px] tracking-wider"><th class="py-1.5">저항</th><th>값</th><th>전류</th><th>전압</th><th>전력</th></tr></thead>
+                    <tbody id="rows"></tbody>
+                </table>
+            </div>
+
+            <div class="instrument rounded-xl p-3 flex-none">
+                <h3 class="text-sm font-bold mb-2" style="color:#e3e9f0">법칙 검증</h3>
+                <div id="lawCheck" class="space-y-1.5 text-xs"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+// 계측 팔레트 (계산·토폴로지 무관, 시각 전용)
+const STROKE = "#7f8c99";          // 중립 배선
+const SW = 1.6;                    // 정밀 스키매틱 선폭
+const R_COLORS = ["#5eddd6", "#7fc3d8", "#e0a458"]; // R1/R2/R3 식별색 (절제)
+let pattern = "single";
+
+const PATTERNS = {
+  single:      { count: 1, defaults: [10] },
+  series3:     { count: 3, defaults: [10, 20, 30] },
+  parallel3:   { count: 3, defaults: [10, 20, 30] },
+  "hybrid-sp": { count: 3, defaults: [10, 20, 30] },
+  "hybrid-ps": { count: 3, defaults: [10, 20, 30] },
+};
+
+const PATTERN_LABEL = {
+  single:      "CIRCUIT · 전원 + R₁ (단일 저항)",
+  series3:     "CIRCUIT · 전원 + R₁→R₂→R₃ (직렬 3개)",
+  parallel3:   "CIRCUIT · 전원 + R₁∥R₂∥R₃ (병렬 3개)",
+  "hybrid-sp": "CIRCUIT · 전원 + R₁ + (R₂∥R₃)",
+  "hybrid-ps": "CIRCUIT · 전원 + (R₁∥R₂) + R₃",
+};
+
+// 마지막 계산 결과 (전류 흐름 애니메이션·발열 색조용 — 표시 전용)
+let lastBranches = [];
+let lastItotal = 0;
+
+function setPattern(p) {
+  pattern = p;
+  document.querySelectorAll(".pattern-btn").forEach(b => b.classList.remove("active"));
+  document.querySelector(`[data-pattern="${p}"]`).classList.add("active");
+  $("circuitLabel").textContent = PATTERN_LABEL[p];
+  renderControls();
+  render();
+  flashCard();
+}
+
+function renderControls() {
+  const def = PATTERNS[pattern];
+  const ctrl = $("rControls");
+  ctrl.innerHTML = "";
+  for (let i = 1; i <= def.count; i++) {
+    const div = document.createElement("div");
+    div.className = "chip-r rounded-md p-3";
+    div.innerHTML = `
+      <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>저항 R<sub>${i}</sub></span><span id="r${i}Val" class="mono text-sm" style="color:${R_COLORS[i-1]}">${def.defaults[i-1]}</span></label>
+      <input type="range" id="r${i}" min="1" max="100" value="${def.defaults[i-1]}" class="w-full mt-2 cursor-pointer">
+      <p class="text-[10px] eyebrow mt-1 text-right">Ω</p>`;
+    ctrl.appendChild(div);
+    $(`r${i}`).addEventListener("input", () => { render(); flashCard(); });
+  }
+}
+
+document.querySelectorAll(".pattern-btn").forEach(b => b.addEventListener("click", () => setPattern(b.dataset.pattern)));
+$("v").addEventListener("input", () => { render(); flashCard(); });
+
+$("resetBtn").addEventListener("click", () => {
+  $("v").value = 12;
+  const def = PATTERNS[pattern];
+  for (let i = 1; i <= def.count; i++) { if ($(`r${i}`)) $(`r${i}`).value = def.defaults[i-1]; }
+  render();
+  flashCard();
+});
+
+function flashCard() {
+  // 차분한 진입 강조 — 보더 톤만 아주 약하게
+  if (window.gsap) gsap.fromTo('#canvasCard',
+    { borderColor: 'rgba(94,221,214,0.35)' },
+    { borderColor: 'rgba(148,163,184,0.16)', duration: 0.7, ease: 'power2.out' });
+}
+
+// 숫자 카운트업 (표시 전용 — 최종값은 계산 결과 그대로)
+function countUp(elId, target, suffix, decimals) {
+  const el = $(elId);
+  if (!el) return;
+  if (window.gsap) {
+    const obj = { val: parseFloat(el.dataset.cur || "0") };
+    gsap.to(obj, {
+      val: target, duration: 0.45, ease: 'power2.out',
+      onUpdate: () => { el.textContent = obj.val.toFixed(decimals) + suffix; },
+      onComplete: () => { el.textContent = target.toFixed(decimals) + suffix; el.dataset.cur = target; }
+    });
+  } else {
+    el.textContent = target.toFixed(decimals) + suffix;
+    el.dataset.cur = target;
+  }
+}
+
+// 표준 지그재그 저항 심볼 (수평). 발열은 은은한 색조 변화로만 표현.
+function R(x, y, label, ci) {
+  const color = R_COLORS[ci];
+  let heat = 0;
+  if (lastBranches[ci]) heat = Math.min(1, (lastBranches[ci].i * lastBranches[ci].v) / 120);
+  // 발열: 채움색이 차분한 호박빛으로 살짝 따뜻해짐 (번쩍임 없음)
+  const fill = heat > 0.04
+    ? `rgba(${Math.round(20 + heat * 60)}, ${Math.round(22 + heat * 20)}, ${Math.round(28 - heat * 6)}, 0.9)`
+    : `rgba(16,21,28,0.9)`;
+  const zs = x + 8, ze = x + 52, steps = 6;
+  let zig = `M ${zs} ${y}`;
+  for (let k = 1; k <= steps; k++) {
+    const px = zs + ((ze - zs) * k) / steps;
+    const py = y + (k % 2 === 1 ? -6 : 6);
+    zig += ` L ${px} ${py}`;
+  }
+  zig += ` L ${ze} ${y}`;
+  return `
+    <rect x="${x}" y="${y-12}" width="60" height="24" rx="3"
+      fill="${fill}" stroke="${color}" stroke-width="${SW}"/>
+    <path d="${zig}" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.95"/>
+    <text x="${x+30}" y="${y-18}" text-anchor="middle" font-size="12" font-weight="bold"
+      fill="${color}" font-family="ui-monospace, monospace">${label}</text>`;
+}
+
+// 정밀 스키매틱 배선 + SPICE풍 절제된 전류점 (속도 ∝ 전류)
+function L(x1, y1, x2, y2, branchIdx) {
+  let cur = lastItotal;
+  if (branchIdx != null && lastBranches[branchIdx]) cur = lastBranches[branchIdx].i;
+  const speed = Math.max(0.6, Math.min(3.2, cur * 0.55));
+  const dur = (2.6 / speed).toFixed(2);
+  const stroke = branchIdx != null ? R_COLORS[branchIdx] : STROKE;
+  const len = Math.hypot(x2 - x1, y2 - y1);
+  return `
+    <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="${SW}" opacity="0.92"/>
+    <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#cfeeec" stroke-width="2"
+      stroke-dasharray="1.5 ${Math.max(10, len)}" stroke-linecap="round" opacity="0.55">
+      <animate attributeName="stroke-dashoffset" from="${(1.5 + Math.max(10, len)).toFixed(1)}" to="0" dur="${dur}s" repeatCount="indefinite"/>
+    </line>`;
+}
+
+// 전압원 — 표준 기호풍 (큰 +/− 단자), 차분한 표현. 단자 리드 → (140,80) 상단 / (140,240) 하단
+function source(V) {
+  return `
+    <circle cx="80" cy="160" r="30" fill="rgba(16,21,28,0.9)" stroke="#e0a458" stroke-width="${SW}"/>
+    <line x1="68" y1="142" x2="92" y2="142" stroke="#e0a458" stroke-width="2"/>
+    <line x1="80" y1="134" x2="80" y2="150" stroke="#e0a458" stroke-width="2"/>
+    <line x1="70" y1="180" x2="90" y2="180" stroke="#8b97a4" stroke-width="2"/>
+    <text x="80" y="120" text-anchor="middle" font-size="13" font-weight="bold" fill="#e0a458" font-family="ui-monospace, monospace">${V}V</text>
+    <text x="106" y="146" text-anchor="middle" font-size="12" font-weight="bold" fill="#c9a06a" font-family="ui-monospace, monospace">+</text>
+    <text x="106" y="200" text-anchor="middle" font-size="13" font-weight="bold" fill="#8b97a4" font-family="ui-monospace, monospace">−</text>
+    ${L(80, 130, 80, 80)}
+    ${L(80, 80, 140, 80)}
+    ${L(80, 190, 80, 240)}
+    ${L(80, 240, 140, 240)}`;
+}
+
+// 접합 노드 — 작은 솔리드 점만 (펄스 제거)
+function node(x, y) {
+  return `<circle cx="${x}" cy="${y}" r="3.4" fill="#aab4c0"/>`;
+}
+
+function render() {
+  const V = +$("v").value;
+  $("vVal").textContent = V;
+
+  const r1 = +($("r1")?.value ?? PATTERNS[pattern].defaults[0]);
+  const r2 = +($("r2")?.value ?? PATTERNS[pattern].defaults[1] ?? 0);
+  const r3 = +($("r3")?.value ?? PATTERNS[pattern].defaults[2] ?? 0);
+
+  if ($("r1Val")) $("r1Val").textContent = r1;
+  if ($("r2Val")) $("r2Val").textContent = r2;
+  if ($("r3Val")) $("r3Val").textContent = r3;
+
+  let Rt, branches, lawHtml;
+
+  if (pattern === "single") {
+    Rt = r1;
+    const I = V/Rt;
+    branches = [{r:r1,i:I,v:I*r1}];
+    lawHtml = `
+      <div class="law-box law-ohm"><strong style="color:#5eddd6">옴의 법칙</strong>: V = I · R → ${V} = ${I.toFixed(3)} × ${r1}</div>
+      <div class="law-box law-power"><strong style="color:#bea5d7">전력 (3가지 식)</strong>: P = VI = ${(V*I).toFixed(2)} W = I²R = ${(I*I*r1).toFixed(2)} W = V²/R = ${(V*V/r1).toFixed(2)} W ✓</div>
+    `;
+  } else if (pattern === "series3") {
+    Rt = r1 + r2 + r3;
+    const I = V/Rt;
+    branches = [{r:r1,i:I,v:I*r1},{r:r2,i:I,v:I*r2},{r:r3,i:I,v:I*r3}];
+    const vSum = I*r1 + I*r2 + I*r3;
+    lawHtml = `
+      <div class="law-box law-ohm"><strong style="color:#5eddd6">합성저항</strong>: R = R₁+R₂+R₃ = ${r1}+${r2}+${r3} = ${Rt} Ω</div>
+      <div class="law-box law-kvl"><strong style="color:#78c896">KVL</strong>: V₁+V₂+V₃ = ${(I*r1).toFixed(2)}+${(I*r2).toFixed(2)}+${(I*r3).toFixed(2)} = ${vSum.toFixed(2)} V ≈ ${V} V ✓</div>
+      <div class="law-box law-share"><strong style="color:#e0a458">전압분배</strong>: V_n = V·R_n/R. 큰 저항에 더 큰 전압.<br/>V₁ = ${V}×${r1}/${Rt} = ${(V*r1/Rt).toFixed(2)} V</div>
+    `;
+  } else if (pattern === "parallel3") {
+    Rt = 1/(1/r1 + 1/r2 + 1/r3);
+    const I = V/Rt;
+    const i1 = V/r1, i2 = V/r2, i3 = V/r3;
+    branches = [{r:r1,i:i1,v:V},{r:r2,i:i2,v:V},{r:r3,i:i3,v:V}];
+    lawHtml = `
+      <div class="law-box law-ohm"><strong style="color:#5eddd6">합성저항</strong>: 1/R = 1/${r1}+1/${r2}+1/${r3} → R = ${Rt.toFixed(2)} Ω</div>
+      <div class="law-box law-kvl"><strong style="color:#78c896">KCL</strong>: I = I₁+I₂+I₃ = ${i1.toFixed(3)}+${i2.toFixed(3)}+${i3.toFixed(3)} = ${(i1+i2+i3).toFixed(3)} A ≈ ${I.toFixed(3)} A ✓</div>
+      <div class="law-box law-share"><strong style="color:#e0a458">전류분배</strong>: 작은 저항에 더 큰 전류.<br/>I₁=${i1.toFixed(2)}, I₂=${i2.toFixed(2)}, I₃=${i3.toFixed(2)} A</div>
+    `;
+  } else if (pattern === "hybrid-sp") {
+    const Rp = (r2*r3)/(r2+r3);
+    Rt = r1 + Rp;
+    const I = V/Rt;
+    const Vp = I*Rp;
+    branches = [{r:r1,i:I,v:I*r1},{r:r2,i:Vp/r2,v:Vp},{r:r3,i:Vp/r3,v:Vp}];
+    lawHtml = `
+      <div class="law-box law-ohm"><strong style="color:#5eddd6">합성저항</strong>: R = R₁ + (R₂∥R₃) = ${r1} + ${Rp.toFixed(2)} = ${Rt.toFixed(2)} Ω</div>
+      <div class="law-box law-kvl"><strong style="color:#78c896">KVL</strong>: V = V_R₁ + V_(R₂∥R₃) = ${(I*r1).toFixed(2)} + ${Vp.toFixed(2)} = ${(I*r1+Vp).toFixed(2)} V ≈ ${V} V ✓</div>
+      <div class="law-box law-share"><strong style="color:#e0a458">KCL (분기점)</strong>: I = I_R₂ + I_R₃ = ${(Vp/r2).toFixed(3)} + ${(Vp/r3).toFixed(3)} = ${(Vp/r2+Vp/r3).toFixed(3)} A ≈ ${I.toFixed(3)} A ✓</div>
+    `;
+  } else {
+    const Rp = (r1*r2)/(r1+r2);
+    Rt = Rp + r3;
+    const I = V/Rt;
+    const Vp = I*Rp;
+    branches = [{r:r1,i:Vp/r1,v:Vp},{r:r2,i:Vp/r2,v:Vp},{r:r3,i:I,v:I*r3}];
+    lawHtml = `
+      <div class="law-box law-ohm"><strong style="color:#5eddd6">합성저항</strong>: R = (R₁∥R₂) + R₃ = ${Rp.toFixed(2)} + ${r3} = ${Rt.toFixed(2)} Ω</div>
+      <div class="law-box law-kvl"><strong style="color:#78c896">KVL</strong>: V = V_(R₁∥R₂) + V_R₃ = ${Vp.toFixed(2)} + ${(I*r3).toFixed(2)} = ${(Vp+I*r3).toFixed(2)} V ≈ ${V} V ✓</div>
+      <div class="law-box law-share"><strong style="color:#e0a458">KCL (분기점)</strong>: I = I_R₁ + I_R₂ = ${(Vp/r1).toFixed(3)} + ${(Vp/r2).toFixed(3)} = ${(Vp/r1+Vp/r2).toFixed(3)} A ≈ ${I.toFixed(3)} A ✓</div>
+    `;
+  }
+
+  const Itotal = V/Rt;
+  lastBranches = branches;
+  lastItotal = Itotal;
+
+  countUp("rTotal", Rt, " Ω", 2);
+  countUp("iTotal", Itotal, " A", 3);
+  countUp("vDisp", V, " V", 0);
+  countUp("pTotal", V*Itotal, " W", 2);
+  $("pill-r").classList.add("verified"); $("pill-i").classList.add("verified");
+
+  $("rows").innerHTML = branches.map((b,i)=>`<tr><td class="py-2 font-semibold" style="color:${R_COLORS[i]}">R<sub>${i+1}</sub></td><td style="color:#aab4c0">${b.r} Ω</td><td style="color:#78c896">${b.i.toFixed(3)} A</td><td style="color:#5eddd6">${b.v.toFixed(2)} V</td><td style="color:#bea5d7">${(b.i*b.v).toFixed(2)} W</td></tr>`).join("");
+  $("lawCheck").innerHTML = lawHtml;
+
+  drawCircuit();
+}
+
+function drawCircuit() {
+  const svg = $("circuit");
+  const V = $("v").value;
+  let body = source(V);
+
+  if (pattern === "single") {
+    body += L(140, 80, 320, 80);
+    body += R(320, 80, "R₁", 0);
+    body += L(380, 80, 580, 80);
+    body += L(580, 80, 580, 240);
+    body += L(580, 240, 140, 240);
+  } else if (pattern === "series3") {
+    body += L(140, 80, 200, 80);
+    body += R(200, 80, "R₁", 0);
+    body += L(260, 80, 340, 80);
+    body += R(340, 80, "R₂", 1);
+    body += L(400, 80, 480, 80);
+    body += R(480, 80, "R₃", 2);
+    body += L(540, 80, 580, 80);
+    body += L(580, 80, 580, 240);
+    body += L(580, 240, 140, 240);
+  } else if (pattern === "parallel3") {
+    // ── 깨끗한 사다리(ladder)형 ──────────────────────────────
+    // 상단 레일 y=80 (x 140→560), 하단 레일 y=240 (x 140→560)
+    // 전원 리드는 source()가 (140,80)·(140,240)으로 전달.
+    // 세 가지: x=270 / x=370 / x=470, 저항은 세로(중심 y=160).
+    // 레일 구간을 가지 접합점 단위로 분할 → 어떤 가지/저항도
+    // 레일과 동일선상으로 겹치지 않음. 총전류는 레일 끝구간에만.
+    const BX = [270, 370, 470];
+    // 상단 레일: 전원 인입(140) → B1 → B2 → B3 → 560
+    body += L(140, 80, BX[0], 80);            // 총전류 (전원→첫 분기)
+    body += L(BX[0], 80, BX[1], 80);          // 총전류
+    body += L(BX[1], 80, BX[2], 80);          // 총전류
+    body += L(BX[2], 80, 560, 80);            // 총전류 (마지막 분기→코너)
+    // 하단 레일: 전원 인입(140) → B1 → B2 → B3 → 560 (귀환)
+    body += L(140, 240, BX[0], 240);
+    body += L(BX[0], 240, BX[1], 240);
+    body += L(BX[1], 240, BX[2], 240);
+    body += L(BX[2], 240, 560, 240);
+    // 우측 코너 (상단레일 끝 → 하단레일 끝) — 총전류 귀환
+    body += L(560, 80, 560, 240);
+    // 세 수직 가지: 상단레일(80)→저항(세로, 중심 160)→하단레일(240)
+    for (let k = 0; k < 3; k++) {
+      const x = BX[k];
+      body += L(x, 80, x, 130, k);            // 상단 리드
+      body += RV(x, 160, `R${["₁","₂","₃"][k]}`, k); // 세로 저항 (y 130→190)
+      body += L(x, 190, x, 240, k);           // 하단 리드
+    }
+    // 접합 노드 6점 (가지가 레일과 만나는 곳에만)
+    body += node(BX[0], 80) + node(BX[1], 80) + node(BX[2], 80);
+    body += node(BX[0], 240) + node(BX[1], 240) + node(BX[2], 240);
+  } else if (pattern === "hybrid-sp") {
+    body += L(140, 80, 200, 80);
+    body += R(200, 80, "R₁", 0);
+    body += L(260, 80, 340, 80);
+    body += L(340, 80, 340, 180);
+    body += L(340, 120, 380, 120, 1);
+    body += R(380, 120, "R₂", 1);
+    body += L(440, 120, 500, 120, 1);
+    body += L(340, 180, 380, 180, 2);
+    body += R(380, 180, "R₃", 2);
+    body += L(440, 180, 500, 180, 2);
+    body += L(500, 120, 500, 180);
+    body += L(500, 120, 580, 120);
+    body += L(580, 120, 580, 240);
+    body += L(580, 240, 140, 240);
+    body += node(340, 120) + node(340, 180) + node(500, 120) + node(500, 180);
+  } else {
+    body += L(140, 80, 220, 80);
+    body += L(220, 80, 220, 180);
+    body += L(220, 120, 260, 120, 0);
+    body += R(260, 120, "R₁", 0);
+    body += L(320, 120, 380, 120, 0);
+    body += L(220, 180, 260, 180, 1);
+    body += R(260, 180, "R₂", 1);
+    body += L(320, 180, 380, 180, 1);
+    body += L(380, 120, 380, 180);
+    body += L(380, 120, 440, 120);
+    body += L(440, 120, 440, 80);
+    body += R(460, 80, "R₃", 2);
+    body += L(520, 80, 580, 80);
+    body += L(580, 80, 580, 240);
+    body += L(580, 240, 140, 240);
+    body += node(220, 120) + node(220, 180) + node(380, 120) + node(380, 180);
+  }
+  svg.innerHTML = body;
+}
+
+// 세로 방향 표준 지그재그 저항 심볼 (병렬 사다리 가지용).
+// (x, yc): 중심. 심볼 본체 y = yc-30 → yc+30. 발열은 은은한 색조만.
+function RV(x, yc, label, ci) {
+  const color = R_COLORS[ci];
+  let heat = 0;
+  if (lastBranches[ci]) heat = Math.min(1, (lastBranches[ci].i * lastBranches[ci].v) / 120);
+  const fill = heat > 0.04
+    ? `rgba(${Math.round(20 + heat * 60)}, ${Math.round(22 + heat * 20)}, ${Math.round(28 - heat * 6)}, 0.9)`
+    : `rgba(16,21,28,0.9)`;
+  const zs = yc - 22, ze = yc + 22, steps = 6;
+  let zig = `M ${x} ${zs}`;
+  for (let k = 1; k <= steps; k++) {
+    const py = zs + ((ze - zs) * k) / steps;
+    const px = x + (k % 2 === 1 ? -6 : 6);
+    zig += ` L ${px} ${py}`;
+  }
+  zig += ` L ${x} ${ze}`;
+  return `
+    <line x1="${x}" y1="${yc-30}" x2="${x}" y2="${zs}" stroke="${color}" stroke-width="${SW}" opacity="0.92"/>
+    <line x1="${x}" y1="${ze}" x2="${x}" y2="${yc+30}" stroke="${color}" stroke-width="${SW}" opacity="0.92"/>
+    <rect x="${x-12}" y="${yc-30}" width="24" height="60" rx="3"
+      fill="${fill}" stroke="${color}" stroke-width="${SW}"/>
+    <path d="${zig}" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.95"/>
+    <text x="${x+22}" y="${yc+4}" text-anchor="middle" font-size="12" font-weight="bold"
+      fill="${color}" font-family="ui-monospace, monospace">${label}</text>`;
+}
+
+window.addEventListener('load', () => {
+  setPattern("single");
+  if (window.gsap) {
+    gsap.from('#hdr', { y: -10, opacity: 0, duration: 0.5, ease: 'power2.out' });
+    gsap.from('#livePanel > *', { y: 8, opacity: 0, duration: 0.45, stagger: 0.05, delay: 0.1, ease: 'power2.out' });
+    gsap.from('#canvasCard', { opacity: 0, duration: 0.55, delay: 0.15, ease: 'power2.out' });
+    gsap.from('#sideCol > *', { y: 10, opacity: 0, duration: 0.45, stagger: 0.08, delay: 0.25, ease: 'power2.out' });
+  }
+});
+</script>
+</body>
+</html>

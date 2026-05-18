@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전기기능사 - 직병렬 회로 시뮬레이터</title>
+<link rel="stylesheet" href="/samples/_tailwind.css">
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+:root {
+    --bg-0: #0d1117;
+    --bg-1: #11161d;
+    --panel: #131922;
+    --panel-2: #161d27;
+    --border: rgba(148, 163, 184, 0.16);
+    --border-soft: rgba(148, 163, 184, 0.10);
+    --grid: rgba(125, 211, 252, 0.055);
+    --grid-strong: rgba(125, 211, 252, 0.10);
+    --teal: #5eddd6;
+    --amber: #e0a458;
+    --slate-txt: #c4ccd6;
+    --ink: #aab4c0;
+}
+html, body { height: 100%; }
+body {
+    background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    color: #d3dae3;
+    font-family: 'Pretendard', system-ui, sans-serif;
+    overflow: hidden;
+}
+
+/* 한 화면 셸 — 페이지 스크롤 금지, 컬럼 내부에서만 스크롤 */
+.sim-shell {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.sim-main {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    gap: 1rem;
+    overflow: hidden;
+}
+.sim-left {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    overflow: hidden;
+}
+.sim-right {
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding-right: 4px;
+}
+.sim-right::-webkit-scrollbar { width: 7px; }
+.sim-right::-webkit-scrollbar-thumb {
+    background: rgba(148,163,184,0.22);
+    border-radius: 9999px;
+}
+.sim-right::-webkit-scrollbar-track { background: transparent; }
+
+.canvas-card { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.canvas-card .canvas-wrap { flex: 1 1 auto; min-height: 0; }
+
+@media (max-width: 1023px) {
+    body { overflow: auto; }
+    .sim-shell { height: auto; min-height: 100vh; overflow: visible; }
+    .sim-main { grid-template-columns: 1fr; overflow: visible; }
+    .sim-left, .sim-right { overflow: visible; }
+    .canvas-card { min-height: 360px; }
+}
+
+.canvas-wrap {
+    position: relative;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #0b0f15;
+    overflow: hidden;
+}
+canvas#main {
+    display: block;
+    width: 100%;
+    height: 560px;
+    background: #0b0f15;
+}
+.glass {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
+}
+.pulse-dot {
+    display: inline-block;
+    width: 7px; height: 7px; border-radius: 9999px;
+    background: var(--teal);
+    box-shadow: 0 0 5px rgba(94, 221, 214, 0.55);
+}
+
+input[type=range] {
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.22);
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: #cdd5df;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+    cursor: pointer;
+    border: 3px solid #2a3340;
+}
+input[type=range]:focus { outline: none; }
+input[type=range]:focus::-webkit-slider-thumb { background: var(--teal); }
+.chip-v { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(190,165,215,0.55); color: var(--slate-txt); }
+.chip-r1 { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(224,164,88,0.6); color: var(--slate-txt); }
+.chip-r2 { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(120,200,150,0.55); color: var(--slate-txt); }
+.chip-r3 { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(94,221,214,0.55); color: var(--slate-txt); }
+
+.live-pill {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    transition: border-color 200ms;
+}
+.live-pill.flash {
+    border-color: rgba(94, 221, 214, 0.40);
+}
+.live-num {
+    font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    color: #d8f3f0;
+    letter-spacing: 0.01em;
+}
+.math-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 2px solid rgba(94, 221, 214, 0.35);
+}
+.math-container { font-size: 1.0rem; color: #cdd5df; }
+.feature-row {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    transition: border-color 180ms;
+}
+.feature-row:hover { border-color: rgba(94, 221, 214, 0.30); }
+.reset-btn {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--slate-txt);
+    transition: border-color 160ms, color 160ms;
+}
+.reset-btn:hover { border-color: rgba(94, 221, 214, 0.5); color: #d8f3f0; }
+.mode-tab {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    color: var(--ink);
+    transition: border-color 160ms, color 160ms, background 160ms;
+    cursor: pointer;
+}
+.mode-tab:hover { border-color: var(--border); color: var(--slate-txt); }
+.mode-tab.active.series {
+    background: rgba(224, 164, 88, 0.12);
+    border-color: rgba(224, 164, 88, 0.55);
+    color: #eabd84;
+}
+.mode-tab.active.parallel {
+    background: rgba(94, 221, 214, 0.10);
+    border-color: rgba(94, 221, 214, 0.55);
+    color: #d8f3f0;
+}
+.neon-divider {
+    height: 1px;
+    background: var(--border-soft);
+}
+.req-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 2px solid rgba(94, 221, 214, 0.35);
+}
+.bar-track {
+    background: rgba(148, 163, 184, 0.12);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+}
+.bar-fill-series {
+    background: rgba(224, 164, 88, 0.7);
+    transition: width 360ms cubic-bezier(.22,.61,.36,1);
+}
+.bar-fill-parallel {
+    background: rgba(94, 221, 214, 0.7);
+    transition: width 360ms cubic-bezier(.22,.61,.36,1);
+}
+.eyebrow { color: #74808d; }
+</style>
+</head>
+<body class="p-3 md:p-4">
+
+<div class="sim-shell max-w-7xl mx-auto w-full relative">
+    <header class="mb-3 flex-none" id="hdr">
+        <div class="flex items-center gap-2 text-[11px] font-semibold tracking-widest" style="color:#7d8a97">
+            <span class="pulse-dot"></span>
+            INTERACTIVE · SERIES vs PARALLEL
+        </div>
+        <h1 class="mt-1 text-xl md:text-2xl font-bold" style="color:#e3e9f0">
+            직병렬 회로 시뮬레이터
+        </h1>
+    </header>
+
+    <!-- 라이브 데이터 패널 -->
+    <div id="livePanel" class="mb-3 grid grid-cols-2 sm:grid-cols-4 gap-2 flex-none">
+        <div class="live-pill rounded-xl p-3" id="pill-req">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">합성 저항 R<sub>eq</sub></p>
+            <p class="mt-1 text-lg font-bold"><span id="reqVal" class="live-num">—</span> <span class="text-xs opacity-70 font-normal">Ω</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-i">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">총 전류 I</p>
+            <p class="mt-1 text-lg font-bold"><span id="iVal" class="live-num">—</span> <span class="text-xs opacity-70 font-normal">A</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-p">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">총 전력 P</p>
+            <p class="mt-1 text-lg font-bold"><span id="pVal" class="live-num">—</span> <span class="text-xs opacity-70 font-normal">W</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-mode">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">회로 모드</p>
+            <p class="mt-1 text-lg font-bold"><span id="modeVal" class="live-num">—</span></p>
+        </div>
+    </div>
+
+    <div class="sim-main">
+        <div class="sim-left">
+            <div class="glass rounded-xl p-3 canvas-card" id="canvasCard">
+                <div class="flex items-center justify-between mb-2 gap-3 flex-wrap flex-none">
+                    <span class="text-[11px] font-semibold text-slate-400 tracking-wide">CIRCUIT · 전원 → R₁/R₂/R₃ (직렬 또는 병렬)</span>
+                    <div class="flex gap-2">
+                        <button id="tabSeries" class="mode-tab series active rounded-md px-3 py-1.5 text-xs font-bold">직렬</button>
+                        <button id="tabParallel" class="mode-tab parallel rounded-md px-3 py-1.5 text-xs font-bold">병렬</button>
+                        <button id="resetBtn" class="reset-btn rounded-md px-3 py-1.5 text-xs font-bold">초기화</button>
+                    </div>
+                </div>
+                <div class="canvas-wrap">
+                    <canvas id="main"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="sim-right" id="sideCol">
+            <div class="glass rounded-xl p-3 flex-none">
+                <h2 class="text-sm font-bold mb-2" style="color:#e3e9f0">변수 조절</h2>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="chip-v rounded-lg p-3">
+                        <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>입력 전압 V</span><span id="vDisp" class="font-mono text-sm">24</span></label>
+                        <input type="range" id="v" min="1" max="60" value="24" class="w-full mt-2 cursor-pointer">
+                        <p class="text-[10px] text-slate-500 mt-1 text-right">V</p>
+                    </div>
+                    <div class="chip-r1 rounded-lg p-3">
+                        <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>R₁</span><span id="r1Disp" class="font-mono text-sm">10</span></label>
+                        <input type="range" id="r1" min="1" max="100" value="10" class="w-full mt-2 cursor-pointer">
+                        <p class="text-[10px] text-slate-500 mt-1 text-right">Ω</p>
+                    </div>
+                    <div class="chip-r2 rounded-lg p-3">
+                        <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>R₂</span><span id="r2Disp" class="font-mono text-sm">20</span></label>
+                        <input type="range" id="r2" min="1" max="100" value="20" class="w-full mt-2 cursor-pointer">
+                        <p class="text-[10px] text-slate-500 mt-1 text-right">Ω</p>
+                    </div>
+                    <div class="chip-r3 rounded-lg p-3">
+                        <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>R₃</span><span id="r3Disp" class="font-mono text-sm">30</span></label>
+                        <input type="range" id="r3" min="1" max="100" value="30" class="w-full mt-2 cursor-pointer">
+                        <p class="text-[10px] text-slate-500 mt-1 text-right">Ω</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 합성 저항 비교 막대 (실시간) -->
+            <div class="req-card rounded-xl p-3 flex-none">
+                <h3 class="font-bold text-sm mb-3 tracking-wider" style="color:#c4ccd6">합성 저항 비교 (실시간)</h3>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between text-[11px] font-bold tracking-wider mb-1">
+                            <span style="color:#e0a458">직렬 R<sub>eq</sub></span>
+                            <span id="reqSeriesText" class="font-mono" style="color:#eabd84">— Ω</span>
+                        </div>
+                        <div class="bar-track rounded-full h-2.5 overflow-hidden">
+                            <div id="barSeries" class="bar-fill-series h-full rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between text-[11px] font-bold tracking-wider mb-1">
+                            <span style="color:#5eddd6">병렬 R<sub>eq</sub></span>
+                            <span id="reqParallelText" class="font-mono" style="color:#8fe9e3">— Ω</span>
+                        </div>
+                        <div class="bar-track rounded-full h-2.5 overflow-hidden">
+                            <div id="barParallel" class="bar-fill-parallel h-full rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="neon-divider my-3"></div>
+                <p class="text-[11px] text-slate-400">두 모드의 합성 저항 비율 : <span id="ratioVal" class="font-mono font-bold" style="color:#5eddd6">—</span> 배</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $('main');
+const ctx = canvas.getContext('2d');
+
+const state = {
+    V: 24, R1: 10, R2: 20, R3: 30,
+    Req: 0, Itot: 0, P: 0,
+    I1: 0, I2: 0, I3: 0,
+    V1: 0, V2: 0, V3: 0,
+    t: 0,
+    mode: 'series',
+    morph: 0  // 0: series, 1: parallel (애니메이션 보간)
+};
+
+const COLORS = {
+    R1: { color: '#e0a458', accent: '#eabd84' },
+    R2: { color: '#78c896', accent: '#a3d9b8' },
+    R3: { color: '#5eddd6', accent: '#8fe9e3' }
+};
+
+let geo = {};
+// 직렬 경로와 병렬 경로를 모두 보관해두고 모드별로 사용
+let seriesPath, seriesParticles;
+let parallelBranches; // R1/R2/R3 가지 + 메인 라인
+
+function resize() {
+    canvas.width = canvas.parentElement.clientWidth - 2;
+    canvas.height = 560;
+    buildGeometry();
+}
+window.addEventListener('resize', resize);
+
+function buildGeometry() {
+    const W = canvas.width, H = canvas.height;
+    const topY = H * 0.28;
+    const botY = H * 0.78;
+    const leftX = W * 0.13;
+    const rightX = W * 0.87;
+    const nodeAx = W * 0.30;
+    const nodeBx = W * 0.70;
+
+    geo = {
+        W, H,
+        leftX, rightX, topY, botY,
+        nodeAx, nodeBx,
+        srcX: (leftX + rightX) / 2,
+        srcY: botY,
+        // 저항 슬롯
+        seriesSlots: [
+            { x: leftX + (rightX - leftX) * 0.22, y: topY },
+            { x: leftX + (rightX - leftX) * 0.50, y: topY },
+            { x: leftX + (rightX - leftX) * 0.78, y: topY }
+        ],
+        parallelYs: [ topY - 50, topY + 6, topY + 62 ]
+    };
+
+    // 직렬 경로 (한 줄 흐름): 전원 + → 우 → 상 → R1 → R2 → R3 → 좌 → 하 → 전원 −
+    seriesPath = [
+        { x: rightX, y: botY },
+        { x: rightX, y: topY },
+        { x: leftX, y: topY },
+        { x: leftX, y: botY },
+        { x: rightX, y: botY }
+    ];
+    const segs = pathToSegments(seriesPath);
+    seriesParticles = {
+        path: seriesPath,
+        segments: segs.segments,
+        total: segs.total,
+        particles: makeParticles(28, segs.total)
+    };
+
+    // 병렬: 가지마다 별도 경로
+    // 가지: 노드 A → 위/가운데/아래 가지 → 노드 B
+    const A = { x: nodeAx, y: topY };
+    const B = { x: nodeBx, y: topY };
+    const ys = geo.parallelYs;
+    parallelBranches = [
+        makeBranch('R1', A, B, ys[0]),
+        makeBranch('R2', A, B, ys[1]),
+        makeBranch('R3', A, B, ys[2])
+    ];
+    // 메인 라인 (전원 ↔ 노드 A/B)
+    const mainPathR = [
+        { x: rightX, y: botY },
+        { x: rightX, y: topY },
+        { x: B.x, y: topY }
+    ];
+    const mainPathL = [
+        { x: A.x, y: topY },
+        { x: leftX, y: topY },
+        { x: leftX, y: botY }
+    ];
+    geo.mainR = seedLine(mainPathR, 10);
+    geo.mainL = seedLine(mainPathL, 10);
+    geo.parallelA = A; geo.parallelB = B;
+}
+
+function makeBranch(name, A, B, midY) {
+    // A → A+30 → midY → B−30 → B
+    const path = [
+        { x: A.x, y: A.y },
+        { x: A.x + 24, y: A.y },
+        { x: A.x + 24, y: midY },
+        { x: B.x - 24, y: midY },
+        { x: B.x - 24, y: B.y },
+        { x: B.x, y: B.y }
+    ];
+    const segs = pathToSegments(path);
+    return {
+        name,
+        path,
+        segments: segs.segments,
+        total: segs.total,
+        particles: makeParticles(14, segs.total),
+        resistorMid: { x: (A.x + 24 + B.x - 24) / 2, y: midY }
+    };
+}
+
+function seedLine(path, n) {
+    const segs = pathToSegments(path);
+    return {
+        path,
+        segments: segs.segments,
+        total: segs.total,
+        particles: makeParticles(n, segs.total)
+    };
+}
+
+function pathToSegments(path) {
+    let total = 0;
+    const segments = [];
+    for (let k = 0; k < path.length - 1; k++) {
+        const a = path[k], b = path[k + 1];
+        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        segments.push({ a, b, len, start: total });
+        total += len;
+    }
+    return { segments, total };
+}
+function makeParticles(n, total) {
+    const arr = [];
+    for (let i = 0; i < n; i++) arr.push({
+        progress: (i / n) * total,
+        size: 1.6 + Math.random() * 0.8,
+        jitter: (Math.random() - 0.5) * 0.6
+    });
+    return arr;
+}
+function pointAt(segments, total, progress) {
+    let p = ((progress % total) + total) % total;
+    for (const s of segments) {
+        if (p <= s.start + s.len) {
+            const tt = (p - s.start) / s.len;
+            return { x: s.a.x + (s.b.x - s.a.x) * tt, y: s.a.y + (s.b.y - s.a.y) * tt };
+        }
+    }
+    return segments[0].a;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+
+function drawBg() {
+    ctx.fillStyle = '#0b0f15';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // 오실로스코프 모눈 그리드
+    ctx.save();
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.055)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= canvas.width; i += 20) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+    }
+    for (let i = 0; i <= canvas.height; i += 20) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.10)';
+    for (let i = 0; i <= canvas.width; i += 100) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+    }
+    for (let i = 0; i <= canvas.height; i += 100) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+    }
+    ctx.restore();
+
+    // 헤더 텍스트
+    ctx.save();
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillStyle = 'rgba(116, 128, 141, 0.85)';
+    ctx.fillText('▮ SERIES vs PARALLEL · R₁/R₂/R₃', 12, 10);
+    ctx.textAlign = 'right';
+    const modeLabel = state.mode === 'series' ? '◯ MODE · SERIES' : '◯ MODE · PARALLEL';
+    ctx.fillStyle = state.mode === 'series' ? 'rgba(224, 164, 88, 0.85)' : 'rgba(94, 221, 214, 0.85)';
+    ctx.fillText(modeLabel, canvas.width - 12, 10);
+    ctx.restore();
+}
+
+function drawSource() {
+    // 전원: 직렬은 좌우 끝 / 병렬은 동일 위치 (양쪽 모두 좌우 끝)
+    const W = canvas.width;
+    const leftEnd = { x: geo.leftX, y: geo.botY };
+    const rightEnd = { x: geo.rightX, y: geo.botY };
+
+    // (+) 오른쪽
+    ctx.save();
+    ctx.strokeStyle = 'rgba(224, 164, 88, 0.9)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(rightEnd.x + 14, rightEnd.y - 18); ctx.lineTo(rightEnd.x + 14, rightEnd.y + 18);
+    ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(rightEnd.x + 24, rightEnd.y - 10); ctx.lineTo(rightEnd.x + 24, rightEnd.y + 10);
+    ctx.stroke();
+    ctx.restore();
+
+    // (-) 왼쪽
+    ctx.save();
+    ctx.strokeStyle = 'rgba(139, 151, 164, 0.9)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(leftEnd.x - 14, leftEnd.y - 10); ctx.lineTo(leftEnd.x - 14, leftEnd.y + 10);
+    ctx.stroke();
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(leftEnd.x - 24, leftEnd.y - 18); ctx.lineTo(leftEnd.x - 24, leftEnd.y + 18);
+    ctx.stroke();
+    ctx.restore();
+
+    // 전원 라벨
+    ctx.save();
+    ctx.font = 'bold 12px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const txt = `V = ${state.V.toFixed(0)} V`;
+    const tw = ctx.measureText(txt).width;
+    const cx = (geo.leftX + geo.rightX) / 2, cy = geo.botY + 30;
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    roundRect(ctx, cx - tw/2 - 10, cy - 11, tw + 20, 22, 5);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(224, 164, 88, 0.55)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = '#e0a458';
+    ctx.fillText(txt, cx, cy + 1);
+    // +/- 부호
+    ctx.font = 'bold 14px ui-monospace, monospace';
+    ctx.fillStyle = '#c9a06a';
+    ctx.fillText('+', rightEnd.x + 40, rightEnd.y);
+    ctx.fillStyle = '#8b97a4';
+    ctx.fillText('−', leftEnd.x - 40, leftEnd.y);
+    ctx.restore();
+}
+
+// ---------- 직렬 ----------
+function drawSeriesWires() {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(127, 140, 153, 0.92)';
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    seriesPath.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+    ctx.stroke();
+    ctx.restore();
+}
+function drawSeriesResistors() {
+    const slots = geo.seriesSlots;
+    const resistors = [
+        { r: state.R1, v: state.V1, i: state.Itot, label: 'R₁', ...COLORS.R1 },
+        { r: state.R2, v: state.V2, i: state.Itot, label: 'R₂', ...COLORS.R2 },
+        { r: state.R3, v: state.V3, i: state.Itot, label: 'R₃', ...COLORS.R3 }
+    ];
+    for (let k = 0; k < 3; k++) {
+        drawResistorBox(slots[k].x, slots[k].y, resistors[k], 'series');
+    }
+}
+function drawSeriesParticles() {
+    const speed = Math.max(0.6, state.Itot * 4.0);
+    ctx.save();
+    for (const p of seriesParticles.particles) {
+        p.progress = (p.progress + speed) % seriesParticles.total;
+        const pt = pointAt(seriesParticles.segments, seriesParticles.total, p.progress);
+        ctx.fillStyle = 'rgba(224, 164, 88, 0.85)';
+        ctx.beginPath();
+        ctx.arc(pt.x + p.jitter, pt.y + p.jitter, p.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+// ---------- 병렬 ----------
+function drawParallelWires() {
+    // 메인 라인
+    ctx.save();
+    ctx.strokeStyle = 'rgba(127, 140, 153, 0.92)';
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for (const ml of [geo.mainR, geo.mainL]) {
+        ctx.beginPath();
+        ml.path.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+        ctx.stroke();
+    }
+    ctx.restore();
+    // 가지
+    for (const b of parallelBranches) {
+        const col = COLORS[b.name];
+        ctx.save();
+        ctx.strokeStyle = col.color;
+        ctx.globalAlpha = 0.85;
+        ctx.lineWidth = 1.6;
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.beginPath();
+        b.path.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+function drawParallelResistors() {
+    const data = [
+        { r: state.R1, v: state.V, i: state.I1, label: 'R₁', ...COLORS.R1, mid: parallelBranches[0].resistorMid },
+        { r: state.R2, v: state.V, i: state.I2, label: 'R₂', ...COLORS.R2, mid: parallelBranches[1].resistorMid },
+        { r: state.R3, v: state.V, i: state.I3, label: 'R₃', ...COLORS.R3, mid: parallelBranches[2].resistorMid }
+    ];
+    for (const d of data) drawResistorBox(d.mid.x, d.mid.y, d, 'parallel');
+}
+function drawParallelNodes() {
+    const nodes = [geo.parallelA, geo.parallelB];
+    const labels = ['A', 'B'];
+    for (let k = 0; k < 2; k++) {
+        const n = nodes[k];
+        // 본체 (정적, 절제)
+        ctx.save();
+        ctx.fillStyle = '#1b2531';
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(94, 221, 214, 0.7)';
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.font = 'bold 11px ui-monospace, monospace';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#c4ccd6';
+        ctx.fillText(labels[k], n.x, n.y + 1);
+        ctx.restore();
+    }
+}
+function drawParallelParticles() {
+    const speedScale = 4.0;
+    const currents = [state.I1, state.I2, state.I3];
+    for (let k = 0; k < parallelBranches.length; k++) {
+        const b = parallelBranches[k];
+        const I = currents[k];
+        const speed = Math.max(0.4, I * speedScale);
+        const col = COLORS[b.name];
+        ctx.save();
+        for (const p of b.particles) {
+            p.progress = (p.progress + speed) % b.total;
+            const pt = pointAt(b.segments, b.total, p.progress);
+            ctx.fillStyle = col.accent;
+            ctx.beginPath();
+            ctx.arc(pt.x + p.jitter, pt.y + p.jitter, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+    // 메인 라인
+    const speedM = Math.max(0.6, state.Itot * speedScale * 0.6);
+    for (const mp of [geo.mainR, geo.mainL]) {
+        ctx.save();
+        for (const p of mp.particles) {
+            p.progress = (p.progress + speedM) % mp.total;
+            const pt = pointAt(mp.segments, mp.total, p.progress);
+            ctx.fillStyle = 'rgba(207, 238, 236, 0.55)';
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+}
+
+// ---------- 공통 저항 박스 ----------
+function drawResistorBox(cx, cy, data, mode) {
+    const w = 76, h = 28;
+    const power = data.v * data.i;
+    const heat = Math.min(1, power / 40);
+
+    ctx.save();
+    const fillC = heat > 0.04
+        ? `rgba(${Math.round(20 + heat * 60)}, ${Math.round(22 + heat * 20)}, ${Math.round(28 - heat * 6)}, 0.9)`
+        : 'rgba(16,21,28,0.9)';
+    ctx.fillStyle = fillC;
+    roundRect(ctx, cx - w/2, cy - h/2, w, h, 3);
+    ctx.fill();
+    ctx.strokeStyle = data.color;
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    // zig-zag
+    ctx.strokeStyle = data.color;
+    ctx.globalAlpha = 0.95;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    const zs = cx - w/2 + 10, ze = cx + w/2 - 10;
+    const steps = 6;
+    for (let k = 0; k <= steps; k++) {
+        const x = zs + ((ze - zs) * k) / steps;
+        const y = cy + (k % 2 === 0 ? -6 : 6);
+        if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // 라벨 (상단: R, 하단: I=, V=)
+    ctx.save();
+    ctx.font = 'bold 11px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const nameTxt = `${data.label}=${data.r.toFixed(0)}Ω`;
+    const nw = ctx.measureText(nameTxt).width;
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    roundRect(ctx, cx - nw/2 - 6, cy - h/2 - 22, nw + 12, 18, 5);
+    ctx.fill();
+    ctx.fillStyle = data.accent;
+    ctx.fillText(nameTxt, cx, cy - h/2 - 13);
+
+    const iTxt = `I=${data.i.toFixed(2)}A`;
+    const iw = ctx.measureText(iTxt).width;
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    roundRect(ctx, cx - iw/2 - 6, cy + h/2 + 6, iw + 12, 18, 5);
+    ctx.fill();
+    ctx.fillStyle = data.accent;
+    ctx.fillText(iTxt, cx, cy + h/2 + 15);
+
+    const vTxt = `V=${data.v.toFixed(2)}V`;
+    const vw = ctx.measureText(vTxt).width;
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.8)';
+    roundRect(ctx, cx - vw/2 - 6, cy + h/2 + 28, vw + 12, 16, 5);
+    ctx.fill();
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = `${data.accent}cc`;
+    ctx.fillText(vTxt, cx, cy + h/2 + 36);
+    ctx.restore();
+}
+
+// ---------- 합성 저항 큰 라벨 ----------
+function drawReqBigLabel() {
+    const text = `R_eq = ${state.Req.toFixed(2)} Ω`;
+    const sub = state.mode === 'series'
+        ? `= R₁+R₂+R₃ = ${(state.R1 + state.R2 + state.R3).toFixed(0)}`
+        : `= 1/(1/R₁+1/R₂+1/R₃)`;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height - 36;
+
+    ctx.save();
+    ctx.font = 'bold 20px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(text).width;
+    const padW = Math.max(tw + 36, 220);
+
+    const isS = state.mode === 'series';
+    const strokeCol = isS ? 'rgba(224, 164, 88, 0.55)' : 'rgba(94, 221, 214, 0.55)';
+    const textCol = isS ? '#e0a458' : '#5eddd6';
+
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    roundRect(ctx, cx - padW/2, cy - 22, padW, 44, 8);
+    ctx.fill();
+    ctx.strokeStyle = strokeCol;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = textCol;
+    ctx.fillText(text, cx, cy - 4);
+    // 보조 텍스트
+    ctx.font = '10px ui-monospace, monospace';
+    ctx.fillStyle = 'rgba(116, 128, 141, 0.85)';
+    ctx.fillText(sub, cx, cy + 12);
+    ctx.restore();
+}
+
+// ---------- 모드 전환 표지 (가운데 가이드) ----------
+function drawModeBadge() {
+    const cx = canvas.width / 2;
+    const cy = 38;
+    const txt = state.mode === 'series'
+        ? '직렬 · 전자가 한 줄로, 모든 저항을 차례로 통과'
+        : '병렬 · 세 가지로 나뉘어 흐름 (저항 작은 가지가 빠름)';
+    ctx.save();
+    ctx.font = 'bold 12px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(txt).width;
+    const isS = state.mode === 'series';
+    const strokeCol = isS ? 'rgba(224, 164, 88, 0.5)' : 'rgba(94, 221, 214, 0.5)';
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    roundRect(ctx, cx - tw/2 - 14, cy - 13, tw + 28, 26, 6);
+    ctx.fill();
+    ctx.strokeStyle = strokeCol;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = isS ? '#e0a458' : '#5eddd6';
+    ctx.fillText(txt, cx, cy);
+    ctx.restore();
+}
+
+// ---------- 계산 ----------
+function compute() {
+    state.V = +$('v').value;
+    state.R1 = +$('r1').value;
+    state.R2 = +$('r2').value;
+    state.R3 = +$('r3').value;
+
+    const Rs = state.R1 + state.R2 + state.R3;
+    const Rp = 1 / (1/state.R1 + 1/state.R2 + 1/state.R3);
+
+    if (state.mode === 'series') {
+        state.Req = Rs;
+        state.Itot = state.V / state.Req;
+        state.I1 = state.I2 = state.I3 = state.Itot;
+        state.V1 = state.Itot * state.R1;
+        state.V2 = state.Itot * state.R2;
+        state.V3 = state.Itot * state.R3;
+    } else {
+        state.Req = Rp;
+        state.I1 = state.V / state.R1;
+        state.I2 = state.V / state.R2;
+        state.I3 = state.V / state.R3;
+        state.Itot = state.I1 + state.I2 + state.I3;
+        state.V1 = state.V2 = state.V3 = state.V;
+    }
+    state.P = state.V * state.Itot;
+
+    $('vDisp').textContent = state.V;
+    $('r1Disp').textContent = state.R1;
+    $('r2Disp').textContent = state.R2;
+    $('r3Disp').textContent = state.R3;
+
+    $('reqVal').textContent = state.Req.toFixed(2);
+    $('iVal').textContent = state.Itot.toFixed(3);
+    $('pVal').textContent = state.P.toFixed(2);
+    $('modeVal').textContent = state.mode === 'series' ? '직렬' : '병렬';
+
+    // 비교 막대 — 직렬과 병렬을 한 척도(max=Rs)로
+    const maxR = Math.max(Rs, 1);
+    $('reqSeriesText').textContent = `${Rs.toFixed(2)} Ω`;
+    $('reqParallelText').textContent = `${Rp.toFixed(2)} Ω`;
+    $('barSeries').style.width = `${Math.min(100, (Rs / maxR) * 100)}%`;
+    $('barParallel').style.width = `${Math.min(100, (Rp / maxR) * 100)}%`;
+    const ratio = Rs / Rp;
+    $('ratioVal').textContent = ratio.toFixed(2);
+}
+
+function flashLive() {
+    if (!window.gsap) return;
+    gsap.fromTo('#pill-req',
+        { borderColor: 'rgba(94,221,214,0.40)' },
+        { borderColor: 'rgba(148,163,184,0.10)', duration: 0.6, ease: 'power2.out' });
+}
+
+['v','r1','r2','r3'].forEach(id => {
+    $(id).addEventListener('input', () => { compute(); flashLive(); });
+});
+
+$('resetBtn').addEventListener('click', () => {
+    const defaults = { v: 24, r1: 10, r2: 20, r3: 30 };
+    if (window.gsap) {
+        Object.keys(defaults).forEach(k => {
+            gsap.to($(k), { value: defaults[k], duration: 0.7, ease: 'power3.out', onUpdate: () => compute() });
+        });
+    } else {
+        Object.keys(defaults).forEach(k => { $(k).value = defaults[k]; });
+        compute();
+    }
+});
+
+function setMode(m) {
+    if (state.mode === m) return;
+    state.mode = m;
+    $('tabSeries').classList.toggle('active', m === 'series');
+    $('tabParallel').classList.toggle('active', m === 'parallel');
+    if (window.gsap) {
+        // 모드 변경 시 캔버스 카드 보더 톤만 은은하게
+        gsap.fromTo('#canvasCard',
+            { borderColor: 'rgba(94,221,214,0.35)' },
+            { borderColor: 'rgba(148,163,184,0.16)', duration: 0.7, ease: 'power2.out' });
+        // 회로 morph (입자 progress 살짝 리셋)
+        seriesParticles.particles.forEach((p, i) => {
+            p.progress = (i / seriesParticles.particles.length) * seriesParticles.total;
+        });
+        parallelBranches.forEach(b => {
+            b.particles.forEach((p, i) => {
+                p.progress = (i / b.particles.length) * b.total;
+            });
+        });
+        gsap.fromTo('#pill-mode',
+            { scale: 1 },
+            { scale: 1.04, duration: 0.18, yoyo: true, repeat: 1 });
+        // 비교 막대 살짝 강조
+        gsap.fromTo(m === 'series' ? '#barSeries' : '#barParallel',
+            { filter: 'brightness(1.6)' },
+            { filter: 'brightness(1)', duration: 0.8 });
+    }
+    compute();
+}
+$('tabSeries').addEventListener('click', () => setMode('series'));
+$('tabParallel').addEventListener('click', () => setMode('parallel'));
+
+function animate() {
+    state.t++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawBg();
+    drawModeBadge();
+    drawSource();
+
+    if (state.mode === 'series') {
+        drawSeriesWires();
+        drawSeriesResistors();
+        drawSeriesParticles();
+    } else {
+        drawParallelWires();
+        drawParallelResistors();
+        drawParallelNodes();
+        drawParallelParticles();
+    }
+
+    drawReqBigLabel();
+
+    requestAnimationFrame(animate);
+}
+
+window.addEventListener('load', () => {
+    resize();
+    compute();
+    animate();
+
+    if (window.gsap) {
+        gsap.from('#hdr', { y: -10, opacity: 0, duration: 0.5, ease: 'power2.out' });
+        gsap.from('#livePanel > *', { y: 8, opacity: 0, duration: 0.45, stagger: 0.05, delay: 0.1, ease: 'power2.out' });
+        gsap.from('#canvasCard', { opacity: 0, duration: 0.55, delay: 0.15, ease: 'power2.out' });
+        gsap.from('#sideCol > *', { y: 10, opacity: 0, duration: 0.45, stagger: 0.08, delay: 0.25, ease: 'power2.out' });
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전압 분배기 시뮬레이터</title>
+<link rel="stylesheet" href="/samples/_tailwind.css">
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+:root {
+    --bg-0: #0d1117;
+    --bg-1: #11161d;
+    --panel: #131922;
+    --panel-2: #161d27;
+    --border: rgba(148, 163, 184, 0.16);
+    --border-soft: rgba(148, 163, 184, 0.10);
+    --grid: rgba(125, 211, 252, 0.055);
+    --grid-strong: rgba(125, 211, 252, 0.10);
+    --teal: #5eddd6;
+    --amber: #e0a458;
+    --slate-txt: #c4ccd6;
+    --ink: #aab4c0;
+}
+html, body { height: 100%; }
+body {
+    background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    color: #d3dae3;
+    font-family: 'Pretendard', system-ui, sans-serif;
+    overflow: hidden;
+}
+
+/* 한 화면 셸 — 페이지 스크롤 금지, 컬럼 내부에서만 스크롤 */
+.sim-shell {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.sim-main {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    gap: 1rem;
+    overflow: hidden;
+}
+.sim-left {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    overflow: hidden;
+}
+.sim-right {
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding-right: 4px;
+}
+.sim-right::-webkit-scrollbar { width: 7px; }
+.sim-right::-webkit-scrollbar-thumb {
+    background: rgba(148,163,184,0.22);
+    border-radius: 9999px;
+}
+.sim-right::-webkit-scrollbar-track { background: transparent; }
+
+.canvas-card { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.canvas-card .canvas-wrap { flex: 1 1 auto; min-height: 0; }
+
+@media (max-width: 1023px) {
+    body { overflow: auto; }
+    .sim-shell { height: auto; min-height: 100vh; overflow: visible; }
+    .sim-main { grid-template-columns: 1fr; overflow: visible; }
+    .sim-left, .sim-right { overflow: visible; }
+    .canvas-card { min-height: 360px; }
+}
+
+.canvas-wrap {
+    position: relative;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #0b0f15;
+    overflow: hidden;
+}
+canvas#main {
+    display: block;
+    width: 100%;
+    height: 620px;
+    background: #0b0f15;
+}
+.glass {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
+}
+.neon-divider {
+    height: 1px;
+    background: var(--border-soft);
+}
+.pulse-dot {
+    display: inline-block;
+    width: 7px; height: 7px; border-radius: 9999px;
+    background: var(--teal);
+    box-shadow: 0 0 5px rgba(94, 221, 214, 0.55);
+}
+input[type=range] {
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.22);
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: #cdd5df;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+    cursor: pointer;
+    border: 3px solid #2a3340;
+}
+input[type=range]:focus { outline: none; }
+input[type=range]:focus::-webkit-slider-thumb { background: var(--teal); }
+.chip {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+}
+.chip-vin { background: var(--panel-2); border-color: var(--border-soft); border-left: 2px solid rgba(190,165,215,0.55); color: var(--slate-txt); }
+.chip-r1  { background: var(--panel-2); border-color: var(--border-soft); border-left: 2px solid rgba(224,164,88,0.6); color: var(--slate-txt); }
+.chip-r2  { background: var(--panel-2); border-color: var(--border-soft); border-left: 2px solid rgba(94,221,214,0.55); color: var(--slate-txt); }
+.chip-rl  { background: var(--panel-2); border-color: var(--border-soft); border-left: 2px solid rgba(120,200,150,0.55); color: var(--slate-txt); }
+.live-pill {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    transition: border-color 200ms;
+}
+.live-pill.flash {
+    border-color: rgba(94, 221, 214, 0.40);
+}
+.live-num {
+    font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    color: #d8f3f0;
+    letter-spacing: 0.01em;
+}
+.feature-row {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    transition: border-color 180ms;
+}
+.feature-row:hover { border-color: rgba(94, 221, 214, 0.30); }
+.math-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 2px solid rgba(94, 221, 214, 0.35);
+}
+.math-container { font-size: 1.0rem; color: #cdd5df; }
+.toggle-btn {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    color: var(--ink);
+    transition: border-color 160ms, color 160ms, background 160ms;
+    cursor: pointer;
+}
+.toggle-btn:hover { border-color: var(--border); color: var(--slate-txt); }
+.toggle-btn.active {
+    background: rgba(94, 221, 214, 0.10);
+    border-color: rgba(94, 221, 214, 0.55);
+    color: #d8f3f0;
+}
+.preset-btn {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    color: var(--ink);
+    transition: border-color 160ms, color 160ms;
+    cursor: pointer;
+}
+.preset-btn:hover {
+    border-color: rgba(94, 221, 214, 0.5);
+    color: #d8f3f0;
+}
+.eyebrow { color: #74808d; }
+</style>
+</head>
+<body class="p-3 md:p-4">
+
+<div class="sim-shell max-w-7xl mx-auto w-full relative">
+    <header class="mb-3 flex-none" id="hdr">
+        <div class="flex items-center gap-2 text-[11px] font-semibold tracking-widest" style="color:#7d8a97">
+            <span class="pulse-dot"></span>
+            INTERACTIVE · VOLTAGE DIVIDER · DUAL VIEW
+        </div>
+        <h1 class="mt-1 text-xl md:text-2xl font-bold" style="color:#e3e9f0">
+            전압 분배기 시뮬레이터
+        </h1>
+    </header>
+
+    <!-- 라이브 데이터 패널 -->
+    <div id="livePanel" class="mb-3 grid grid-cols-2 sm:grid-cols-4 gap-2 flex-none">
+        <div class="live-pill rounded-xl p-3" id="pill-vin">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">입력 V_in</p>
+            <p class="mt-1 text-lg font-bold"><span id="vinDisp" class="live-num">12.0</span> <span class="text-xs opacity-60 font-normal">V</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-vout">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">출력 V_out</p>
+            <p class="mt-1 text-lg font-bold"><span id="voutDisp" class="live-num">6.00</span> <span class="text-xs opacity-60 font-normal">V</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-ratio">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">분배비 V_out / V_in</p>
+            <p class="mt-1 text-lg font-bold"><span id="ratioDisp" class="live-num">0.500</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-i">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">회로 전류 I</p>
+            <p class="mt-1 text-lg font-bold"><span id="iDisp" class="live-num">0.60</span> <span class="text-xs opacity-60 font-normal">A</span></p>
+        </div>
+    </div>
+
+    <div class="sim-main">
+        <!-- 캔버스 영역 -->
+        <div class="sim-left">
+            <div class="glass rounded-xl p-3 canvas-card" id="canvasCard">
+                <div class="flex items-center justify-between mb-2 flex-wrap gap-2 flex-none">
+                    <span class="text-[11px] font-semibold text-slate-400 tracking-wide">CIRCUIT · 전자 흐름 속도 ∝ I · V_out = V_in · R2 / (R1+R2)</span>
+                    <div class="flex gap-2">
+                        <button class="preset-btn rounded-md px-2.5 py-1.5 text-[11px] font-bold" data-preset="half">R1 = R2 (½)</button>
+                        <button class="preset-btn rounded-md px-2.5 py-1.5 text-[11px] font-bold" data-preset="low">R1≫R2 (작음)</button>
+                        <button class="preset-btn rounded-md px-2.5 py-1.5 text-[11px] font-bold" data-preset="high">R1≪R2 (큼)</button>
+                    </div>
+                </div>
+                <div class="canvas-wrap">
+                    <canvas id="main"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 컨트롤 (이 컬럼만 내부 스크롤) -->
+        <div class="sim-right" id="controlPanel">
+            <div class="glass rounded-xl p-3 flex-none space-y-3">
+                <h2 class="font-bold text-sm tracking-wider" style="color:#c4ccd6">변수 조절</h2>
+
+                <div class="chip-vin chip rounded-lg p-3">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>입력 전압 V_in</span><span id="vinVal" class="font-mono text-base">12</span></label>
+                    <input type="range" id="vin" min="5" max="50" step="1" value="12" class="w-full mt-2 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 mt-1 text-right">V</p>
+                </div>
+                <div class="chip-r1 chip rounded-lg p-3">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>저항 R₁</span><span id="r1Val" class="font-mono text-base">10</span></label>
+                    <input type="range" id="r1" min="1" max="100" step="1" value="10" class="w-full mt-2 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 mt-1 text-right">Ω</p>
+                </div>
+                <div class="chip-r2 chip rounded-lg p-3">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>저항 R₂</span><span id="r2Val" class="font-mono text-base">10</span></label>
+                    <input type="range" id="r2" min="1" max="100" step="1" value="10" class="w-full mt-2 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 mt-1 text-right">Ω</p>
+                </div>
+
+                <div class="neon-divider"></div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-bold text-xs tracking-wider" style="color:#78c896">부하 R_L</h3>
+                        <button id="rlToggle" class="toggle-btn rounded-md px-2 py-1 text-[10px] font-bold">OFF</button>
+                    </div>
+                    <div id="rlBox" class="chip-rl chip rounded-lg p-3 opacity-50">
+                        <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>부하 R_L</span><span id="rlVal" class="font-mono text-base">1000</span></label>
+                        <input type="range" id="rl" min="10" max="5000" step="10" value="1000" class="w-full mt-2 cursor-pointer" disabled>
+                        <p class="text-[10px] text-slate-500 mt-1 text-right">Ω · R2와 병렬</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $('main');
+const ctx = canvas.getContext('2d');
+
+const CIRCUIT_H = 360;
+const PLOT_H = 260;
+const TOTAL_H = CIRCUIT_H + PLOT_H;
+
+const state = {
+    Vin: 12, R1: 10, R2: 10, RL: 1000,
+    loadOn: false,
+    t: 0,
+    // computed
+    Reff: 10, Vout: 6, I: 0.6, ratio: 0.5
+};
+
+let path = [];        // 회로 본선 (좌하 → 좌상 → 우상 → 우하 → 좌하)
+let loadPath = [];    // 부하 경로 (T 분기)
+let pathLen = 0, loadLen = 0;
+let segments = [], loadSegments = [];
+let particles = [], loadParticles = [];
+let comp = {};        // 컴포넌트 위치 정보
+
+function resize() {
+    canvas.width = canvas.parentElement.clientWidth - 2;
+    canvas.height = TOTAL_H;
+    buildCircuit();
+    seedParticles();
+}
+window.addEventListener('resize', resize);
+
+function buildCircuit() {
+    const W = canvas.width;
+    const margin = 60;
+    const top = 90, bot = CIRCUIT_H - 60;
+    const startX = margin + 40;          // 배터리 X
+    const endX   = W - margin;
+    const midX   = (startX + endX) / 2;  // V_out 노드 X
+    const outX   = endX - 30;            // 우측 출력 분기점 (부하 연결)
+    // 주 회로 경로: 좌하(배터리-) → 좌상 → 우상(저항들 통과) → 우하 → 좌하
+    path = [
+        { x: startX, y: bot },
+        { x: startX, y: top },
+        { x: endX,   y: top },
+        { x: endX,   y: bot },
+        { x: startX, y: bot }
+    ];
+    pathLen = 0;
+    segments = [];
+    for (let k = 0; k < path.length - 1; k++) {
+        const a = path[k], b = path[k+1];
+        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        segments.push({ a, b, len, start: pathLen });
+        pathLen += len;
+    }
+
+    // 컴포넌트 위치
+    // 상단 라인에서 R1(좌측 절반), V_out 노드(midX), R2(우측 절반)
+    const r1cx = startX + (midX - startX) * 0.55;
+    const r2cx = midX + (endX - midX) * 0.45;
+    comp = {
+        bat: { cx: startX, cy: (top + bot) / 2 },
+        R1:  { cx: r1cx, cy: top, w: 90, h: 30 },
+        node:{ cx: midX, cy: top },
+        R2:  { cx: r2cx, cy: top, w: 90, h: 30 },
+        // 부하: V_out 노드에서 아래로 내려 GND 라인에 연결
+        load:{ cx: midX, cy: (top + bot) / 2, w: 70, h: 28 },
+        gndY: bot
+    };
+
+    // 부하 입자용 경로 (V_out 노드 → 부하 → GND)
+    loadPath = [
+        { x: midX, y: top },
+        { x: midX, y: bot }
+    ];
+    loadLen = Math.hypot(0, bot - top);
+    loadSegments = [{ a: loadPath[0], b: loadPath[1], len: loadLen, start: 0 }];
+}
+
+function pointAt(progress, segs, len) {
+    let p = ((progress % len) + len) % len;
+    for (const s of segs) {
+        if (p <= s.start + s.len) {
+            const lp = (p - s.start) / s.len;
+            return { x: s.a.x + (s.b.x - s.a.x) * lp, y: s.a.y + (s.b.y - s.a.y) * lp };
+        }
+    }
+    return segs[0].a;
+}
+
+function seedParticles() {
+    particles = [];
+    const N = 60;
+    for (let i = 0; i < N; i++) {
+        particles.push({ progress: (i / N) * pathLen, size: 1.4 + Math.random(), jit: Math.random() * 0.4 - 0.2 });
+    }
+    loadParticles = [];
+    const Nl = 18;
+    for (let i = 0; i < Nl; i++) {
+        loadParticles.push({ progress: (i / Nl) * loadLen, size: 1.2 + Math.random()*0.8, jit: Math.random() * 0.3 - 0.15 });
+    }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+
+// =========================================================
+// 계산
+// =========================================================
+function computeState() {
+    state.Vin = +$('vin').value;
+    state.R1  = +$('r1').value;
+    state.R2  = +$('r2').value;
+    state.RL  = +$('rl').value;
+
+    // R2와 부하 R_L 병렬
+    let R2eff = state.R2;
+    if (state.loadOn) {
+        R2eff = (state.R2 * state.RL) / (state.R2 + state.RL);
+    }
+    state.R2eff = R2eff;
+    state.I = state.Vin / (state.R1 + R2eff);
+    state.Vout = state.Vin * R2eff / (state.R1 + R2eff);
+    state.ratio = state.Vout / state.Vin;
+    state.VR1 = state.I * state.R1;
+    state.VR2 = state.Vout;
+}
+
+function updateDisplays() {
+    $('vinVal').textContent = state.Vin.toFixed(0);
+    $('r1Val').textContent  = state.R1.toFixed(0);
+    $('r2Val').textContent  = state.R2.toFixed(0);
+    $('rlVal').textContent  = state.RL.toFixed(0);
+    $('vinDisp').textContent  = state.Vin.toFixed(1);
+    $('voutDisp').textContent = state.Vout.toFixed(2);
+    $('ratioDisp').textContent= state.ratio.toFixed(3);
+    $('iDisp').textContent    = state.I.toFixed(2);
+}
+
+// =========================================================
+// 위: 회로 그리기
+// =========================================================
+function drawCircuitBg() {
+    ctx.save();
+    ctx.fillStyle = '#0b0f15';
+    ctx.fillRect(0, 0, canvas.width, CIRCUIT_H);
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.055)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= canvas.width; i += 20) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, CIRCUIT_H); ctx.stroke();
+    }
+    for (let i = 0; i <= CIRCUIT_H; i += 20) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.10)';
+    for (let i = 0; i <= canvas.width; i += 100) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, CIRCUIT_H); ctx.stroke();
+    }
+    for (let i = 0; i <= CIRCUIT_H; i += 100) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+    }
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = 'rgba(116, 128, 141, 0.85)';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('▮ CIRCUIT · V_in → R1 → [V_out] → R2 → GND', 12, 10);
+    ctx.restore();
+}
+
+function drawWires() {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(127, 140, 153, 0.92)';
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let k = 0; k < path.length; k++) {
+        const p = path[k];
+        if (k === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawLoadWire() {
+    if (!state.loadOn) return;
+    const ld = comp.load;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(120, 200, 150, 0.85)';
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'round';
+    // node 위에서 부하 위까지
+    ctx.beginPath();
+    ctx.moveTo(comp.node.cx, comp.node.cy + 4);
+    ctx.lineTo(comp.node.cx, ld.cy - ld.h/2);
+    ctx.stroke();
+    // 부하 아래에서 GND까지
+    ctx.beginPath();
+    ctx.moveTo(comp.node.cx, ld.cy + ld.h/2);
+    ctx.lineTo(comp.node.cx, comp.gndY);
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawBattery() {
+    const b = comp.bat;
+    ctx.save();
+    // + (위, 긴 막대)
+    ctx.strokeStyle = 'rgba(224, 164, 88, 0.9)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(b.cx - 22, b.cy - 14); ctx.lineTo(b.cx + 22, b.cy - 14);
+    ctx.stroke();
+    // - (아래, 짧은 막대)
+    ctx.strokeStyle = 'rgba(139, 151, 164, 0.9)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(b.cx - 12, b.cy + 14); ctx.lineTo(b.cx + 12, b.cy + 14);
+    ctx.stroke();
+    ctx.restore();
+
+    // + / - 라벨
+    ctx.save();
+    ctx.font = 'bold 14px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#c9a06a';
+    ctx.fillText('+', b.cx, b.cy - 28);
+    ctx.fillStyle = '#8b97a4';
+    ctx.fillText('−', b.cx, b.cy + 28);
+    // 값 라벨
+    ctx.font = 'bold 11px ui-monospace, monospace';
+    const label = `V_in = ${state.Vin.toFixed(0)} V`;
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    const tw = ctx.measureText(label).width;
+    roundRect(ctx, b.cx - tw/2 - 6, b.cy + 42, tw + 12, 18, 5);
+    ctx.fill();
+    ctx.fillStyle = '#e0a458';
+    ctx.fillText(label, b.cx, b.cy + 51);
+    ctx.restore();
+}
+
+function drawResistorBox(c, color1, color2, color3, ringColor, label, valStr, intensity) {
+    const edge = ringColor.replace('1)', '0.85)');
+    const accent = ringColor.replace('1)', '1)');
+    ctx.save();
+    const fillC = intensity > 0.04
+        ? `rgba(${Math.round(20 + intensity * 60)}, ${Math.round(22 + intensity * 20)}, ${Math.round(28 - intensity * 6)}, 0.9)`
+        : 'rgba(16,21,28,0.9)';
+    ctx.fillStyle = fillC;
+    roundRect(ctx, c.cx - c.w/2, c.cy - c.h/2, c.w, c.h, 3);
+    ctx.fill();
+    ctx.strokeStyle = edge;
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    // zig-zag (저항 기호)
+    ctx.strokeStyle = accent;
+    ctx.globalAlpha = 0.95;
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    const zs = c.cx - c.w/2 + 10, ze = c.cx + c.w/2 - 10;
+    const zSteps = 7;
+    for (let k = 0; k <= zSteps; k++) {
+        const x = zs + ((ze - zs) * k) / zSteps;
+        const y = c.cy + (k % 2 === 0 ? -7 : 7);
+        if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // 라벨 (위: 이름, 아래: 값)
+    ctx.save();
+    ctx.font = 'bold 11px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const lw = ctx.measureText(label).width;
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    roundRect(ctx, c.cx - lw/2 - 6, c.cy - c.h/2 - 22, lw + 12, 18, 5);
+    ctx.fill();
+    ctx.fillStyle = accent;
+    ctx.fillText(label, c.cx, c.cy - c.h/2 - 13);
+    const vw = ctx.measureText(valStr).width;
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    roundRect(ctx, c.cx - vw/2 - 6, c.cy + c.h/2 + 6, vw + 12, 18, 5);
+    ctx.fill();
+    ctx.fillStyle = accent;
+    ctx.fillText(valStr, c.cx, c.cy + c.h/2 + 15);
+    ctx.restore();
+}
+
+function drawResistors() {
+    // 전류에 따른 발열 강도
+    const heatBase = Math.min(1, state.I / 1.5);
+    const heatR1 = Math.min(1, (state.VR1 * state.I) / 30);
+    const heatR2 = Math.min(1, (state.VR2 * state.I) / 30);
+
+    // R1 = 호박(amber)
+    drawResistorBox(
+        comp.R1,
+        '#eabd84', '#e0a458', '#161d27',
+        'rgba(224,164,88,1)',
+        `R₁ · V_R1 = ${state.VR1.toFixed(2)}V`,
+        `${state.R1.toFixed(0)} Ω`,
+        heatR1
+    );
+
+    // R2 = 청록(teal)
+    drawResistorBox(
+        comp.R2,
+        '#8fe9e3', '#5eddd6', '#161d27',
+        'rgba(94,221,214,1)',
+        `R₂ · V_R2 = ${state.VR2.toFixed(2)}V`,
+        `${state.R2.toFixed(0)} Ω`,
+        heatR2
+    );
+}
+
+function drawLoadResistor() {
+    if (!state.loadOn) return;
+    const ld = comp.load;
+    const heatRL = Math.min(1, (state.Vout * state.Vout / state.RL) / 10);
+    drawResistorBox(
+        ld,
+        '#a3d9b8', '#78c896', '#161d27',
+        'rgba(120,200,150,1)',
+        `R_L`,
+        `${state.RL.toFixed(0)} Ω`,
+        heatRL
+    );
+    // GND 기호 (부하 아래)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(120, 200, 150, 0.85)';
+    ctx.lineWidth = 1.6;
+    const gx = comp.node.cx;
+    const gy = comp.gndY + 2;
+    ctx.beginPath();
+    ctx.moveTo(gx - 12, gy); ctx.lineTo(gx + 12, gy);
+    ctx.moveTo(gx - 8, gy + 5); ctx.lineTo(gx + 8, gy + 5);
+    ctx.moveTo(gx - 4, gy + 10); ctx.lineTo(gx + 4, gy + 10);
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawVoutNode() {
+    // V_out 노드에 측정 프로브 (펄스 글로우)
+    const n = comp.node;
+    const rOuter = 18;
+    ctx.save();
+    // 외곽 측정 링 (정적, 절제)
+    ctx.strokeStyle = 'rgba(120, 200, 150, 0.45)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(n.cx, n.cy, rOuter, 0, Math.PI * 2);
+    ctx.stroke();
+    // 내부 점
+    ctx.fillStyle = '#78c896';
+    ctx.beginPath();
+    ctx.arc(n.cx, n.cy, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // V_out 라벨 박스 (큰 글자)
+    ctx.save();
+    ctx.font = 'bold 14px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const label = `V_out = ${state.Vout.toFixed(2)} V`;
+    const tw = ctx.measureText(label).width;
+    const ly = n.cy - 50;
+    // 화살표 (라벨 → 노드)
+    ctx.strokeStyle = 'rgba(120, 200, 150, 0.6)';
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(n.cx, ly + 12);
+    ctx.lineTo(n.cx, n.cy - rOuter - 4);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // 박스
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    roundRect(ctx, n.cx - tw/2 - 10, ly - 12, tw + 20, 24, 5);
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(120, 200, 150, 0.6)';
+    ctx.stroke();
+    // 텍스트
+    ctx.fillStyle = '#a3d9b8';
+    ctx.fillText(label, n.cx, ly + 1);
+    ctx.restore();
+}
+
+function drawElectronFlow() {
+    // 전류 ∝ I (포화)
+    const speed = Math.min(7, 0.4 + state.I * 2.2);
+    ctx.save();
+    for (const p of particles) {
+        p.progress = (p.progress + speed) % pathLen;
+        const pt = pointAt(p.progress, segments, pathLen);
+        ctx.fillStyle = 'rgba(207, 238, 236, 0.6)';
+        ctx.beginPath();
+        ctx.arc(pt.x + p.jit, pt.y + p.jit, p.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    // 부하 분기 입자 (부하 전류 ∝ Vout/RL)
+    if (state.loadOn) {
+        const iLoad = state.Vout / state.RL;
+        const lSpeed = Math.min(5, 0.4 + iLoad * 200);
+        for (const p of loadParticles) {
+            p.progress = (p.progress + lSpeed) % loadLen;
+            const pt = pointAt(p.progress, loadSegments, loadLen);
+            ctx.fillStyle = 'rgba(120, 200, 150, 0.7)';
+            ctx.beginPath();
+            ctx.arc(pt.x + p.jit, pt.y + p.jit, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+    ctx.restore();
+}
+
+function drawArrowHeads() {
+    // 흐름 방향 화살표 (위쪽 라인 중앙, R1→R2 사이가 아닌 라인 위에)
+    const W = canvas.width;
+    const top = 90;
+    const arrows = [
+        { x: comp.bat.cx + 30, y: comp.bat.cy - 35, ang: -Math.PI/2 },           // 좌측 위로
+        { x: (comp.bat.cx + comp.R1.cx) / 2, y: top, ang: 0 },                  // R1 좌측 → 우측
+        { x: (comp.R2.cx + W - 60) / 2 + 20, y: top, ang: 0 },                  // R2 우측 진행
+        { x: W - 60, y: (top + comp.gndY) / 2, ang: Math.PI/2 },                // 우측 아래로
+    ];
+    ctx.save();
+    for (const a of arrows) {
+        ctx.translate(a.x, a.y); ctx.rotate(a.ang);
+        ctx.fillStyle = 'rgba(170, 180, 192, 0.8)';
+        ctx.beginPath();
+        ctx.moveTo(6, 0); ctx.lineTo(-5, -4); ctx.lineTo(-5, 4); ctx.closePath();
+        ctx.fill();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    ctx.restore();
+}
+
+// =========================================================
+// 아래: V_in 대비 V_out 비율 시각화 (막대 + 게이지)
+// =========================================================
+function drawPlot() {
+    const W = canvas.width;
+    const top0 = CIRCUIT_H;
+    // 배경
+    ctx.save();
+    ctx.fillStyle = '#0b0f15';
+    ctx.fillRect(0, top0, W, PLOT_H);
+    // 미세 그리드
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.045)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= W; i += 20) { ctx.beginPath(); ctx.moveTo(i, top0); ctx.lineTo(i, top0 + PLOT_H); ctx.stroke(); }
+    for (let i = 0; i <= PLOT_H; i += 20) { ctx.beginPath(); ctx.moveTo(0, top0 + i); ctx.lineTo(W, top0 + i); ctx.stroke(); }
+
+    // 분할선
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.16)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, top0); ctx.lineTo(W, top0);
+    ctx.stroke();
+
+    // 라벨
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = 'rgba(116, 128, 141, 0.85)';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('◯ VOLTAGE DISTRIBUTION · V_in을 R1·R2가 어떻게 나눠 갖는지', 12, top0 + 10);
+    ctx.restore();
+
+    // 좌측: 막대 그래프 (V_R1, V_R2 = V_out, 합 = V_in)
+    // 우측: V_in·V_out 사인파 비교
+    const splitX = W * 0.45;
+    drawBars(top0, splitX, W);
+    drawSineCompare(top0, splitX, W);
+}
+
+function drawBars(top0, leftEndX, totalW) {
+    const padL = 40, padT = 50, padB = 40;
+    const barAreaTop = top0 + padT;
+    const barAreaBot = top0 + PLOT_H - padB;
+    const barAreaH = barAreaBot - barAreaTop;
+
+    // V_in 기준 막대 (배경, 음영)
+    const barW = 56;
+    const slots = [
+        { x: padL + 30,         label: 'V_in',      vMax: state.Vin, v: state.Vin, color: '#bea5d7', topColor: '#d3c2e5' },
+        { x: padL + 30 + 80,    label: 'V_R1',      vMax: state.Vin, v: state.VR1, color: '#e0a458', topColor: '#eabd84' },
+        { x: padL + 30 + 80*2,  label: 'V_out=V_R2',vMax: state.Vin, v: state.Vout, color: '#5eddd6', topColor: '#8fe9e3' },
+    ];
+
+    // 축 라벨 (0, V/2, V)
+    ctx.save();
+    ctx.font = '10px ui-monospace, monospace';
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.7)';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (let k = 0; k <= 4; k++) {
+        const frac = k / 4;
+        const yLine = barAreaBot - barAreaH * frac;
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
+        ctx.beginPath();
+        ctx.moveTo(padL, yLine); ctx.lineTo(leftEndX - 10, yLine);
+        ctx.stroke();
+        ctx.fillText((state.Vin * frac).toFixed(0) + 'V', padL - 4, yLine);
+    }
+    ctx.restore();
+
+    // 각 막대
+    for (const s of slots) {
+        const h = barAreaH * (s.v / Math.max(state.Vin, 0.01));
+        const y = barAreaBot - h;
+        ctx.save();
+        // 배경 막대 (V_in 높이까지, 음영)
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+        roundRect(ctx, s.x, barAreaTop, barW, barAreaH, 6);
+        ctx.fill();
+        // 실제 막대
+        const g = ctx.createLinearGradient(s.x, y, s.x, barAreaBot);
+        g.addColorStop(0, s.topColor);
+        g.addColorStop(1, s.color);
+        ctx.fillStyle = g;
+        ctx.globalAlpha = 0.85;
+        roundRect(ctx, s.x, y, barW, h, 3);
+        ctx.fill();
+        ctx.restore();
+
+        // 값
+        ctx.save();
+        ctx.font = 'bold 11px ui-monospace, monospace';
+        ctx.fillStyle = '#e5e7eb';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillText(s.v.toFixed(2) + 'V', s.x + barW/2, y - 4);
+        // 라벨 (막대 아래)
+        ctx.fillStyle = 'rgba(203, 213, 225, 0.8)';
+        ctx.textBaseline = 'top';
+        ctx.font = 'bold 10px ui-monospace, monospace';
+        ctx.fillText(s.label, s.x + barW/2, barAreaBot + 6);
+        // 비율 (V_in 대비)
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.7)';
+        ctx.font = '10px ui-monospace, monospace';
+        ctx.fillText((s.v / Math.max(state.Vin, 0.01) * 100).toFixed(0) + '%', s.x + barW/2, barAreaBot + 18);
+        ctx.restore();
+    }
+
+    // 합산 검증 표시 (V_R1 + V_R2 = V_in)
+    ctx.save();
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.7)';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    const sumLbl = `KVL  V_R1 + V_R2 = ${(state.VR1 + state.VR2).toFixed(2)} V  ≈  V_in ${state.Vin.toFixed(2)} V`;
+    ctx.fillText(sumLbl, padL, top0 + 26);
+    ctx.restore();
+}
+
+function drawSineCompare(top0, leftEndX, totalW) {
+    const padL = leftEndX + 20;
+    const padR = 30, padT = 50, padB = 40;
+    const plotL = padL;
+    const plotR = totalW - padR;
+    const plotW = plotR - plotL;
+    const plotTop = top0 + padT;
+    const plotBot = top0 + PLOT_H - padB;
+    const plotH = plotBot - plotTop;
+    const mid = (plotTop + plotBot) / 2;
+
+    // 라벨
+    ctx.save();
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = 'rgba(116, 128, 141, 0.85)';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('SIGNAL COMPARE · V_in (보라) vs V_out (청록)', plotL, top0 + 26);
+    ctx.restore();
+
+    // 축선
+    ctx.save();
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(plotL, mid); ctx.lineTo(plotR, mid);
+    ctx.stroke();
+    // 가이드 (V_in 진폭 상하)
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.07)';
+    ctx.beginPath();
+    ctx.moveTo(plotL, plotTop); ctx.lineTo(plotR, plotTop);
+    ctx.moveTo(plotL, plotBot); ctx.lineTo(plotR, plotBot);
+    ctx.stroke();
+    ctx.restore();
+
+    const ampMax = plotH / 2 - 4;
+    const ampVin = ampMax;
+    const ampVout = ampMax * (state.Vout / Math.max(state.Vin, 0.01));
+
+    // V_in (보라, 점선 ghost)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(190, 165, 215, 0.5)';
+    ctx.lineWidth = 1.4;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    for (let i = 0; i <= 200; i++) {
+        const x = plotL + (i / 200) * plotW;
+        const phase = (i / 200) * Math.PI * 4 - state.t * 0.05;
+        const y = mid - Math.sin(phase) * ampVin;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // V_out (청록 실선, 정밀)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(94, 221, 214, 0.95)';
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= 200; i++) {
+        const x = plotL + (i / 200) * plotW;
+        const phase = (i / 200) * Math.PI * 4 - state.t * 0.05;
+        const y = mid - Math.sin(phase) * ampVout;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // 진폭 라벨
+    ctx.save();
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = '#bea5d7';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(`V_in · ±${state.Vin.toFixed(1)}V`, plotL + 4, plotTop + 8);
+    ctx.fillStyle = '#5eddd6';
+    ctx.fillText(`V_out · ±${state.Vout.toFixed(2)}V`, plotL + 4, plotTop + 22);
+    // 분배비 우측 표시
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#aab4c0';
+    ctx.fillText(`× ${state.ratio.toFixed(3)}`, plotR - 4, plotTop + 8);
+    ctx.restore();
+}
+
+// =========================================================
+// 메인 루프
+// =========================================================
+function frame() {
+    state.t++;
+    computeState();
+    updateDisplays();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawCircuitBg();
+    drawWires();
+    drawLoadWire();
+    drawBattery();
+    drawResistors();
+    drawLoadResistor();
+    drawElectronFlow();
+    drawVoutNode();
+    drawArrowHeads();
+    drawPlot();
+    requestAnimationFrame(frame);
+}
+
+// =========================================================
+// 인터랙션
+// =========================================================
+function flashPanel(idTarget) {
+    if (!window.gsap) return;
+    gsap.fromTo('#canvasCard',
+        { borderColor: 'rgba(94,221,214,0.35)' },
+        { borderColor: 'rgba(148,163,184,0.16)', duration: 0.7, ease: 'power2.out' });
+    const pill = document.getElementById(idTarget);
+    if (pill) {
+        pill.classList.add('flash');
+        setTimeout(() => pill.classList.remove('flash'), 400);
+    }
+}
+
+['vin', 'r1', 'r2', 'rl'].forEach(id => {
+    const map = { vin: 'pill-vin', r1: 'pill-ratio', r2: 'pill-ratio', rl: 'pill-vout' };
+    $(id).addEventListener('input', () => flashPanel(map[id]));
+});
+
+// 부하 토글
+$('rlToggle').addEventListener('click', () => {
+    state.loadOn = !state.loadOn;
+    const btn = $('rlToggle');
+    const box = $('rlBox');
+    const slider = $('rl');
+    if (state.loadOn) {
+        btn.classList.add('active');
+        btn.textContent = 'ON';
+        box.classList.remove('opacity-50');
+        slider.disabled = false;
+        if (window.gsap) gsap.fromTo(box, { scale: 0.96 }, { scale: 1, duration: 0.35, ease: 'back.out(1.6)' });
+    } else {
+        btn.classList.remove('active');
+        btn.textContent = 'OFF';
+        box.classList.add('opacity-50');
+        slider.disabled = true;
+    }
+    flashPanel('pill-vout');
+});
+
+// 프리셋
+document.querySelectorAll('.preset-btn').forEach(b => {
+    b.addEventListener('click', () => {
+        const mode = b.dataset.preset;
+        let r1Target = 10, r2Target = 10;
+        if (mode === 'half') { r1Target = 10; r2Target = 10; }
+        if (mode === 'low')  { r1Target = 90; r2Target = 10; }   // R1 >> R2 → V_out 작음
+        if (mode === 'high') { r1Target = 10; r2Target = 90; }   // R1 << R2 → V_out 큼
+        if (window.gsap) {
+            gsap.to($('r1'), { value: r1Target, duration: 0.6, ease: 'power3.out',
+                onUpdate: () => { $('r1Val').textContent = Math.round($('r1').value); } });
+            gsap.to($('r2'), { value: r2Target, duration: 0.6, ease: 'power3.out',
+                onUpdate: () => { $('r2Val').textContent = Math.round($('r2').value); } });
+        } else {
+            $('r1').value = r1Target;
+            $('r2').value = r2Target;
+        }
+        flashPanel('pill-ratio');
+    });
+});
+
+// 초기화 + 등장 애니메이션
+window.addEventListener('load', () => {
+    resize();
+    computeState();
+    updateDisplays();
+    requestAnimationFrame(frame);
+
+    if (window.gsap) {
+        gsap.from('#hdr', { y: -10, opacity: 0, duration: 0.5, ease: 'power2.out' });
+        gsap.from('#livePanel > *', { y: 8, opacity: 0, duration: 0.45, stagger: 0.05, delay: 0.1, ease: 'power2.out' });
+        gsap.from('#canvasCard', { opacity: 0, duration: 0.55, delay: 0.15, ease: 'power2.out' });
+        gsap.from('#formulaCard', { y: 10, opacity: 0, duration: 0.45, delay: 0.3, ease: 'power2.out' });
+        gsap.from('#controlPanel', { y: 10, opacity: 0, duration: 0.45, delay: 0.25, ease: 'power2.out' });
+    }
+});
+</script>
+</body>
+</html>

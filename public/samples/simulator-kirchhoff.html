@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전기기능사 - 키르히호프 법칙 시뮬레이터</title>
+<link rel="stylesheet" href="/samples/_tailwind.css">
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+:root {
+    --bg-0: #0d1117;
+    --bg-1: #11161d;
+    --panel: #131922;
+    --panel-2: #161d27;
+    --border: rgba(148, 163, 184, 0.16);
+    --border-soft: rgba(148, 163, 184, 0.10);
+    --grid: rgba(125, 211, 252, 0.055);
+    --grid-strong: rgba(125, 211, 252, 0.10);
+    --teal: #5eddd6;
+    --amber: #e0a458;
+    --slate-txt: #c4ccd6;
+    --ink: #aab4c0;
+}
+html, body { height: 100%; }
+body {
+    background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    color: #d3dae3;
+    font-family: 'Pretendard', system-ui, sans-serif;
+    overflow: hidden;
+}
+
+/* 한 화면 셸 — 페이지 스크롤 금지, 컬럼 내부에서만 스크롤 */
+.sim-shell {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.sim-main {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    gap: 1rem;
+    overflow: hidden;
+}
+.sim-left {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    overflow: hidden;
+}
+.sim-right {
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding-right: 4px;
+}
+.sim-right::-webkit-scrollbar { width: 7px; }
+.sim-right::-webkit-scrollbar-thumb {
+    background: rgba(148,163,184,0.22);
+    border-radius: 9999px;
+}
+.sim-right::-webkit-scrollbar-track { background: transparent; }
+
+.canvas-card { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.canvas-card .canvas-wrap { flex: 1 1 auto; min-height: 0; }
+
+@media (max-width: 1023px) {
+    body { overflow: auto; }
+    .sim-shell { height: auto; min-height: 100vh; overflow: visible; }
+    .sim-main { grid-template-columns: 1fr; overflow: visible; }
+    .sim-left, .sim-right { overflow: visible; }
+    .canvas-card { min-height: 360px; }
+}
+
+.canvas-wrap {
+    position: relative;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #0b0f15;
+    overflow: hidden;
+}
+canvas#main {
+    display: block;
+    width: 100%;
+    height: 600px;
+    background: #0b0f15;
+}
+.glass {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
+}
+.pulse-dot {
+    display: inline-block;
+    width: 7px; height: 7px; border-radius: 9999px;
+    background: var(--teal);
+    box-shadow: 0 0 5px rgba(94, 221, 214, 0.55);
+}
+
+input[type=range] {
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.22);
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: #cdd5df;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+    cursor: pointer;
+    border: 3px solid #2a3340;
+}
+input[type=range]:focus { outline: none; }
+input[type=range]:focus::-webkit-slider-thumb { background: var(--teal); }
+.chip-v { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(190,165,215,0.55); color: var(--slate-txt); }
+.chip-r1 { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(224,164,88,0.6); color: var(--slate-txt); }
+.chip-r2 { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(120,200,150,0.55); color: var(--slate-txt); }
+.chip-r3 { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(94,221,214,0.55); color: var(--slate-txt); }
+
+.live-pill {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    transition: border-color 200ms;
+}
+.live-pill.verified { border-color: rgba(94, 221, 214, 0.40); }
+.live-num {
+    font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    color: #d8f3f0;
+    letter-spacing: 0.01em;
+}
+.math-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 2px solid rgba(94, 221, 214, 0.35);
+}
+.math-container { font-size: 1.0rem; color: #cdd5df; }
+.feature-row {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    transition: border-color 180ms;
+}
+.feature-row:hover { border-color: rgba(94, 221, 214, 0.30); }
+.reset-btn {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--slate-txt);
+    transition: border-color 160ms, color 160ms;
+}
+.reset-btn:hover { border-color: rgba(94, 221, 214, 0.5); color: #d8f3f0; }
+.law-tab {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    color: var(--ink);
+    transition: border-color 160ms, color 160ms, background 160ms;
+    cursor: pointer;
+}
+.law-tab:hover { border-color: var(--border); color: var(--slate-txt); }
+.law-tab.active {
+    background: rgba(94, 221, 214, 0.10);
+    border-color: rgba(94, 221, 214, 0.55);
+    color: #d8f3f0;
+}
+.neon-divider {
+    height: 1px;
+    background: var(--border-soft);
+}
+.eyebrow { color: #74808d; }
+</style>
+</head>
+<body class="p-3 md:p-4">
+
+<div class="sim-shell max-w-7xl mx-auto w-full relative">
+    <header class="mb-3 flex-none" id="hdr">
+        <div class="flex items-center gap-2 text-[11px] font-semibold tracking-widest" style="color:#7d8a97">
+            <span class="pulse-dot"></span>
+            INTERACTIVE · KIRCHHOFF'S LAWS · KCL & KVL
+        </div>
+        <h1 class="mt-1 text-xl md:text-2xl font-bold" style="color:#e3e9f0">
+            키르히호프 법칙 시뮬레이터
+        </h1>
+    </header>
+
+    <div id="livePanel" class="mb-3 grid grid-cols-2 sm:grid-cols-4 gap-2 flex-none">
+        <div class="live-pill rounded-xl p-3" id="pill-v">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">입력 전원 V</p>
+            <p class="mt-1 text-lg font-bold"><span id="vVal" class="live-num">— V</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-kcl">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">KCL · 노드 A (in = out)</p>
+            <p class="mt-1 text-sm font-bold"><span id="kclIn" style="color:#5eddd6">—</span><span class="text-slate-500"> = </span><span id="kclOut" style="color:#bea5d7">—</span> <span id="kclMark" class="text-xs" style="color:#78c896">✓</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-kvl">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">KVL · 폐회로 전압합</p>
+            <p class="mt-1 text-lg font-bold"><span id="kvlVal" class="live-num">—</span> <span id="kvlMark" class="text-sm" style="color:#78c896">✓</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-p">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">총 소비 전력 P</p>
+            <p class="mt-1 text-lg font-bold"><span id="pVal" class="live-num">— W</span></p>
+        </div>
+    </div>
+
+    <div class="sim-main">
+        <div class="sim-left">
+            <div class="glass rounded-xl p-3 canvas-card" id="canvasCard">
+                <div class="flex items-center justify-between mb-2 gap-3 flex-wrap flex-none">
+                    <span class="text-[11px] font-semibold text-slate-400 tracking-wide">CIRCUIT · 전원 + 노드 A·B + R₁/R₂/R₃ 병렬</span>
+                    <div class="flex gap-2">
+                        <button id="tabKCL" class="law-tab active rounded-md px-3 py-1.5 text-xs font-bold">KCL 강조</button>
+                        <button id="tabKVL" class="law-tab rounded-md px-3 py-1.5 text-xs font-bold">KVL 강조</button>
+                        <button id="resetBtn" class="reset-btn rounded-md px-3 py-1.5 text-xs font-bold">초기화</button>
+                    </div>
+                </div>
+                <div class="canvas-wrap">
+                    <canvas id="main"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="sim-right" id="sideCol">
+            <div class="glass rounded-xl p-3 flex-none">
+                <h2 class="text-sm font-bold mb-2" style="color:#e3e9f0">변수 조절</h2>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="chip-v rounded-lg p-3">
+                        <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>전원 V</span><span id="vDisp" class="font-mono text-sm">12</span></label>
+                        <input type="range" id="v" min="1" max="48" value="12" class="w-full mt-2 cursor-pointer">
+                        <p class="text-[10px] text-slate-500 mt-1 text-right">V</p>
+                    </div>
+                    <div class="chip-r1 rounded-lg p-3">
+                        <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>R₁</span><span id="r1Disp" class="font-mono text-sm">6</span></label>
+                        <input type="range" id="r1" min="1" max="50" value="6" class="w-full mt-2 cursor-pointer">
+                        <p class="text-[10px] text-slate-500 mt-1 text-right">Ω</p>
+                    </div>
+                    <div class="chip-r2 rounded-lg p-3">
+                        <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>R₂</span><span id="r2Disp" class="font-mono text-sm">12</span></label>
+                        <input type="range" id="r2" min="1" max="50" value="12" class="w-full mt-2 cursor-pointer">
+                        <p class="text-[10px] text-slate-500 mt-1 text-right">Ω</p>
+                    </div>
+                    <div class="chip-r3 rounded-lg p-3">
+                        <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>R₃</span><span id="r3Disp" class="font-mono text-sm">18</span></label>
+                        <input type="range" id="r3" min="1" max="50" value="18" class="w-full mt-2 cursor-pointer">
+                        <p class="text-[10px] text-slate-500 mt-1 text-right">Ω</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="math-card rounded-xl p-3 flex-none">
+                <h3 class="font-bold text-sm mb-2 tracking-wider" style="color:#c4ccd6">실시간 합성 저항 (병렬)</h3>
+                <p class="text-[11px] text-slate-400">현재 R<sub>eq</sub> = <span id="reqVal" class="font-mono font-bold" style="color:#5eddd6">—</span> Ω · I<sub>total</sub> = <span id="itotVal" class="font-mono font-bold" style="color:#5eddd6">—</span> A</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $('main');
+const ctx = canvas.getContext('2d');
+
+let state = {
+    V: 12, R1: 6, R2: 12, R3: 18,
+    I1: 0, I2: 0, I3: 0, Itot: 0, Req: 0, P: 0,
+    t: 0,
+    mode: 'KCL'
+};
+
+let geo = {};
+let branches = [];
+
+function resize() {
+    canvas.width = canvas.parentElement.clientWidth - 2;
+    canvas.height = 600;
+    buildGeometry();
+}
+window.addEventListener('resize', resize);
+
+function buildGeometry() {
+    const W = canvas.width, H = canvas.height;
+    const cx = W / 2;
+    const nodeAx = W * 0.22, nodeBx = W * 0.78;
+    const nodeY = H * 0.30;
+    const srcY = H * 0.78;
+
+    geo = {
+        A: { x: nodeAx, y: nodeY, label: 'A' },
+        B: { x: nodeBx, y: nodeY, label: 'B' },
+        srcLeft: { x: nodeAx, y: srcY },
+        srcRight: { x: nodeBx, y: srcY },
+        srcCenter: { x: cx, y: srcY },
+        branchYs: [ nodeY - 80, nodeY, nodeY + 80 ]
+    };
+
+    const A = geo.A, B = geo.B;
+    const ys = geo.branchYs;
+
+    // R1: 위쪽 가지
+    // R2: 가운데 가지
+    // R3: 아래쪽 가지
+    branches = [
+        {
+            name: 'R1', color: '#e0a458', accent: '#eabd84',
+            path: [
+                { x: A.x, y: A.y },
+                { x: A.x + 30, y: A.y },
+                { x: A.x + 30, y: ys[0] },
+                { x: B.x - 30, y: ys[0] },
+                { x: B.x - 30, y: B.y },
+                { x: B.x, y: B.y }
+            ]
+        },
+        {
+            name: 'R2', color: '#78c896', accent: '#a3d9b8',
+            path: [
+                { x: A.x, y: A.y },
+                { x: A.x + 60, y: A.y },
+                { x: A.x + 60, y: ys[1] },
+                { x: B.x - 60, y: ys[1] },
+                { x: B.x - 60, y: B.y },
+                { x: B.x, y: B.y }
+            ]
+        },
+        {
+            name: 'R3', color: '#5eddd6', accent: '#8fe9e3',
+            path: [
+                { x: A.x, y: A.y },
+                { x: A.x + 30, y: A.y },
+                { x: A.x + 30, y: ys[2] },
+                { x: B.x - 30, y: ys[2] },
+                { x: B.x - 30, y: B.y },
+                { x: B.x, y: B.y }
+            ]
+        }
+    ];
+
+    branches[0].resistorMid = { x: (A.x + 30 + B.x - 30) / 2, y: ys[0] };
+    branches[1].resistorMid = { x: (A.x + 60 + B.x - 60) / 2, y: ys[1] };
+    branches[2].resistorMid = { x: (A.x + 30 + B.x - 30) / 2, y: ys[2] };
+
+    for (const b of branches) {
+        let total = 0;
+        b.segments = [];
+        for (let k = 0; k < b.path.length - 1; k++) {
+            const a0 = b.path[k], a1 = b.path[k + 1];
+            const len = Math.hypot(a1.x - a0.x, a1.y - a0.y);
+            b.segments.push({ a: a0, b: a1, len, start: total });
+            total += len;
+        }
+        b.totalLen = total;
+        b.particles = [];
+        const count = 18;
+        for (let i = 0; i < count; i++) {
+            b.particles.push({ progress: (i / count) * b.totalLen, size: 1.6 + Math.random() * 0.8 });
+        }
+    }
+
+    geo.mainPathRight = [
+        { x: geo.srcRight.x, y: geo.srcRight.y },
+        { x: B.x, y: geo.srcRight.y },
+        { x: B.x, y: B.y }
+    ];
+    geo.mainPathLeft = [
+        { x: A.x, y: A.y },
+        { x: A.x, y: geo.srcLeft.y },
+        { x: geo.srcLeft.x, y: geo.srcLeft.y }
+    ];
+    geo.mainParticlesR = seedLinePath(geo.mainPathRight, 12);
+    geo.mainParticlesL = seedLinePath(geo.mainPathLeft, 12);
+}
+
+function seedLinePath(path, n) {
+    let total = 0;
+    const segments = [];
+    for (let k = 0; k < path.length - 1; k++) {
+        const a = path[k], b = path[k + 1];
+        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        segments.push({ a, b, len, start: total });
+        total += len;
+    }
+    const particles = [];
+    for (let i = 0; i < n; i++) particles.push({ progress: (i / n) * total, size: 1.7 + Math.random() * 0.8 });
+    return { path, segments, total, particles };
+}
+
+function pointAtPath(segments, total, progress) {
+    let p = ((progress % total) + total) % total;
+    for (const s of segments) {
+        if (p <= s.start + s.len) {
+            const t = (p - s.start) / s.len;
+            return { x: s.a.x + (s.b.x - s.a.x) * t, y: s.a.y + (s.b.y - s.a.y) * t };
+        }
+    }
+    return segments[0].a;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+
+function drawBg() {
+    ctx.save();
+    ctx.fillStyle = '#0b0f15';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.055)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= canvas.width; i += 20) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+    }
+    for (let i = 0; i <= canvas.height; i += 20) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.10)';
+    for (let i = 0; i <= canvas.width; i += 100) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+    }
+    for (let i = 0; i <= canvas.height; i += 100) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+    }
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = 'rgba(116, 128, 141, 0.85)';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('▮ KIRCHHOFF · NODE A / NODE B', 12, 10);
+    ctx.fillStyle = state.mode === 'KCL' ? 'rgba(120, 200, 150, 0.75)' : 'rgba(190, 165, 215, 0.75)';
+    ctx.textAlign = 'right';
+    ctx.fillText(`◯ MODE · ${state.mode}`, canvas.width - 12, 10);
+    ctx.restore();
+}
+
+// KVL 모드: 폐회로 하이라이트
+function drawLoopHighlight() {
+    if (state.mode !== 'KVL') return;
+    const A = geo.A, B = geo.B;
+    const ys = geo.branchYs;
+    const loopPath = [
+        { x: geo.srcRight.x, y: geo.srcRight.y },
+        { x: B.x, y: geo.srcRight.y },
+        { x: B.x, y: B.y },
+        { x: B.x - 30, y: B.y },
+        { x: B.x - 30, y: ys[0] },
+        { x: A.x + 30, y: ys[0] },
+        { x: A.x + 30, y: A.y },
+        { x: A.x, y: A.y },
+        { x: A.x, y: geo.srcLeft.y },
+        { x: geo.srcLeft.x, y: geo.srcLeft.y }
+    ];
+    ctx.save();
+    const dashLen = 10;
+    const offset = -(state.t * 0.8) % (dashLen * 2);
+    ctx.strokeStyle = 'rgba(190, 165, 215, 0.40)';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.setLineDash([dashLen, dashLen]);
+    ctx.lineDashOffset = offset;
+    ctx.beginPath();
+    loopPath.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+}
+
+function drawWires() {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(127, 140, 153, 0.92)';
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    geo.mainPathRight.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+    ctx.stroke();
+    ctx.beginPath();
+    geo.mainPathLeft.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(geo.srcLeft.x, geo.srcLeft.y);
+    ctx.lineTo(geo.srcRight.x, geo.srcRight.y);
+    ctx.stroke();
+    ctx.restore();
+
+    for (const b of branches) {
+        ctx.save();
+        ctx.strokeStyle = b.color;
+        ctx.lineWidth = 1.6;
+        ctx.globalAlpha = 0.85;
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.beginPath();
+        b.path.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+
+function drawResistorBox(cx, cy, rVal, current, color, accent, label) {
+    const w = 72, h = 26;
+    const heatI = Math.min(1, Math.abs(current) / 2);
+    ctx.save();
+    const fillC = heatI > 0.04
+        ? `rgba(${Math.round(20 + heatI * 60)}, ${Math.round(22 + heatI * 20)}, ${Math.round(28 - heatI * 6)}, 0.9)`
+        : 'rgba(16,21,28,0.9)';
+    ctx.fillStyle = fillC;
+    roundRect(ctx, cx - w/2, cy - h/2, w, h, 3);
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    ctx.strokeStyle = color;
+    ctx.globalAlpha = 0.95;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    const zs = cx - w/2 + 10, ze = cx + w/2 - 10;
+    const zSteps = 6;
+    for (let k = 0; k <= zSteps; k++) {
+        const x = zs + ((ze - zs) * k) / zSteps;
+        const y = cy + (k % 2 === 0 ? -6 : 6);
+        if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.font = 'bold 11px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const nameTxt = `${label}=${rVal.toFixed(0)}Ω`;
+    const nw = ctx.measureText(nameTxt).width;
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    roundRect(ctx, cx - nw/2 - 6, cy - h/2 - 22, nw + 12, 18, 5);
+    ctx.fill();
+    ctx.fillStyle = accent;
+    ctx.fillText(nameTxt, cx, cy - h/2 - 13);
+
+    const iTxt = `I=${current.toFixed(2)}A`;
+    const iw = ctx.measureText(iTxt).width;
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    roundRect(ctx, cx - iw/2 - 6, cy + h/2 + 6, iw + 12, 18, 5);
+    ctx.fill();
+    ctx.fillStyle = accent;
+    ctx.fillText(iTxt, cx, cy + h/2 + 15);
+
+    const vTxt = `V=${(current * rVal).toFixed(2)}V`;
+    const vw = ctx.measureText(vTxt).width;
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.8)';
+    roundRect(ctx, cx - vw/2 - 6, cy + h/2 + 28, vw + 12, 16, 5);
+    ctx.fill();
+    ctx.fillStyle = `${accent}cc`;
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillText(vTxt, cx, cy + h/2 + 36);
+    ctx.restore();
+}
+
+function drawNode(node, currentIn, currentOut, isHighlight) {
+    const x = node.x, y = node.y;
+
+    ctx.save();
+    ctx.fillStyle = '#1b2531';
+    ctx.beginPath();
+    ctx.arc(x, y, 11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = state.mode === 'KCL' ? 'rgba(120,200,150,0.75)' : 'rgba(94,221,214,0.75)';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.font = 'bold 13px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#c4ccd6';
+    ctx.fillText(node.label, x, y + 1);
+    ctx.restore();
+
+    // KCL 검증 칩
+    if (state.mode === 'KCL') {
+        const sum = currentIn - currentOut;
+        const ok = Math.abs(sum) < 1e-3;
+        const txt = `ΣI = ${sum.toFixed(3)}A ${ok ? '✓' : '✗'}`;
+        ctx.save();
+        ctx.font = 'bold 11px ui-monospace, monospace';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const tw = ctx.measureText(txt).width;
+        const ly = y - 40;
+        ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+        roundRect(ctx, x - tw/2 - 8, ly - 10, tw + 16, 20, 5);
+        ctx.fill();
+        ctx.strokeStyle = ok ? 'rgba(94, 221, 214, 0.55)' : 'rgba(217, 119, 119, 0.55)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = ok ? '#5eddd6' : '#d97777';
+        ctx.fillText(txt, x, ly);
+        ctx.restore();
+
+        ctx.save();
+        ctx.font = '9.5px ui-monospace, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#78c896';
+        ctx.fillText(`in=${currentIn.toFixed(2)}A`, x, y + 30);
+        ctx.fillStyle = '#bea5d7';
+        ctx.fillText(`out=${currentOut.toFixed(2)}A`, x, y + 42);
+        ctx.restore();
+    } else {
+        // KVL 모드에서도 노드 라벨 보조
+        ctx.save();
+        ctx.font = 'bold 10px ui-monospace, monospace';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#74808d';
+        ctx.fillText(`노드 ${node.label}`, x, y - 28);
+        ctx.restore();
+    }
+}
+
+function drawSource() {
+    const left = geo.srcLeft, right = geo.srcRight;
+    // (+) 쪽 — 오른쪽
+    ctx.save();
+    ctx.strokeStyle = 'rgba(224, 164, 88, 0.9)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(right.x - 14, right.y - 16); ctx.lineTo(right.x - 14, right.y + 16);
+    ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(right.x - 22, right.y - 8); ctx.lineTo(right.x - 22, right.y + 8);
+    ctx.stroke();
+    ctx.restore();
+
+    // (-) 쪽 — 왼쪽
+    ctx.save();
+    ctx.strokeStyle = 'rgba(139, 151, 164, 0.9)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(left.x + 14, left.y - 8); ctx.lineTo(left.x + 14, left.y + 8);
+    ctx.stroke();
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(left.x + 22, left.y - 16); ctx.lineTo(left.x + 22, left.y + 16);
+    ctx.stroke();
+    ctx.restore();
+
+    // V 라벨
+    ctx.save();
+    ctx.font = 'bold 12px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const txt = `V = ${state.V.toFixed(0)} V`;
+    const tw = ctx.measureText(txt).width;
+    const cx = geo.srcCenter.x, cy = geo.srcCenter.y + 32;
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    roundRect(ctx, cx - tw/2 - 10, cy - 11, tw + 20, 22, 5);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(224, 164, 88, 0.55)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = '#e0a458';
+    ctx.fillText(txt, cx, cy + 1);
+    ctx.restore();
+
+    // +/- 부호
+    ctx.save();
+    ctx.font = 'bold 14px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#c9a06a';
+    ctx.fillText('+', right.x - 38, right.y);
+    ctx.fillStyle = '#8b97a4';
+    ctx.fillText('−', left.x + 38, left.y);
+    ctx.restore();
+}
+
+function drawParticles() {
+    const speedScale = 4.0;
+    const currents = [state.I1, state.I2, state.I3];
+    for (let k = 0; k < branches.length; k++) {
+        const b = branches[k];
+        const I = currents[k];
+        const speed = Math.max(0.5, I * speedScale);
+        ctx.save();
+        for (const p of b.particles) {
+            p.progress = (p.progress + speed) % b.totalLen;
+            const pt = pointAtPath(b.segments, b.totalLen, p.progress);
+            ctx.fillStyle = b.accent;
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+    // 메인 라인 (총 전류)
+    const Itot = state.Itot;
+    const speedM = Math.max(0.6, Itot * speedScale * 0.6);
+    for (const mp of [geo.mainParticlesR, geo.mainParticlesL]) {
+        ctx.save();
+        for (const p of mp.particles) {
+            p.progress = (p.progress + speedM) % mp.total;
+            const pt = pointAtPath(mp.segments, mp.total, p.progress);
+            ctx.fillStyle = 'rgba(207, 238, 236, 0.55)';
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+}
+
+function drawKVLChip() {
+    if (state.mode !== 'KVL') return;
+    const sum = state.V - state.I1 * state.R1;
+    const ok = Math.abs(sum) < 1e-3;
+    const txt = `ΣV (loop R₁) = V − I₁·R₁ = ${sum.toFixed(3)}V ${ok ? '✓' : '✗'}`;
+    ctx.save();
+    ctx.font = 'bold 12px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(txt).width;
+    const cx = canvas.width / 2;
+    const cy = canvas.height - 26;
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    roundRect(ctx, cx - tw/2 - 12, cy - 13, tw + 24, 26, 6);
+    ctx.fill();
+    ctx.strokeStyle = ok ? 'rgba(94, 221, 214, 0.55)' : 'rgba(217, 119, 119, 0.55)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = ok ? '#5eddd6' : '#d97777';
+    ctx.fillText(txt, cx, cy + 1);
+    ctx.restore();
+}
+
+// 계산
+function compute() {
+    state.V = +$('v').value;
+    state.R1 = +$('r1').value;
+    state.R2 = +$('r2').value;
+    state.R3 = +$('r3').value;
+
+    state.Req = 1 / (1/state.R1 + 1/state.R2 + 1/state.R3);
+    state.I1 = state.V / state.R1;
+    state.I2 = state.V / state.R2;
+    state.I3 = state.V / state.R3;
+    state.Itot = state.I1 + state.I2 + state.I3;
+    state.P = state.V * state.Itot;
+
+    $('vDisp').textContent = state.V;
+    $('r1Disp').textContent = state.R1;
+    $('r2Disp').textContent = state.R2;
+    $('r3Disp').textContent = state.R3;
+
+    $('vVal').textContent = `${state.V} V`;
+    // KCL: 노드 A에 들어오는 총전류 Itot vs 가지로 나가는 합
+    const Iout = state.I1 + state.I2 + state.I3;
+    $('kclIn').textContent = `${state.Itot.toFixed(2)}A`;
+    $('kclOut').textContent = `${Iout.toFixed(2)}A`;
+    const kclOk = Math.abs(state.Itot - Iout) < 1e-3;
+    $('kclMark').textContent = kclOk ? '✓' : '✗';
+    $('kclMark').style.color = kclOk ? '#5eddd6' : '#d97777';
+    $('pill-kcl').classList.toggle('verified', kclOk);
+
+    const kvlSum = state.V - state.I1 * state.R1;
+    $('kvlVal').textContent = `${kvlSum.toFixed(3)} V`;
+    $('kvlMark').textContent = Math.abs(kvlSum) < 1e-3 ? '✓' : '✗';
+    $('kvlMark').style.color = Math.abs(kvlSum) < 1e-3 ? '#5eddd6' : '#d97777';
+    $('pill-kvl').classList.toggle('verified', Math.abs(kvlSum) < 1e-3);
+
+    $('pVal').textContent = `${state.P.toFixed(2)} W`;
+    $('reqVal').textContent = state.Req.toFixed(2);
+    $('itotVal').textContent = state.Itot.toFixed(2);
+}
+
+function flashCard() {
+    if (window.gsap) gsap.fromTo('#canvasCard',
+        { borderColor: 'rgba(94,221,214,0.35)' },
+        { borderColor: 'rgba(148,163,184,0.16)', duration: 0.7, ease: 'power2.out' });
+}
+
+['v','r1','r2','r3'].forEach(id => {
+    $(id).addEventListener('input', () => { compute(); flashCard(); });
+});
+
+$('resetBtn').addEventListener('click', () => {
+    const defaults = { v: 12, r1: 6, r2: 12, r3: 18 };
+    if (window.gsap) {
+        Object.keys(defaults).forEach(k => {
+            gsap.to($(k), { value: defaults[k], duration: 0.7, ease: 'power3.out', onUpdate: () => compute() });
+        });
+    } else {
+        Object.keys(defaults).forEach(k => { $(k).value = defaults[k]; });
+        compute();
+    }
+    flashCard();
+});
+
+$('tabKCL').addEventListener('click', () => {
+    state.mode = 'KCL';
+    $('tabKCL').classList.add('active');
+    $('tabKVL').classList.remove('active');
+});
+$('tabKVL').addEventListener('click', () => {
+    state.mode = 'KVL';
+    $('tabKVL').classList.add('active');
+    $('tabKCL').classList.remove('active');
+});
+
+function animate() {
+    state.t++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawBg();
+    drawLoopHighlight();
+    drawWires();
+    drawSource();
+
+    drawResistorBox(branches[0].resistorMid.x, branches[0].resistorMid.y, state.R1, state.I1, '#fb923c', '#fdba74', 'R₁');
+    drawResistorBox(branches[1].resistorMid.x, branches[1].resistorMid.y, state.R2, state.I2, '#22c55e', '#86efac', 'R₂');
+    drawResistorBox(branches[2].resistorMid.x, branches[2].resistorMid.y, state.R3, state.I3, '#22d3ee', '#67e8f9', 'R₃');
+
+    drawParticles();
+
+    const totalOut = state.I1 + state.I2 + state.I3;
+    drawNode(geo.A, state.Itot, totalOut, true);
+    drawNode(geo.B, totalOut, state.Itot, true);
+
+    drawKVLChip();
+
+    requestAnimationFrame(animate);
+}
+
+window.addEventListener('load', () => {
+    resize();
+    compute();
+    animate();
+
+    if (window.gsap) {
+        gsap.from('#hdr', { y: -10, opacity: 0, duration: 0.5, ease: 'power2.out' });
+        gsap.from('#livePanel > *', { y: 8, opacity: 0, duration: 0.45, stagger: 0.05, delay: 0.1, ease: 'power2.out' });
+        gsap.from('#canvasCard', { opacity: 0, duration: 0.55, delay: 0.15, ease: 'power2.out' });
+        gsap.from('#sideCol > *', { y: 10, opacity: 0, duration: 0.45, stagger: 0.08, delay: 0.25, ease: 'power2.out' });
+    }
+});
+</script>
+</body>
+</html>

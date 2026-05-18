@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전기기능사 이론 - 직급별 단톡방</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 0;
+        }
+
+        .kakao-bg {
+            background-color: #abc1d1;
+            width: 100%;
+            max-width: 420px;
+            height: 850px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+        }
+
+        .chat-header {
+            background-color: #abc1d1;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scrollbar-width: none;
+        }
+        
+        .chat-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .message {
+            display: flex;
+            max-width: 85%;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInUp 0.4s forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.left { align-self: flex-start; }
+        .message.right { align-self: flex-end; flex-direction: row-reverse; }
+
+        .profile-img {
+            width: 42px;
+            height: 42px;
+            border-radius: 16px;
+            margin-right: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message.right .profile-img { margin-right: 0; margin-left: 8px; }
+
+        .bubble {
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+            position: relative;
+            word-break: break-all;
+        }
+
+        .left .bubble { background-color: white; color: black; }
+        .right .bubble { background-color: #fee500; color: black; }
+
+        .sender-name { font-size: 11px; color: #444; margin-bottom: 2px; }
+        .time { font-size: 9px; color: #666; align-self: flex-end; margin: 0 4px; }
+
+        .formula-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 8px 0;
+            border-left: 5px solid #ff4757;
+            opacity: 0;
+            animation: fadeInUp 0.5s forwards;
+        }
+
+        .input-area {
+            background-color: white;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        .input-box {
+            background-color: #f2f2f2;
+            border-radius: 20px;
+            padding: 8px 15px;
+            flex: 1;
+            font-size: 14px;
+            color: #999;
+        }
+
+        .send-btn {
+            background-color: #fee500;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="kakao-bg">
+    <div class="chat-header">
+        <div class="flex items-center">
+            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            <span class="font-bold text-lg">전기 상사 컴퍼니 (5)</span>
+        </div>
+    </div>
+
+    <div class="chat-container" id="chat-box">
+        <div class="text-center my-4">
+            <span class="bg-black bg-opacity-10 text-white text-[10px] px-3 py-1 rounded-full">주인공: 전류 대리 (나)</span>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <div class="input-box">메시지를 입력하세요...</div>
+        <div class="send-btn">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+        </div>
+    </div>
+</div>
+
+<script>
+    const messages = [
+        { sender: "전압 과장 (V)", side: "left", color: "#ff4757", text: "전류 대리, 오늘 전력 공급 프로젝트 시작해야지? 내가 220V로 강력하게 밀어줄게! 압력 넣는다? ⚡", type: "chat" },
+        { sender: "전류 대리 (I)", side: "right", color: "#2ed573", text: "과장님, 준비됐습니다! 저항 사원만 업무 협조 잘 해주면 바로 실행하겠습니다! 🏃‍♂️💨", type: "chat" },
+        { sender: "저항 사원 (R)", side: "left", color: "#1e90ff", text: "대리님, 저도 나름의 업무 가이드라인이 있습니다... 제가 너무 열어드리면 과부하 걸려서 사무실 다 타버려요. 😎", type: "chat" },
+        { sender: "시스템", side: "center", type: "formula", title: "📏 프로젝트 핵심 지표 (옴의 법칙)", content: "V = I × R", desc: "실무 팁: 전류(I)를 올리고 싶다면 전압(V)을 높이거나 저항(R)을 낮춰야 합니다." },
+        { sender: "소비전력 팀장 (P)", side: "left", color: "#ffa500", text: "잠깐, 회의 좀 합시다. 단순히 흐르는 것보다 우리가 실제로 낸 '실적'이 중요하잖아요? 📋", type: "chat" },
+        { sender: "전류 대리 (I)", side: "right", color: "#2ed573", text: "팀장님 오셨습니까! 저희 이번 분기 실적 보고는 어떻게 산출할까요?", type: "chat" },
+        { sender: "소비전력 팀장 (P)", side: "left", color: "#ffa500", text: "과장님의 추진력(V)과 대리의 활동량(I)을 곱하면 바로 내 팀 실적이지. 단위는 [W] 와트다!", type: "chat" },
+        { sender: "시스템", side: "center", type: "formula", title: "🔥 실적 보고서 (소비전력)", content: "P = V × I = I<sup>2</sup>R = V<sup>2</sup>/R", desc: "단위: [W]. 대리님이 고생할수록(I) 저항 사원 몸에서 열(I<sup>2</sup>R)이 나는 법이죠." },
+        { sender: "저항 사원 (R)", side: "left", color: "#1e90ff", text: "팀장님, 저 진짜 뜨겁게 일하고 있습니다... 제 열량도 기여도에 꼭 포함해 주세요. ♨️", type: "chat" },
+        { sender: "전력량 부장 (W)", side: "left", color: "#8e44ad", text: "다들 보고 업무에 열중하고 있나? 최종 결재는 내가 한다. 🧐", type: "chat" },
+        { sender: "전압 과장 (V)", side: "left", color: "#ff4757", text: "부장님 오셨습니까! 다들 하던 일 멈추고 집중해!", type: "chat" },
+        { sender: "전력량 부장 (W)", side: "left", color: "#8e44ad", text: "팀장이 아무리 실적 내봐야, 얼마나 '오랫동안(t)' 그 성과를 유지했는지가 회사 총 자산이야. 그게 곧 비용이지. 💸", type: "chat" },
+        { sender: "전류 대리 (I)", side: "right", color: "#2ed573", text: "부장님 말씀이 맞습니다. 1시간 일하면 [Wh], 그게 쌓여서 [kWh]... 저희의 누적 에너지가 되네요. 😢", type: "chat" },
+        { sender: "시스템", side: "center", type: "formula", title: "💰 회사 총 자산 (전력량)", content: "W = P × t = VIt = I<sup>2</sup>Rt", desc: "단위: [J] 또는 [Wh]. 프로젝트 유지 시간(t)이 곱해져야 비로소 가치가 생깁니다." },
+        { sender: "전력량 부장 (W)", side: "left", color: "#8e44ad", text: "이 에너지를 열량으로 환산하려면 0.24를 곱하게. H = 0.24W = 0.24Pt. 이번 인사고과에 반영할 테니 숙지하도록.", type: "chat" },
+        { sender: "저항 사원 (R)", side: "left", color: "#1e90ff", text: "하... 역시 부장님 카리스마. 혹시 오늘 너무 힘든데 회로 단락(Short) 시키고 퇴근하면 안 될까요? 😴", type: "chat" },
+        { sender: "전압 과장 (V)", side: "left", color: "#ff4757", text: "저항 사원! 단락 시키면 회사 폭발해!! 무조건 네 자리 지키면서 안전하게 흐르게 보조해!! 😡", type: "chat" },
+        { sender: "전류 대리 (I)", side: "right", color: "#2ed573", text: "과장님 진정하십시오. 제가 잘 조율하겠습니다. 여러분, 오늘도 안전하게 퇴근합시다! ⚡💡", type: "chat" }
+    ];
+
+    const chatBox = document.getElementById('chat-box');
+
+    function renderAllMessages() {
+        messages.forEach((msg, index) => {
+            let msgHtml = '';
+            const delay = index * 0.4;
+
+            if (msg.type === "chat") {
+                msgHtml = `
+                    <div class="message ${msg.side}" style="animation-delay: ${delay}s">
+                        <div class="profile-img" style="background-color: ${msg.color}">${msg.sender[0]}</div>
+                        <div>
+                            <div class="sender-name">${msg.sender}</div>
+                            <div class="flex ${msg.side === 'right' ? 'flex-row-reverse' : ''}">
+                                <div class="bubble shadow-sm">${msg.text}</div>
+                                <span class="time">오후 3:1${index % 10}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (msg.type === "formula") {
+                msgHtml = `
+                    <div class="formula-card shadow-md" style="animation-delay: ${delay}s">
+                        <div class="font-bold text-red-500 mb-1 text-xs">${msg.title}</div>
+                        <div class="text-lg text-center py-1 font-mono font-bold text-blue-800">${msg.content}</div>
+                        <div class="text-[11px] text-gray-600 border-t mt-1 pt-1">${msg.desc}</div>
+                    </div>
+                `;
+            }
+            chatBox.insertAdjacentHTML('beforeend', msgHtml);
+        });
+
+        setTimeout(() => {
+            chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+        }, messages.length * 400 + 500);
+    }
+
+    window.onload = renderAllMessages;
+</script>
+
+</body>
+</html>
