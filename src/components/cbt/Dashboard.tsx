@@ -8,7 +8,6 @@ import {
   type LearningStats,
 } from "@/lib/cbt/stats";
 import RecentAttempts from "./RecentAttempts";
-import LearningCurve from "./LearningCurve";
 import CbtGuide from "./CbtGuide";
 import BackgroundPattern from "@/components/BackgroundPattern";
 
@@ -101,11 +100,6 @@ export default function Dashboard() {
           <WeakPointDiagnosis stats={stats} />
         </SectionCard>
       </div>
-
-      {/* 학습 곡선 (심플) */}
-      <SectionCard title="학습 곡선" subtitle="최근 점수 추이">
-        <LearningCurve />
-      </SectionCard>
     </main>
   );
 }
