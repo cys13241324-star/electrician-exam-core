@@ -37,6 +37,38 @@ function computeRows(): Row[] {
     .filter((r): r is Row => r !== null);
 }
 
+/** 실제 응시 기록이 없을 때 보여줄 데모용 샘플 기록 (대시보드 데모 배너와 일관). */
+function sampleRows(): Row[] {
+  const DAY = 86400000;
+  const presets = [
+    { correct: 47, daysAgo: 2 },
+    { correct: 39, daysAgo: 5 },
+    { correct: 31, daysAgo: 9 },
+    { correct: 44, daysAgo: 14 },
+  ];
+  return presets
+    .map<Row | null>((p, i) => {
+      const exam = mockExams[i];
+      if (!exam) return null;
+      const total = exam.totalQuestions;
+      const correct = Math.min(p.correct, total);
+      const attempt = {
+        examId: exam.id,
+        answers: [],
+        submittedAt: Date.now() - p.daysAgo * DAY,
+      } as unknown as Attempt;
+      return {
+        attempt,
+        exam,
+        correct,
+        total,
+        passed: correct >= 36,
+        score100: Math.round((correct / total) * 100 * 10) / 10,
+      };
+    })
+    .filter((r): r is Row => r !== null);
+}
+
 function formatTimeAgo(ts: number): string {
   const diff = Date.now() - ts;
   const min = Math.floor(diff / 60000);
@@ -55,10 +87,13 @@ export default function RecentAttempts() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage attempts 읽기 + window focus 이벤트 재계산
-    setRows(computeRows());
-    const handler = () => setRows(computeRows());
-    window.addEventListener("focus", handler);
-    return () => window.removeEventListener("focus", handler);
+    const load = () => {
+      const real = computeRows();
+      setRows(real.length > 0 ? real : sampleRows());
+    };
+    load();
+    window.addEventListener("focus", load);
+    return () => window.removeEventListener("focus", load);
   }, []);
 
   if (rows === null) {
