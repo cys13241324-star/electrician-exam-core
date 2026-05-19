@@ -18,13 +18,19 @@ type WrongItem = {
 
 const SUBJECTS: (Subject | "전체")[] = ["전체", "전기이론", "전기기기", "전기설비"];
 
-export default function WrongNotes() {
+/**
+ * examId 가 주어지면 그 회차 한정 오답노트(회차별), 없으면 전체 회차 집계(바깥 탭).
+ */
+export default function WrongNotes({ examId }: { examId?: string } = {}) {
   const [items, setItems] = useState<WrongItem[] | null>(null);
   const [filter, setFilter] = useState<Subject | "전체">("전체");
   const [reveal, setReveal] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const attempts = readAttempts().filter((a) => a.submittedAt !== null);
+    const attempts = readAttempts().filter(
+      (a) =>
+        a.submittedAt !== null && (examId ? a.examId === examId : true),
+    );
     const out: WrongItem[] = [];
     for (const a of attempts) {
       const exam = mockExams.find((e) => e.id === a.examId);
@@ -48,7 +54,7 @@ export default function WrongNotes() {
     out.sort((a, b) => b.date - a.date);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage attempts 에서 오답만 추출
     setItems(out);
-  }, []);
+  }, [examId]);
 
   const filtered = useMemo(() => {
     if (!items) return [];
@@ -81,13 +87,15 @@ export default function WrongNotes() {
           아직 오답 기록이 없어요
         </h2>
         <p className="mt-2 text-sm text-zinc-600">
-          모의고사를 응시한 뒤 틀린 문제가 자동으로 이곳에 모입니다.
+          {examId
+            ? "이 회차에서 틀린 문제가 없거나 아직 응시하지 않았습니다."
+            : "모의고사를 응시한 뒤 틀린 문제가 자동으로 이곳에 모입니다."}
         </p>
         <Link
-          href="/cbt/exams"
+          href={examId ? `/cbt/${examId}/take` : "/cbt/exams"}
           className="mt-6 inline-block rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
         >
-          첫 모의고사 응시하기 →
+          {examId ? "이 회차 응시하기 →" : "첫 모의고사 응시하기 →"}
         </Link>
       </div>
     );

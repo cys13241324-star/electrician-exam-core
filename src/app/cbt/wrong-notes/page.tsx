@@ -13,7 +13,7 @@ export default function WrongNotesPage() {
   return (
     <div className="min-h-screen bg-zinc-50">
       <Header />
-      <SubTabs active="main" />
+      <SubTabs active="wrong-notes" />
       <main className="mx-auto max-w-6xl px-6 py-12">
         <div className="mb-6">
           <p className="text-sm font-semibold tracking-wide text-rose-700">

@@ -129,7 +129,7 @@ export default function StudyBrowser({ tree }: { tree: SubjectNode[] }) {
           href={buildPracticeHref(active.id)}
           className={`rounded-md px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 ${theme.activeBg}`}
         >
-          {active.subject} 전체 응시 →
+          {active.subject} 전체 연습 →
         </Link>
       </div>
 
@@ -196,7 +196,7 @@ export default function StudyBrowser({ tree }: { tree: SubjectNode[] }) {
                 href={buildPracticeHref(active.id, topic.id)}
                 className="mt-auto rounded-md border border-zinc-300 bg-white px-4 py-2 text-center text-sm font-semibold text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50"
               >
-                {topic.name} 전체 응시
+                {topic.name} 전체 연습
               </Link>
             ) : (
               <span className="mt-auto rounded-md bg-zinc-100 px-4 py-2 text-center text-sm font-semibold text-zinc-400">

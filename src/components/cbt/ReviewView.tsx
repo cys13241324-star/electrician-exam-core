@@ -5,14 +5,11 @@ import Link from "next/link";
 import AIExplainPanel from "@/components/AIExplainPanel";
 import type { Attempt, Choice, Exam } from "@/lib/cbt/types";
 
-const PAGE_SIZE = 10;
-
 type FilterMode = "all" | "correct" | "wrong" | "checked";
 
 export default function ReviewView({ exam }: { exam: Exam }) {
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [loading, setLoading] = useState(true);
-  const [pageIndex, setPageIndex] = useState(0);
   const [filterMode, setFilterMode] = useState<FilterMode>("all");
   const questionRefs = useRef<Record<number, HTMLElement | null>>({});
 
@@ -41,14 +38,6 @@ export default function ReviewView({ exam }: { exam: Exam }) {
         return true;
       });
   }, [attempt, exam.questions, filterMode]);
-
-  const totalPages = Math.max(1, Math.ceil(visibleIndices.length / PAGE_SIZE));
-
-  useEffect(() => {
-    // TODO(refactor): pageIndex 를 useMemo 로 clamping 처리하면 effect 불필요
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- 필터 변경으로 totalPages 가 줄어들면 페이지 인덱스 리셋
-    if (pageIndex >= totalPages) setPageIndex(0);
-  }, [totalPages, pageIndex]);
 
   if (loading) {
     return (
@@ -81,26 +70,11 @@ export default function ReviewView({ exam }: { exam: Exam }) {
   const wrongCount = exam.totalQuestions - correctCount;
   const checkedCount = attempt.checked.filter(Boolean).length;
 
-  const start = pageIndex * PAGE_SIZE;
-  const pageIndices = visibleIndices.slice(start, start + PAGE_SIZE);
-
   function jumpToQuestion(qIdx: number) {
-    const pos = visibleIndices.indexOf(qIdx);
-    if (pos < 0) {
-      // change filter to all and try again
+    // 현재 필터에 안 잡히는 문항이면 전체로 풀고 스크롤. 페이지 개념 없음.
+    if (visibleIndices.indexOf(qIdx) < 0) {
       setFilterMode("all");
-      const target = Math.floor(qIdx / PAGE_SIZE);
-      setPageIndex(target);
-      setTimeout(() => {
-        questionRefs.current[qIdx]?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }, 50);
-      return;
     }
-    const target = Math.floor(pos / PAGE_SIZE);
-    setPageIndex(target);
     setTimeout(() => {
       questionRefs.current[qIdx]?.scrollIntoView({
         behavior: "smooth",
@@ -153,40 +127,28 @@ export default function ReviewView({ exam }: { exam: Exam }) {
         <div className="sticky top-0 z-20 -mx-6 mb-6 flex flex-wrap gap-2 border-b border-zinc-200 bg-zinc-50/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-zinc-50/80">
           <FilterChip
             active={filterMode === "all"}
-            onClick={() => {
-              setFilterMode("all");
-              setPageIndex(0);
-            }}
+            onClick={() => setFilterMode("all")}
           >
             전체 ({exam.totalQuestions})
           </FilterChip>
           <FilterChip
             active={filterMode === "correct"}
             color="emerald"
-            onClick={() => {
-              setFilterMode("correct");
-              setPageIndex(0);
-            }}
+            onClick={() => setFilterMode("correct")}
           >
             맞힌 문항 ({correctCount})
           </FilterChip>
           <FilterChip
             active={filterMode === "wrong"}
             color="rose"
-            onClick={() => {
-              setFilterMode("wrong");
-              setPageIndex(0);
-            }}
+            onClick={() => setFilterMode("wrong")}
           >
             틀린 문항 ({wrongCount})
           </FilterChip>
           <FilterChip
             active={filterMode === "checked"}
             color="amber"
-            onClick={() => {
-              setFilterMode("checked");
-              setPageIndex(0);
-            }}
+            onClick={() => setFilterMode("checked")}
           >
             체크 문항 ({checkedCount})
           </FilterChip>
@@ -237,24 +199,31 @@ export default function ReviewView({ exam }: { exam: Exam }) {
           </div>
         </div>
 
-        {/* Page heading */}
+        {/* Count heading */}
         <div className="mb-4 flex items-center justify-between">
           <p className="text-sm text-zinc-600">
-            한 페이지 내 최대 {PAGE_SIZE}문항의 해설이 노출됩니다.
-          </p>
-          <p className="text-sm font-semibold text-zinc-900">
-            {pageIndex + 1} / {totalPages} 페이지
+            {filterMode === "all"
+              ? "전체"
+              : filterMode === "correct"
+                ? "맞힌 문항"
+                : filterMode === "wrong"
+                  ? "틀린 문항"
+                  : "체크 문항"}{" "}
+            <strong className="font-semibold text-zinc-900">
+              {visibleIndices.length}개
+            </strong>{" "}
+            표시 중
           </p>
         </div>
 
         {/* Question explanations */}
-        {pageIndices.length === 0 ? (
+        {visibleIndices.length === 0 ? (
           <div className="rounded-xl border border-zinc-200 bg-white py-12 text-center text-sm text-zinc-500">
             해당 항목이 없습니다.
           </div>
         ) : (
           <div className="space-y-5">
-            {pageIndices.map((qIdx) => {
+            {visibleIndices.map((qIdx) => {
               const q = exam.questions[qIdx];
               const userAnswer = attempt.answers[qIdx];
               const isCorrect = userAnswer === q.answer;
@@ -401,31 +370,6 @@ export default function ReviewView({ exam }: { exam: Exam }) {
             })}
           </div>
         )}
-
-        {/* Pagination */}
-        <div className="mt-8 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => setPageIndex(Math.max(0, pageIndex - 1))}
-            disabled={pageIndex === 0}
-            className="rounded-md border border-zinc-300 bg-white px-5 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            ← 이전 페이지
-          </button>
-          <span className="text-sm text-zinc-600">
-            {pageIndex + 1} / {totalPages}
-          </span>
-          <button
-            type="button"
-            onClick={() =>
-              setPageIndex(Math.min(totalPages - 1, pageIndex + 1))
-            }
-            disabled={pageIndex >= totalPages - 1}
-            className="rounded-md border border-zinc-300 bg-white px-5 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            다음 페이지 →
-          </button>
-        </div>
       </main>
     </div>
   );
