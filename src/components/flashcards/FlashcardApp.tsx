@@ -39,6 +39,8 @@ function shuffle<T>(arr: T[]): T[] {
 export default function FlashcardApp() {
   const [view, setView] = useState<View>("study");
   const [subjectFilter, setSubjectFilter] = useState<SubjectFilter>("all");
+  // 선택된 챕터(과목별). 선택 시 학습·랜덤 출제가 이 챕터 안으로 제한됨.
+  const [chapterFilter, setChapterFilter] = useState<string | null>(null);
   const [starredOnly, setStarredOnly] = useState(false);
   const [dueOnly, setDueOnly] = useState(false);
   const [shuffleOn, setShuffleOn] = useState(false);
@@ -56,10 +58,36 @@ export default function FlashcardApp() {
     setHydrated(true);
   }, []);
 
+  // 선택한 과목의 챕터별 카드 분배 (과목 칩 바로 아래 노출용)
+  const chapterGroups = useMemo(() => {
+    if (subjectFilter === "all")
+      return [] as { title: string; cards: Flashcard[] }[];
+    const subject = subjectFilter as Subject;
+    const subjectCards = presetCards.filter((c) => c.subject === subject);
+    const groups = CHAPTER_DEFS[subject].map((def) => ({
+      title: def.title,
+      cards: subjectCards.filter((c) => def.topics.includes(c.topic)),
+    }));
+    const residual = subjectCards.filter(
+      (c) => !topicIsMapped(subject, c.topic),
+    );
+    if (residual.length > 0)
+      groups.push({ title: RESIDUAL_CHAPTER, cards: residual });
+    return groups;
+  }, [subjectFilter]);
+
+  // 선택된 챕터의 카드 id 집합 (없으면 null = 챕터 제한 없음)
+  const chapterCardIds = useMemo(() => {
+    if (!chapterFilter) return null;
+    const g = chapterGroups.find((x) => x.title === chapterFilter);
+    return g ? new Set(g.cards.map((c) => c.id)) : null;
+  }, [chapterFilter, chapterGroups]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return presetCards.filter((c) => {
       if (subjectFilter !== "all" && c.subject !== subjectFilter) return false;
+      if (chapterCardIds && !chapterCardIds.has(c.id)) return false;
       if (starredOnly && !favorites.has(c.id)) return false;
       if (dueOnly && !needsReview(progress, c.id)) return false;
       if (q) {
@@ -68,7 +96,7 @@ export default function FlashcardApp() {
       }
       return true;
     });
-  }, [subjectFilter, starredOnly, dueOnly, query, favorites, progress]);
+  }, [subjectFilter, chapterCardIds, starredOnly, dueOnly, query, favorites, progress]);
 
   // 덱을 새로 짜야 하는 "의도된" 조건만 모은 시그니처.
   // 주의: filtered 자체(progress 의존)를 deps 로 쓰면 카드를 평가할 때마다
@@ -78,6 +106,7 @@ export default function FlashcardApp() {
   const deckKey = useMemo(() => {
     const base = [
       subjectFilter,
+      chapterFilter ?? "",
       starredOnly ? "s" : "",
       dueOnly ? "d" : "",
       shuffleOn ? "x" : "",
@@ -86,7 +115,7 @@ export default function FlashcardApp() {
     ];
     if (dueOnly) base.push(JSON.stringify(progress));
     return base.join("|");
-  }, [subjectFilter, starredOnly, dueOnly, shuffleOn, query, favorites, progress]);
+  }, [subjectFilter, chapterFilter, starredOnly, dueOnly, shuffleOn, query, favorites, progress]);
 
   // 필터가 바뀌면 학습 덱도 새로 짜기 (현재 학습 중이면 끊김 → 의도된 동작)
   useEffect(() => {
@@ -123,10 +152,11 @@ export default function FlashcardApp() {
     setView("study");
   }
 
-  /** 오늘 복습: 복습 권장 카드만 모아 학습 시작. */
+  /** 오늘 다시보기: 다시 볼 카드만 모아 학습 시작. (과목·챕터 선택 시 그 범위로 제한) */
   function startReview() {
     const due = presetCards.filter((c) => {
       if (subjectFilter !== "all" && c.subject !== subjectFilter) return false;
+      if (chapterCardIds && !chapterCardIds.has(c.id)) return false;
       return needsReview(progress, c.id);
     });
     setDeck(shuffle(due));
@@ -144,33 +174,6 @@ export default function FlashcardApp() {
   function handleResetProgress() {
     setProgress(resetProgress());
   }
-
-  function handleReplayUnknown(ids: string[]) {
-    const map = new Map(presetCards.map((c) => [c.id, c]));
-    const replayDeck = ids
-      .map((id) => map.get(id))
-      .filter((c): c is Flashcard => Boolean(c));
-    setDeck(replayDeck);
-    setView("study");
-  }
-
-  // 선택한 과목의 챕터별 카드 분배 (과목 칩 바로 아래 노출용)
-  const chapterGroups = useMemo(() => {
-    if (subjectFilter === "all")
-      return [] as { title: string; cards: Flashcard[] }[];
-    const subject = subjectFilter as Subject;
-    const subjectCards = presetCards.filter((c) => c.subject === subject);
-    const groups = CHAPTER_DEFS[subject].map((def) => ({
-      title: def.title,
-      cards: subjectCards.filter((c) => def.topics.includes(c.topic)),
-    }));
-    const residual = subjectCards.filter(
-      (c) => !topicIsMapped(subject, c.topic),
-    );
-    if (residual.length > 0)
-      groups.push({ title: RESIDUAL_CHAPTER, cards: residual });
-    return groups;
-  }, [subjectFilter]);
 
   function handleStartChapter(chapterCards: Flashcard[]) {
     setDeck(shuffleOn ? shuffle(chapterCards) : chapterCards);
@@ -200,7 +203,7 @@ export default function FlashcardApp() {
             </h1>
             <p className="mt-1.5 text-sm text-zinc-500">
               핵심 개념 {presetCards.length}장을 뒤집으며 익히고, 헷갈리는 카드는
-              다시 복습하세요.
+              다시 보세요.
             </p>
           </div>
 
@@ -234,7 +237,10 @@ export default function FlashcardApp() {
             <Chip
               key={s}
               active={subjectFilter === s}
-              onClick={() => setSubjectFilter(s)}
+              onClick={() => {
+                setSubjectFilter(s);
+                setChapterFilter(null);
+              }}
             >
               {s === "all" ? "전체" : s}
             </Chip>
@@ -252,7 +258,7 @@ export default function FlashcardApp() {
             onClick={() => setDueOnly((v) => !v)}
             icon="🔁"
           >
-            복습 필요
+            다시보기
           </Toggle>
           <Toggle on={shuffleOn} onClick={() => setShuffleOn((v) => !v)} icon="🔀">
             셔플
@@ -280,24 +286,49 @@ export default function FlashcardApp() {
                 📚 {subjectFilter} · 챕터
               </span>
               <span className="text-[11px] text-zinc-400">
-                챕터를 누르면 그 챕터만 학습합니다
+                챕터를 선택하면 학습·랜덤 출제가 그 챕터 안에서만 나옵니다
               </span>
+              {chapterFilter && (
+                <button
+                  type="button"
+                  onClick={() => setChapterFilter(null)}
+                  className="ml-auto rounded-full px-2 py-0.5 text-[11px] font-medium text-zinc-500 underline-offset-2 hover:text-zinc-800 hover:underline"
+                >
+                  챕터 선택 해제
+                </button>
+              )}
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
-              {chapterGroups.map((g) => (
-                <button
-                  key={g.title}
-                  type="button"
-                  disabled={g.cards.length === 0}
-                  onClick={() => handleStartChapter(g.cards)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:bg-white disabled:hover:text-zinc-700"
-                >
-                  {g.title}
-                  <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] font-bold text-zinc-500">
-                    {g.cards.length}
-                  </span>
-                </button>
-              ))}
+              {chapterGroups.map((g) => {
+                const selected = chapterFilter === g.title;
+                return (
+                  <button
+                    key={g.title}
+                    type="button"
+                    disabled={g.cards.length === 0}
+                    aria-pressed={selected}
+                    onClick={() =>
+                      setChapterFilter(selected ? null : g.title)
+                    }
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0 ${
+                      selected
+                        ? "border-blue-500 bg-blue-600 text-white"
+                        : "border-zinc-200 bg-white text-zinc-700 hover:border-blue-400 hover:bg-blue-600 hover:text-white disabled:hover:bg-white disabled:hover:text-zinc-700"
+                    }`}
+                  >
+                    {g.title}
+                    <span
+                      className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                        selected
+                          ? "bg-white/25 text-white"
+                          : "bg-zinc-100 text-zinc-500"
+                      }`}
+                    >
+                      {g.cards.length}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -364,11 +395,15 @@ export default function FlashcardApp() {
             <>
               <span className="text-zinc-300">·</span>
               <span>
-                암기 완료 {filteredStats.known} / 복습 {filteredStats.due}
+                암기 완료 {filteredStats.known} / 다시보기 {filteredStats.due}
               </span>
             </>
           )}
-          {(starredOnly || dueOnly || query || subjectFilter !== "all") && (
+          {(starredOnly ||
+            dueOnly ||
+            query ||
+            subjectFilter !== "all" ||
+            chapterFilter) && (
             <button
               type="button"
               onClick={() => {
@@ -376,6 +411,7 @@ export default function FlashcardApp() {
                 setDueOnly(false);
                 setQuery("");
                 setSubjectFilter("all");
+                setChapterFilter(null);
               }}
               className="ml-auto rounded-full px-2 py-0.5 font-medium text-zinc-500 underline-offset-2 hover:text-zinc-800 hover:underline"
             >
@@ -393,7 +429,6 @@ export default function FlashcardApp() {
           onToggleFavorite={handleToggleFavorite}
           onRate={handleRate}
           onExit={() => setView("list")}
-          onReplayUnknown={handleReplayUnknown}
         />
       ) : (
         <div>
@@ -429,38 +464,46 @@ export default function FlashcardApp() {
 
 function StudyGuide() {
   return (
-    <section
-      aria-label="플립카드 학습 안내"
-      className="mb-7 grid gap-3 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/70 via-white to-amber-50/40 p-4 shadow-sm sm:grid-cols-2 sm:p-5"
-    >
-      <div>
-        <p className="flex items-center gap-1.5 text-sm font-bold text-blue-800">
-          <span aria-hidden>🔎</span> 이렇게 외우세요
-        </p>
-        <ul className="mt-2 space-y-1.5 text-[13px] leading-6 text-zinc-700">
-          <li>· 답이 막히면 바로 뒤집어 확인하고 “모르겠음”으로 표시하세요.</li>
-          <li>· 모르겠음 카드는 자동으로 다시 돌아옵니다 — 맞출 때까지 반복.</li>
-          <li>· 한 번에 몰아서보다, 짧게 자주 회독하는 편이 좋습니다.</li>
-        </ul>
+    <details className="group mb-7 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/70 via-white to-amber-50/40 p-4 shadow-sm sm:p-5">
+      <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-bold text-blue-800 marker:content-none [&::-webkit-details-marker]:hidden">
+        <span aria-hidden>🔎</span> 이렇게 외우세요 · 왜 효과적인가
+        <span className="ml-auto text-xs font-medium text-zinc-400 transition group-open:rotate-180">
+          ▾
+        </span>
+      </summary>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div>
+          <p className="flex items-center gap-1.5 text-sm font-bold text-blue-800">
+            <span aria-hidden>🔎</span> 이렇게 외우세요
+          </p>
+          <ul className="mt-2 space-y-1.5 text-[13px] leading-6 text-zinc-700">
+            <li>· 답이 막히면 바로 뒤집어 확인하고 “다시보기”로 표시하세요.</li>
+            <li>
+              · 다시보기 카드는 ‘오늘 다시보기’·‘다시보기’ 필터에서 모아 볼 수
+              있어요.
+            </li>
+            <li>· 한 번에 몰아서보다, 짧게 자주 회독하는 편이 좋습니다.</li>
+          </ul>
+        </div>
+        <div className="sm:border-l sm:border-blue-100 sm:pl-5">
+          <p className="flex items-center gap-1.5 text-sm font-bold text-amber-700">
+            <span aria-hidden>⭐</span> 왜 효과적인가
+          </p>
+          <ul className="mt-2 space-y-1.5 text-[13px] leading-6 text-zinc-700">
+            <li>
+              · 답을 떠올렸다 확인하는 “능동 인출”은 다시 읽기보다 기억에 더
+              오래 남습니다.
+            </li>
+            <li>
+              · 시간 간격을 두고 반복(분산 학습)하면 장기 기억이 강화됩니다.
+            </li>
+            <li>
+              · 빈출 핵심 개념을 빠르게 회독해 필기 합격에 직접 도움이 됩니다.
+            </li>
+          </ul>
+        </div>
       </div>
-      <div className="sm:border-l sm:border-blue-100 sm:pl-5">
-        <p className="flex items-center gap-1.5 text-sm font-bold text-amber-700">
-          <span aria-hidden>⭐</span> 왜 효과적인가
-        </p>
-        <ul className="mt-2 space-y-1.5 text-[13px] leading-6 text-zinc-700">
-          <li>
-            · 답을 떠올렸다 확인하는 “능동 인출”은 다시 읽기보다 기억에 더
-            오래 남습니다.
-          </li>
-          <li>
-            · 시간 간격을 두고 반복(분산 학습)하면 장기 기억이 강화됩니다.
-          </li>
-          <li>
-            · 빈출 핵심 개념을 빠르게 회독해 필기 합격에 직접 도움이 됩니다.
-          </li>
-        </ul>
-      </div>
-    </section>
+    </details>
   );
 }
 
@@ -555,7 +598,7 @@ function ProgressDashboard({
         <div className="flex items-center gap-4">
           <Stat label="암기 완료" value={hydrated ? stats.known : 0} tone="emerald" />
           <span className="h-8 w-px bg-zinc-200" />
-          <Stat label="복습 필요" value={hydrated ? dueCount : 0} tone="amber" />
+          <Stat label="다시보기" value={hydrated ? dueCount : 0} tone="amber" />
           <span className="h-8 w-px bg-zinc-200" />
           <Stat
             label="아직 안 본 카드"
@@ -570,8 +613,8 @@ function ProgressDashboard({
           className="shrink-0 rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:hover:translate-y-0"
         >
           {hydrated && dueCount > 0
-            ? `오늘 복습 ${dueCount}장 →`
-            : "복습 완료 🎉"}
+            ? `오늘 다시보기 ${dueCount}장 →`
+            : "다시보기 완료 🎉"}
         </button>
       </div>
     </section>
