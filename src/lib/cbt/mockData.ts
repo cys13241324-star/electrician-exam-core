@@ -283,6 +283,8 @@ function buildPracticeExam(filter: PracticeFilter): Exam | undefined {
 export type FocusFilter = {
   frequency?: Frequency;
   difficulty?: Difficulty;
+  /** 회차 페이지에서 생성 시 연도 라벨. 문항 풀은 공유(라벨 용도). */
+  year?: number;
 };
 
 function parseFocusId(id: string): FocusFilter | null {
@@ -300,6 +302,9 @@ function parseFocusId(id: string): FocusFilter | null {
       (value === "easy" || value === "medium" || value === "hard")
     ) {
       filter.difficulty = value;
+    } else if (key === "year") {
+      const n = parseInt(value, 10);
+      if (!Number.isNaN(n)) filter.year = n;
     }
   }
   return filter;
@@ -309,6 +314,7 @@ export function buildFocusId(f: FocusFilter): string {
   const parts: string[] = [];
   if (f.frequency) parts.push("freq", f.frequency);
   if (f.difficulty) parts.push("diff", f.difficulty);
+  if (f.year) parts.push("year", String(f.year));
   return `focus-${parts.join("-")}`;
 }
 
@@ -340,7 +346,10 @@ function buildFocusExam(filter: FocusFilter): Exam | undefined {
   const titleParts: string[] = [];
   if (filter.frequency) titleParts.push(`${FREQ_KO[filter.frequency]} 문항`);
   if (filter.difficulty) titleParts.push(`${DIFF_KO[filter.difficulty]}`);
-  const title = titleParts.length > 0 ? `집중 응시 — ${titleParts.join(" · ")}` : "집중 응시";
+  const tagText = titleParts.length > 0 ? ` — ${titleParts.join(" · ")}` : "";
+  const title = filter.year
+    ? `${filter.year}년 생성 시험지${tagText}`
+    : `집중 응시${tagText}`;
 
   // 1.5분/문항, 최소 10분, 최대 60분
   const durationMinutes = Math.min(
@@ -379,6 +388,11 @@ export function getExamById(id: string): Exam | undefined {
     if (!filter) return undefined;
     return buildFocusExam(filter);
   }
+  if (id.startsWith("custom-")) {
+    const filter = parseCustomId(id);
+    if (!filter) return undefined;
+    return buildCustomExam(filter);
+  }
   return getMockExam(id);
 }
 
@@ -392,3 +406,98 @@ export function countQuestionsBy(filter: PracticeFilter): number {
 }
 
 export { buildPracticeId };
+
+// ── 나만의 시험 (custom) ──────────────────────────────────────────
+// 설정을 라우트 id 에 인코딩해 take/result/review 가 동일 시험을 결정적으로 재구성.
+
+export type CustomFilter = {
+  subjects: string[]; // subjectId 배열 (빈 배열 = 전과목)
+  frequency?: Frequency;
+  difficulty?: Difficulty;
+  count: number; // 목표 문항 수 (0 = 가능한 전부)
+  minutes: number; // 제한 시간(분)
+};
+
+export function buildCustomId(f: CustomFilter): string {
+  const subj = f.subjects.length ? [...f.subjects].sort().join(".") : "all";
+  return [
+    "custom",
+    `s.${subj}`,
+    `f.${f.frequency ?? "any"}`,
+    `d.${f.difficulty ?? "any"}`,
+    `n.${Math.max(0, Math.floor(f.count))}`,
+    `m.${Math.max(1, Math.floor(f.minutes))}`,
+  ].join("-");
+}
+
+function parseCustomId(id: string): CustomFilter | null {
+  if (!id.startsWith("custom-")) return null;
+  const f: CustomFilter = { subjects: [], count: 0, minutes: 0 };
+  for (const part of id.slice("custom-".length).split("-")) {
+    const dot = part.indexOf(".");
+    if (dot < 0) continue;
+    const k = part.slice(0, dot);
+    const v = part.slice(dot + 1);
+    if (k === "s") {
+      f.subjects = v === "all" ? [] : v.split(".").filter(Boolean);
+    } else if (k === "f" && (v === "high" || v === "medium" || v === "low")) {
+      f.frequency = v;
+    } else if (
+      k === "d" &&
+      (v === "easy" || v === "medium" || v === "hard")
+    ) {
+      f.difficulty = v;
+    } else if (k === "n") {
+      f.count = Math.max(0, parseInt(v, 10) || 0);
+    } else if (k === "m") {
+      f.minutes = Math.max(1, parseInt(v, 10) || 0);
+    }
+  }
+  return f;
+}
+
+function matchCustom(f: CustomFilter): Question[] {
+  return sharedQuestions.filter((q) => {
+    if (f.subjects.length && !f.subjects.includes(q.subjectId)) return false;
+    if (f.frequency && (q.frequency ?? "medium") !== f.frequency) return false;
+    if (f.difficulty && (q.difficulty ?? "medium") !== f.difficulty)
+      return false;
+    return true;
+  });
+}
+
+export function countCustom(f: CustomFilter): number {
+  return matchCustom(f).length;
+}
+
+function buildCustomExam(f: CustomFilter): Exam | undefined {
+  const matched = matchCustom(f);
+  if (matched.length === 0) return undefined;
+
+  const take =
+    f.count > 0 ? Math.min(f.count, matched.length) : matched.length;
+  const renumbered: Question[] = matched
+    .slice(0, take)
+    .map((q, i) => ({ ...q, number: i + 1 }));
+
+  const subjKo = f.subjects.length
+    ? f.subjects.map((id) => findSubject(id)?.subject ?? id).join("·")
+    : "전과목";
+  const tags: string[] = [];
+  if (f.frequency) tags.push(FREQ_KO[f.frequency]);
+  if (f.difficulty) tags.push(DIFF_KO[f.difficulty]);
+  const title = `나만의 시험 — ${subjKo}${
+    tags.length ? ` · ${tags.join(" · ")}` : ""
+  } · ${renumbered.length}문항`;
+
+  const durationMinutes = Math.min(180, Math.max(1, f.minutes));
+
+  return {
+    id: buildCustomId(f),
+    round: 0,
+    title,
+    totalQuestions: renumbered.length,
+    durationMinutes,
+    questions: renumbered,
+  };
+}

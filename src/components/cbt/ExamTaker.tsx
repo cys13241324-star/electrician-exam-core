@@ -47,9 +47,9 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
   const [showQuestionMap, setShowQuestionMap] = useState(false);
   const [filterMode, setFilterMode] = useState<FilterMode>("all");
 
-  const [confirmStage, setConfirmStage] = useState<
-    "none" | "warn-unanswered" | "final"
-  >("none");
+  const [confirmStage, setConfirmStage] = useState<"none" | "confirm">(
+    "none",
+  );
   const [showMobileSheet, setShowMobileSheet] = useState(false);
 
   const submittingRef = useRef(false);
@@ -202,10 +202,11 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
   }, [answers, currentIndex, exam.totalQuestions]);
 
   function handleSubmitClick() {
-    if (answeredCount < exam.totalQuestions) {
-      setConfirmStage("warn-unanswered");
+    // 미응답이 없으면 모달 없이 즉시 제출, 있으면 단일 확인 모달 1회
+    if (remainingCount > 0) {
+      setConfirmStage("confirm");
     } else {
-      setConfirmStage("final");
+      submitNow();
     }
   }
 
@@ -264,7 +265,7 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
 
   if (!hydrated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-100 text-sm text-zinc-500">
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50 text-sm text-zinc-500">
         시험을 준비하고 있습니다...
       </div>
     );
@@ -286,13 +287,13 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
         : "normal";
   const timerClass =
     timerUrgency === "critical"
-      ? "bg-rose-600 text-white animate-pulse"
+      ? "border border-rose-300 bg-rose-50 text-rose-700 animate-pulse"
       : timerUrgency === "warning"
-        ? "bg-amber-100 text-amber-800 ring-1 ring-amber-300"
-        : "bg-zinc-900 text-white";
+        ? "border border-amber-300 bg-amber-50 text-amber-800"
+        : "border border-zinc-300 bg-white text-zinc-900";
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-100">
+    <div className="flex min-h-screen flex-col bg-zinc-50">
       {/* Top bar: title + timer + examinee */}
       <div className="sticky top-0 z-30 border-b border-zinc-300 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
@@ -319,7 +320,7 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
                 남은 시간
               </span>
               <span
-                className={`rounded-md px-3 py-1 font-mono text-base font-bold tabular-nums ${timerClass}`}
+                className={`rounded-full px-4 py-1.5 font-mono text-base font-bold tabular-nums shadow-sm ${timerClass}`}
                 role="timer"
                 aria-live={timerUrgency === "critical" ? "assertive" : "off"}
                 aria-label={`남은 시간 ${remainingMinutes}분 ${remainingSeconds}초`}
@@ -496,11 +497,7 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
               return (
                 <article
                   key={q.number}
-                  className={`flex flex-col rounded-xl border bg-white p-5 shadow-sm transition sm:p-6 ${
-                    answers[qIdx] !== null
-                      ? "border-blue-200"
-                      : "border-zinc-200"
-                  }`}
+                  className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition sm:p-8"
                 >
                   <header className="mb-4 flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3">
@@ -529,11 +526,11 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
                     </button>
                   </header>
 
-                  <p className={`text-zinc-900 ${fontSizeClass}`}>
+                  <p className={`font-medium text-zinc-900 ${fontSizeClass}`}>
                     {q.questionText}
                   </p>
 
-                  <ul className={`mt-6 space-y-3 ${fontSizeClass}`}>
+                  <ul className={`mt-6 space-y-1 ${fontSizeClass}`}>
                     {q.choices.map((choice, i) => {
                       const value = (i + 1) as Choice;
                       const isSelected = answers[qIdx] === value;
@@ -542,22 +539,28 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
                           <button
                             type="button"
                             onClick={() => selectAnswer(qIdx, value)}
-                            className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition ${
+                            className={`flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-left transition ${
                               isSelected
-                                ? "border-blue-600 bg-blue-50"
-                                : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
+                                ? "bg-blue-50"
+                                : "hover:bg-zinc-50"
                             }`}
                           >
                             <span
-                              className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border text-sm font-semibold ${
+                              className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border text-sm font-semibold transition ${
                                 isSelected
                                   ? "border-blue-600 bg-blue-600 text-white"
-                                  : "border-zinc-400 text-zinc-600"
+                                  : "border-zinc-300 text-zinc-500"
                               }`}
                             >
                               {value}
                             </span>
-                            <span className="flex-1 text-zinc-800">
+                            <span
+                              className={`flex-1 ${
+                                isSelected
+                                  ? "font-medium text-blue-900"
+                                  : "text-zinc-800"
+                              }`}
+                            >
                               {choice}
                             </span>
                           </button>
@@ -574,27 +577,26 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
         {/* Answer sheet sidebar */}
         {layoutMode !== "one" && (
           <aside className="hidden w-72 flex-shrink-0 lg:block">
-            <div className="sticky top-24 rounded-xl border border-zinc-200 bg-white shadow-sm">
-              <div className="border-b border-zinc-200 px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-bold text-zinc-900">
-                    답안 표기란
-                  </h2>
-                  <span className="text-xs font-semibold tabular-nums text-zinc-500">
-                    {answeredCount}/{exam.totalQuestions}
-                  </span>
-                </div>
-                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100">
+            <div className="sticky top-24 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+              <div className="flex items-center justify-between bg-blue-600 px-4 py-2.5">
+                <h2 className="text-sm font-bold text-white">답안 표기란</h2>
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold tabular-nums text-white">
+                  {answeredCount}/{exam.totalQuestions}
+                </span>
+              </div>
+              <div className="border-b border-zinc-100 px-4 py-2.5">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100">
                   <div
                     className="h-full rounded-full bg-emerald-500 transition-[width] duration-300"
                     style={{ width: `${progressPct}%` }}
                   />
                 </div>
               </div>
-              <div className="max-h-[58vh] overflow-y-auto px-2 py-2">
+              <div className="max-h-[56vh] overflow-y-auto px-2 py-2">
                 {visibleIndices.map((qIdx) => {
                   const isCurrent = qIdx === currentIndex;
                   const isChecked = checked[qIdx];
+                  const isAnswered = answers[qIdx] !== null;
                   return (
                     <div
                       key={qIdx}
@@ -602,10 +604,20 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
                         isCurrent ? "bg-blue-50" : ""
                       }`}
                     >
+                      <span
+                        className={`flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-[3px] border text-[9px] leading-none ${
+                          isAnswered
+                            ? "border-emerald-500 bg-emerald-500 text-white"
+                            : "border-zinc-300 text-transparent"
+                        }`}
+                        aria-hidden
+                      >
+                        ✓
+                      </span>
                       <button
                         type="button"
                         onClick={() => goTo(qIdx)}
-                        className={`w-7 text-left text-xs font-mono font-semibold ${
+                        className={`w-6 text-left text-xs font-mono font-semibold ${
                           isCurrent ? "text-blue-600" : "text-zinc-500"
                         }`}
                       >
@@ -619,10 +631,10 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
                               key={c}
                               type="button"
                               onClick={() => selectAnswer(qIdx, c as Choice)}
-                              className={`flex h-6 w-6 items-center justify-center rounded-full border text-xs font-semibold transition ${
+                              className={`flex h-6 flex-1 items-center justify-center rounded-md border text-xs font-semibold transition ${
                                 sel
-                                  ? "border-zinc-900 bg-zinc-900 text-white"
-                                  : "border-zinc-300 text-zinc-500 hover:border-zinc-500"
+                                  ? "border-blue-600 bg-blue-600 text-white"
+                                  : "border-zinc-200 bg-zinc-50 text-zinc-500 hover:border-zinc-400"
                               }`}
                             >
                               {c}
@@ -707,10 +719,10 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
             onClick={() => setShowMobileSheet(false)}
           />
           <div className="absolute inset-x-0 bottom-0 max-h-[75vh] overflow-hidden rounded-t-2xl bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-3">
-              <h2 className="text-sm font-bold text-zinc-900">
+            <div className="flex items-center justify-between bg-blue-600 px-5 py-3">
+              <h2 className="text-sm font-bold text-white">
                 답안 표기란{" "}
-                <span className="font-medium text-zinc-500">
+                <span className="font-medium text-white/70">
                   ({answeredCount}/{exam.totalQuestions})
                 </span>
               </h2>
@@ -718,7 +730,7 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
                 type="button"
                 onClick={() => setShowMobileSheet(false)}
                 aria-label="닫기"
-                className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+                className="rounded-md p-1 text-white/80 hover:bg-white/15 hover:text-white"
               >
                 ✕
               </button>
@@ -758,8 +770,8 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
                             }
                             className={`flex h-8 flex-1 items-center justify-center rounded-md border text-xs font-semibold transition ${
                               sel
-                                ? "border-zinc-900 bg-zinc-900 text-white"
-                                : "border-zinc-300 text-zinc-500"
+                                ? "border-blue-600 bg-blue-600 text-white"
+                                : "border-zinc-200 bg-zinc-50 text-zinc-500"
                             }`}
                           >
                             {c}
@@ -800,23 +812,12 @@ export default function ExamTaker({ exam }: { exam: Exam }) {
         />
       )}
 
-      {confirmStage === "warn-unanswered" && (
+      {confirmStage === "confirm" && (
         <ConfirmDialog
           title="답안 제출"
-          message={`아직 풀지 않은 문제가 ${remainingCount}개 남아있습니다. 그래도 제출하시겠습니까?`}
-          confirmLabel="확인"
-          cancelLabel="더 풀기"
-          onConfirm={() => setConfirmStage("final")}
-          onCancel={() => setConfirmStage("none")}
-        />
-      )}
-
-      {confirmStage === "final" && (
-        <ConfirmDialog
-          title="답안 제출"
-          message="정말 답안을 제출하시겠습니까? 최종 제출 후에는 수정할 수 없습니다."
+          message={`미응답 ${remainingCount}문항이 있습니다. 제출 후에는 수정할 수 없습니다. 그래도 제출할까요?`}
           confirmLabel="제출"
-          cancelLabel="취소"
+          cancelLabel="돌아가기"
           onConfirm={submitNow}
           onCancel={() => setConfirmStage("none")}
         />

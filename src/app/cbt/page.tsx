@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 import Footer from "@/components/Footer";
-import Dashboard from "@/components/cbt/Dashboard";
+import CbtHub from "@/components/cbt/CbtHub";
 import SubTabs from "@/components/cbt/SubTabs";
 import TextbookFloatingPopup from "@/components/TextbookFloatingPopup";
 
@@ -17,7 +17,7 @@ export default function CbtPage() {
     <div className="min-h-screen bg-zinc-50">
       <Header />
       <SubTabs active="main" />
-      <Dashboard />
+      <CbtHub />
       <Footer />
       <TextbookFloatingPopup />
     </div>

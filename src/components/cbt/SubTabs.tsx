@@ -1,11 +1,18 @@
 import Link from "next/link";
 
-type TabId = "main" | "study" | "exams" | "frequent" | "hard";
+type TabId =
+  | "main"
+  | "study"
+  | "exams"
+  | "wrong-notes"
+  | "frequent"
+  | "hard";
 
 const TABS: { id: TabId; label: string; href: string; badge?: string }[] = [
   { id: "main", label: "전기기능사", href: "/cbt", badge: "구독중" },
   { id: "study", label: "과목별 학습", href: "/cbt/study" },
-  { id: "exams", label: "CBT 응시", href: "/cbt/exams" },
+  { id: "exams", label: "모의고사", href: "/cbt/exams" },
+  { id: "wrong-notes", label: "오답노트", href: "/cbt/wrong-notes" },
   { id: "frequent", label: "N회빈출", href: "/cbt/frequent" },
   { id: "hard", label: "고난도모음", href: "/cbt/hard" },
 ];

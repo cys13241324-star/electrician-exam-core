@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 export const metadata: Metadata = {
   title: "과목별 학습 — 전기이론·전기기기·전기설비",
   description:
-    "원하는 범위만 골라 응시. 전기이론·전기기기·전기설비 3과목 × 28개 하위 토픽으로 세분화된 맞춤 학습.",
+    "원하는 범위만 골라 연습. 전기이론·전기기기·전기설비 3과목 × 28개 하위 토픽으로 세분화된 맞춤 학습.",
 };
 
 import Footer from "@/components/Footer";
@@ -50,7 +50,7 @@ export default function StudyPage() {
             과목별 학습
           </p>
           <h1 className="mt-2 text-2xl font-bold text-zinc-900 sm:text-3xl">
-            원하는 범위만 골라 응시하기
+            원하는 범위만 골라 연습하기
           </h1>
           <p className="mt-2 text-sm text-zinc-600">
             대상 연도 <strong>{TARGET_YEAR_RANGE}</strong> · 과목 전체부터
