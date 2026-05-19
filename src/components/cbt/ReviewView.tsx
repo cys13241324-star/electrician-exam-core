@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import AIExplainPanel from "@/components/AIExplainPanel";
+import LecturePiP from "@/components/cbt/LecturePiP";
 import type { Attempt, Choice, Exam } from "@/lib/cbt/types";
 
 type FilterMode = "all" | "correct" | "wrong" | "checked";
@@ -350,19 +350,9 @@ export default function ReviewView({ exam }: { exam: Exam }) {
                   </div>
 
                   <div className="mt-4">
-                    <AIExplainPanel
-                      context={{
-                        kind: "question",
-                        question: `${q.questionText}\n선택지: ${q.choices
-                          .map((c, i) => `${i + 1}) ${c}`)
-                          .join(" / ")}`,
-                        correctAnswer: `${q.answer}번 — ${q.choices[q.answer - 1]}`,
-                        existingExplanation: q.explanation,
-                        userWrongAnswer:
-                          userAnswer !== null && userAnswer !== q.answer
-                            ? `${userAnswer}번 — ${q.choices[userAnswer - 1]}`
-                            : undefined,
-                      }}
+                    <LecturePiP
+                      title={`${q.subject} · ${q.topic} 강의`}
+                      query={`전기기능사 ${q.subject} ${q.topic} 강의`}
                     />
                   </div>
                 </article>
