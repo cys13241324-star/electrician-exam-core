@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Flashcard, Subject } from "@/lib/flashcards/types";
 import {
   CHAPTER_DEFS,
-  ALL_SUBJECTS,
   RESIDUAL_CHAPTER,
 } from "@/lib/flashcards/chapters";
 import { MathText } from "@/components/Math";
@@ -14,7 +13,7 @@ type Props = {
   cards: Flashcard[];
   favorites: Set<string>;
   progress: ProgressMap;
-  subjectScope: "all" | Subject;
+  subjects: Subject[];
   onPick: (card: Flashcard) => void;
   onToggleFavorite: (id: string) => void;
   onStartChapter: (cards: Flashcard[]) => void;
@@ -51,15 +50,13 @@ export default function CardList({
   cards,
   favorites,
   progress,
-  subjectScope,
+  subjects,
   onPick,
   onToggleFavorite,
   onStartChapter,
 }: Props) {
   const groups = useMemo(() => {
-    const subjectsToShow: Subject[] =
-      subjectScope === "all" ? ALL_SUBJECTS : [subjectScope];
-    return subjectsToShow.flatMap((subject) => {
+    return subjects.flatMap((subject) => {
       const subjectCards = cards.filter((c) => c.subject === subject);
       const defs = CHAPTER_DEFS[subject];
 
@@ -85,7 +82,41 @@ export default function CardList({
 
       return mapped.filter((g) => g.cards.length > 0);
     });
-  }, [cards, subjectScope]);
+  }, [cards, subjects]);
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showTop, setShowTop] = useState(false);
+
+  useEffect(() => {
+    function onScroll() {
+      setShowTop(window.scrollY > 500);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function scrollToSection(i: number) {
+    setMenuOpen(false);
+    const el = document.getElementById(`fc-sec-${i}`);
+    if (!el) return;
+    const bar = document.getElementById("fc-filterbar");
+    const offset = (bar?.offsetHeight ?? 0) + 24;
+    const top = window.scrollY + el.getBoundingClientRect().top - offset;
+    window.scrollTo({ top: top < 0 ? 0 : top, behavior: "smooth" });
+  }
 
   if (groups.length === 0) {
     return (
@@ -102,25 +133,94 @@ export default function CardList({
   }
 
   return (
-    <div className="space-y-7">
-      {groups.map((g) => (
-        <ChapterSection
-          key={`${g.subject}-${g.chapter}`}
-          subject={g.subject}
-          chapter={g.chapter}
-          cards={g.cards}
-          favorites={favorites}
-          progress={progress}
-          onPick={onPick}
-          onToggleFavorite={onToggleFavorite}
-          onStart={() => onStartChapter(g.cards)}
-        />
-      ))}
-    </div>
+    <>
+      <div className="space-y-7">
+        {groups.map((g, i) => (
+          <ChapterSection
+            key={`${g.subject}-${g.chapter}`}
+            id={`fc-sec-${i}`}
+            subject={g.subject}
+            chapter={g.chapter}
+            cards={g.cards}
+            favorites={favorites}
+            progress={progress}
+            onPick={onPick}
+            onToggleFavorite={onToggleFavorite}
+            onStart={() => onStartChapter(g.cards)}
+          />
+        ))}
+      </div>
+
+      {/* 우측 플로팅 — 목차 / 맨 위로 */}
+      <div className="fixed bottom-5 right-4 z-30 flex flex-col items-end gap-2 sm:bottom-7 sm:right-7">
+        {showTop && (
+          <button
+            type="button"
+            onClick={scrollToTop}
+            aria-label="맨 위로"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-200 bg-white text-lg font-bold text-zinc-600 shadow-lg transition hover:-translate-y-0.5 hover:text-blue-600"
+          >
+            ↑
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-expanded={menuOpen}
+          aria-label="목차 열기"
+          className="flex h-12 items-center gap-2 rounded-full bg-zinc-900 px-5 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-zinc-800"
+        >
+          <span aria-hidden>{menuOpen ? "✕" : "≡"}</span> 목차
+        </button>
+      </div>
+
+      {menuOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-30 bg-black/10"
+            aria-hidden
+            onClick={() => setMenuOpen(false)}
+          />
+          <nav
+            aria-label="챕터 목차"
+            className="fixed bottom-20 right-4 z-40 max-h-[70vh] w-72 overflow-y-auto overscroll-contain rounded-2xl border border-zinc-200 bg-white p-2 shadow-2xl sm:bottom-24 sm:right-7"
+          >
+            <p className="px-3 py-2 text-[11px] font-bold tracking-wider text-zinc-400">
+              과목 · 챕터로 이동
+            </p>
+            {groups.map((g, i) => {
+              const showSubject =
+                i === 0 || groups[i - 1].subject !== g.subject;
+              const style = SUBJECT_STYLE[g.subject];
+              return (
+                <div key={`${g.subject}-${g.chapter}`}>
+                  {showSubject && (
+                    <p className="mt-1 px-3 pb-1 pt-2 text-[11px] font-bold text-zinc-500">
+                      {style.emoji} {g.subject}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection(i)}
+                    className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-900"
+                  >
+                    <span className="truncate">{g.chapter}</span>
+                    <span className="shrink-0 rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] font-bold text-zinc-500">
+                      {g.cards.length}
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
+          </nav>
+        </>
+      )}
+    </>
   );
 }
 
 function ChapterSection({
+  id,
   subject,
   chapter,
   cards,
@@ -130,6 +230,7 @@ function ChapterSection({
   onToggleFavorite,
   onStart,
 }: {
+  id: string;
   subject: Subject;
   chapter: string;
   cards: Flashcard[];
@@ -147,7 +248,10 @@ function ChapterSection({
   );
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm">
+    <section
+      id={id}
+      className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm"
+    >
       {/* 챕터 헤더 */}
       <header className="flex items-center justify-between gap-3 p-4 sm:p-5">
         <button
@@ -228,7 +332,7 @@ function ChapterSection({
                       ? "아직 안 봄"
                       : p.status === "known"
                         ? "암기 완료"
-                        : "복습 필요"
+                        : "다시보기"
                   }
                   aria-hidden
                 />

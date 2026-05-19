@@ -6,6 +6,7 @@ import type { Flashcard, Subject } from "@/lib/flashcards/types";
 import {
   CHAPTER_DEFS,
   RESIDUAL_CHAPTER,
+  ALL_SUBJECTS,
   topicIsMapped,
 } from "@/lib/flashcards/chapters";
 import {
@@ -23,9 +24,12 @@ import CardStudy from "./CardStudy";
 import CardList from "./CardList";
 
 type View = "study" | "list";
-type SubjectFilter = "all" | Subject;
 
-const SUBJECTS: SubjectFilter[] = ["all", "전기이론", "전기기기", "전기설비"];
+// 챕터 선택 키 — "기타"가 과목마다 있을 수 있어 과목으로 네임스페이스 한다.
+const CHAP_SEP = "│";
+const chapKey = (subject: Subject, title: string) =>
+  `${subject}${CHAP_SEP}${title}`;
+const subjectOfKey = (key: string) => key.split(CHAP_SEP)[0] as Subject;
 
 function shuffle<T>(arr: T[]): T[] {
   const out = [...arr];
@@ -38,9 +42,9 @@ function shuffle<T>(arr: T[]): T[] {
 
 export default function FlashcardApp() {
   const [view, setView] = useState<View>("study");
-  const [subjectFilter, setSubjectFilter] = useState<SubjectFilter>("all");
-  // 선택된 챕터(과목별). 선택 시 학습·랜덤 출제가 이 챕터 안으로 제한됨.
-  const [chapterFilter, setChapterFilter] = useState<string | null>(null);
+  // 과목·챕터 다중 선택. 과목 셋이 비면 = 전체. 챕터 셋이 비면 = 과목 전체.
+  const [subjects, setSubjects] = useState<Set<Subject>>(new Set());
+  const [chapters, setChapters] = useState<Set<string>>(new Set());
   const [starredOnly, setStarredOnly] = useState(false);
   const [dueOnly, setDueOnly] = useState(false);
   const [shuffleOn, setShuffleOn] = useState(false);
@@ -58,35 +62,60 @@ export default function FlashcardApp() {
     setHydrated(true);
   }, []);
 
-  // 선택한 과목의 챕터별 카드 분배 (과목 칩 바로 아래 노출용)
+  // 선택한 과목들의 챕터별 카드 분배 (과목 칩 아래 노출용)
   const chapterGroups = useMemo(() => {
-    if (subjectFilter === "all")
-      return [] as { title: string; cards: Flashcard[] }[];
-    const subject = subjectFilter as Subject;
-    const subjectCards = presetCards.filter((c) => c.subject === subject);
-    const groups = CHAPTER_DEFS[subject].map((def) => ({
-      title: def.title,
-      cards: subjectCards.filter((c) => def.topics.includes(c.topic)),
-    }));
-    const residual = subjectCards.filter(
-      (c) => !topicIsMapped(subject, c.topic),
-    );
-    if (residual.length > 0)
-      groups.push({ title: RESIDUAL_CHAPTER, cards: residual });
-    return groups;
-  }, [subjectFilter]);
+    if (subjects.size === 0)
+      return [] as {
+        subject: Subject;
+        title: string;
+        key: string;
+        cards: Flashcard[];
+      }[];
+    const out: {
+      subject: Subject;
+      title: string;
+      key: string;
+      cards: Flashcard[];
+    }[] = [];
+    for (const subject of ALL_SUBJECTS) {
+      if (!subjects.has(subject)) continue;
+      const subjectCards = presetCards.filter((c) => c.subject === subject);
+      for (const def of CHAPTER_DEFS[subject]) {
+        out.push({
+          subject,
+          title: def.title,
+          key: chapKey(subject, def.title),
+          cards: subjectCards.filter((c) => def.topics.includes(c.topic)),
+        });
+      }
+      const residual = subjectCards.filter(
+        (c) => !topicIsMapped(subject, c.topic),
+      );
+      if (residual.length > 0)
+        out.push({
+          subject,
+          title: RESIDUAL_CHAPTER,
+          key: chapKey(subject, RESIDUAL_CHAPTER),
+          cards: residual,
+        });
+    }
+    return out;
+  }, [subjects]);
 
-  // 선택된 챕터의 카드 id 집합 (없으면 null = 챕터 제한 없음)
+  // 선택된 챕터들의 카드 id 합집합 (없거나 비면 null = 챕터 제한 없음)
   const chapterCardIds = useMemo(() => {
-    if (!chapterFilter) return null;
-    const g = chapterGroups.find((x) => x.title === chapterFilter);
-    return g ? new Set(g.cards.map((c) => c.id)) : null;
-  }, [chapterFilter, chapterGroups]);
+    if (chapters.size === 0) return null;
+    const ids = new Set<string>();
+    for (const g of chapterGroups) {
+      if (chapters.has(g.key)) for (const c of g.cards) ids.add(c.id);
+    }
+    return ids.size > 0 ? ids : null;
+  }, [chapters, chapterGroups]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return presetCards.filter((c) => {
-      if (subjectFilter !== "all" && c.subject !== subjectFilter) return false;
+      if (subjects.size > 0 && !subjects.has(c.subject)) return false;
       if (chapterCardIds && !chapterCardIds.has(c.id)) return false;
       if (starredOnly && !favorites.has(c.id)) return false;
       if (dueOnly && !needsReview(progress, c.id)) return false;
@@ -96,26 +125,26 @@ export default function FlashcardApp() {
       }
       return true;
     });
-  }, [subjectFilter, chapterCardIds, starredOnly, dueOnly, query, favorites, progress]);
+  }, [subjects, chapterCardIds, starredOnly, dueOnly, query, favorites, progress]);
 
   // 덱을 새로 짜야 하는 "의도된" 조건만 모은 시그니처.
-  // 주의: filtered 자체(progress 의존)를 deps 로 쓰면 카드를 평가할 때마다
-  // progress 객체가 새로 생성 → filtered 재계산 → deck 교체 → CardStudy 가
-  // 첫 카드로 리셋되어 "다음 카드로 못 넘어가는" 회귀가 발생한다.
-  // 따라서 진도(progress)는 '복습 필요(dueOnly)' 필터가 켜진 경우에만 시그니처에 포함한다.
+  // 주의: filtered 자체(favorites/progress 의존)를 deps 로 쓰면 즐겨찾기·평가
+  // 때마다 객체가 새로 생성 → deck 교체 → CardStudy 가 첫 카드·앞면으로 리셋되는
+  // 회귀가 생긴다. 그래서 즐겨찾기(favorites)는 '별 카드(starredOnly)', 진도
+  // (progress)는 '다시보기(dueOnly)' 필터가 켜진 경우에만 시그니처에 포함한다.
   const deckKey = useMemo(() => {
     const base = [
-      subjectFilter,
-      chapterFilter ?? "",
+      [...subjects].sort().join(","),
+      [...chapters].sort().join(","),
       starredOnly ? "s" : "",
       dueOnly ? "d" : "",
       shuffleOn ? "x" : "",
       query.trim().toLowerCase(),
-      [...favorites].sort().join(","),
     ];
+    if (starredOnly) base.push([...favorites].sort().join(","));
     if (dueOnly) base.push(JSON.stringify(progress));
     return base.join("|");
-  }, [subjectFilter, chapterFilter, starredOnly, dueOnly, shuffleOn, query, favorites, progress]);
+  }, [subjects, chapters, starredOnly, dueOnly, shuffleOn, query, favorites, progress]);
 
   // 필터가 바뀌면 학습 덱도 새로 짜기 (현재 학습 중이면 끊김 → 의도된 동작)
   useEffect(() => {
@@ -155,12 +184,48 @@ export default function FlashcardApp() {
   /** 오늘 다시보기: 다시 볼 카드만 모아 학습 시작. (과목·챕터 선택 시 그 범위로 제한) */
   function startReview() {
     const due = presetCards.filter((c) => {
-      if (subjectFilter !== "all" && c.subject !== subjectFilter) return false;
+      if (subjects.size > 0 && !subjects.has(c.subject)) return false;
       if (chapterCardIds && !chapterCardIds.has(c.id)) return false;
       return needsReview(progress, c.id);
     });
     setDeck(shuffle(due));
     setView("study");
+  }
+
+  /** 과목 토글. 해제된 과목에 속한 챕터 선택은 함께 비운다. */
+  function toggleSubject(s: Subject) {
+    const next = new Set(subjects);
+    if (next.has(s)) next.delete(s);
+    else next.add(s);
+    setSubjects(next);
+    setChapters((cs) => {
+      if (next.size === 0) return new Set();
+      const out = new Set<string>();
+      for (const k of cs) if (next.has(subjectOfKey(k))) out.add(k);
+      return out;
+    });
+  }
+
+  function clearSubjects() {
+    setSubjects(new Set());
+    setChapters(new Set());
+  }
+
+  function toggleChapter(key: string) {
+    setChapters((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  function resetFilters() {
+    setSubjects(new Set());
+    setChapters(new Set());
+    setStarredOnly(false);
+    setDueOnly(false);
+    setQuery("");
   }
 
   function handleToggleFavorite(id: string) {
@@ -231,18 +296,21 @@ export default function FlashcardApp() {
       <StudyGuide />
 
       {/* 필터·검색 (스티키) */}
-      <section className="sticky top-2 z-20 mb-7 rounded-2xl border border-zinc-100 bg-white/85 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/70 sm:p-4">
+      <section
+        id="fc-filterbar"
+        className="sticky top-2 z-20 mb-7 rounded-2xl border border-zinc-100 bg-white/85 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/70 sm:p-4"
+      >
         <div className="flex flex-wrap items-center gap-2">
-          {SUBJECTS.map((s) => (
+          <Chip active={subjects.size === 0} onClick={clearSubjects}>
+            전체
+          </Chip>
+          {ALL_SUBJECTS.map((s) => (
             <Chip
               key={s}
-              active={subjectFilter === s}
-              onClick={() => {
-                setSubjectFilter(s);
-                setChapterFilter(null);
-              }}
+              active={subjects.has(s)}
+              onClick={() => toggleSubject(s)}
             >
-              {s === "all" ? "전체" : s}
+              {s}
             </Chip>
           ))}
           <span className="mx-1 hidden h-5 w-px bg-zinc-200 sm:inline-block" />
@@ -280,56 +348,64 @@ export default function FlashcardApp() {
         </div>
 
         {chapterGroups.length > 0 && (
-          <div className="mt-3 rounded-xl bg-zinc-50 px-3 py-2.5 ring-1 ring-zinc-100">
+          <div className="mt-3 space-y-2.5 rounded-xl bg-zinc-50 px-3 py-2.5 ring-1 ring-zinc-100">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold text-zinc-700">
-                📚 {subjectFilter} · 챕터
-              </span>
+              <span className="text-xs font-bold text-zinc-700">📚 챕터</span>
               <span className="text-[11px] text-zinc-400">
-                챕터를 선택하면 학습·랜덤 출제가 그 챕터 안에서만 나옵니다
+                여러 챕터를 선택하면 학습·랜덤 출제가 선택한 챕터 안에서만
+                나옵니다
               </span>
-              {chapterFilter && (
+              {chapters.size > 0 && (
                 <button
                   type="button"
-                  onClick={() => setChapterFilter(null)}
+                  onClick={() => setChapters(new Set())}
                   className="ml-auto rounded-full px-2 py-0.5 text-[11px] font-medium text-zinc-500 underline-offset-2 hover:text-zinc-800 hover:underline"
                 >
-                  챕터 선택 해제
+                  챕터 선택 해제 ({chapters.size})
                 </button>
               )}
             </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {chapterGroups.map((g) => {
-                const selected = chapterFilter === g.title;
-                return (
-                  <button
-                    key={g.title}
-                    type="button"
-                    disabled={g.cards.length === 0}
-                    aria-pressed={selected}
-                    onClick={() =>
-                      setChapterFilter(selected ? null : g.title)
-                    }
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0 ${
-                      selected
-                        ? "border-blue-500 bg-blue-600 text-white"
-                        : "border-zinc-200 bg-white text-zinc-700 hover:border-blue-400 hover:bg-blue-600 hover:text-white disabled:hover:bg-white disabled:hover:text-zinc-700"
-                    }`}
-                  >
-                    {g.title}
-                    <span
-                      className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                        selected
-                          ? "bg-white/25 text-white"
-                          : "bg-zinc-100 text-zinc-500"
-                      }`}
-                    >
-                      {g.cards.length}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            {ALL_SUBJECTS.filter((s) => subjects.has(s)).map((subject) => {
+              const groups = chapterGroups.filter((g) => g.subject === subject);
+              if (groups.length === 0) return null;
+              return (
+                <div key={subject}>
+                  <p className="mb-1.5 text-[11px] font-bold text-zinc-500">
+                    {subject}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {groups.map((g) => {
+                      const selected = chapters.has(g.key);
+                      return (
+                        <button
+                          key={g.key}
+                          type="button"
+                          disabled={g.cards.length === 0}
+                          aria-pressed={selected}
+                          onClick={() => toggleChapter(g.key)}
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0 ${
+                            selected
+                              ? "border-blue-500 bg-blue-600 text-white"
+                              : "border-zinc-200 bg-white text-zinc-700 hover:border-blue-400 hover:bg-blue-600 hover:text-white disabled:hover:bg-white disabled:hover:text-zinc-700"
+                          }`}
+                        >
+                          {g.title}
+                          <span
+                            className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                              selected
+                                ? "bg-white/25 text-white"
+                                : "bg-zinc-100 text-zinc-500"
+                            }`}
+                          >
+                            {g.cards.length}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -402,17 +478,11 @@ export default function FlashcardApp() {
           {(starredOnly ||
             dueOnly ||
             query ||
-            subjectFilter !== "all" ||
-            chapterFilter) && (
+            subjects.size > 0 ||
+            chapters.size > 0) && (
             <button
               type="button"
-              onClick={() => {
-                setStarredOnly(false);
-                setDueOnly(false);
-                setQuery("");
-                setSubjectFilter("all");
-                setChapterFilter(null);
-              }}
+              onClick={resetFilters}
               className="ml-auto rounded-full px-2 py-0.5 font-medium text-zinc-500 underline-offset-2 hover:text-zinc-800 hover:underline"
             >
               필터 초기화
@@ -449,7 +519,7 @@ export default function FlashcardApp() {
             cards={filtered}
             favorites={favorites}
             progress={progress}
-            subjectScope={subjectFilter}
+            subjects={subjects.size > 0 ? [...subjects] : ALL_SUBJECTS}
             onPick={startFromCard}
             onToggleFavorite={handleToggleFavorite}
             onStartChapter={handleStartChapter}
