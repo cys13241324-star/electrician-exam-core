@@ -5,7 +5,12 @@ import Link from "next/link";
 import type { Simulator, Subject } from "@/lib/simulators";
 import { CHAPTERS, ALL_SUBJECTS } from "@/lib/chapters";
 
-type Props = { simulators: Simulator[] };
+type Props = {
+  simulators: Simulator[];
+  initialSubject?: Subject;
+  /** 히어로/상단 검색·필터 영역을 숨기고 챕터 그룹 카드만 렌더 (서브라우트에서 사용) */
+  compact?: boolean;
+};
 
 type SubjectFilter = "all" | Subject;
 const SUBJECT_FILTERS: SubjectFilter[] = ["all", ...ALL_SUBJECTS];
@@ -51,8 +56,14 @@ function normalize(s: string) {
   return s.toLowerCase().replace(/\s+/g, "");
 }
 
-export default function SimulatorList({ simulators }: Props) {
-  const [subjectScope, setSubjectScope] = useState<SubjectFilter>("all");
+export default function SimulatorList({
+  simulators,
+  initialSubject,
+  compact = false,
+}: Props) {
+  const [subjectScope, setSubjectScope] = useState<SubjectFilter>(
+    initialSubject ?? "all",
+  );
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
 
@@ -90,6 +101,7 @@ export default function SimulatorList({ simulators }: Props) {
   return (
     <div>
       {/* 히어로 */}
+      {!compact && (
       <header className="relative mb-8 overflow-hidden rounded-3xl border border-zinc-200/70 bg-gradient-to-br from-indigo-950 via-slate-900 to-zinc-950 px-6 py-10 text-white shadow-xl sm:px-10 sm:py-12">
         <div
           aria-hidden
@@ -118,8 +130,10 @@ export default function SimulatorList({ simulators }: Props) {
           </div>
         </div>
       </header>
+      )}
 
       {/* 검색 + 과목 필터 */}
+      {!compact && (
       <section className="mb-8 rounded-3xl border border-zinc-100 bg-white p-4 shadow-sm sm:p-5">
         <div className="relative">
           <span
@@ -172,6 +186,7 @@ export default function SimulatorList({ simulators }: Props) {
           </span>
         </div>
       </section>
+      )}
 
       {groups.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-zinc-200 bg-white p-14 text-center">
@@ -205,6 +220,7 @@ export default function SimulatorList({ simulators }: Props) {
               chapter={g.chapter}
               items={g.items}
               defaultOpen={!isSearching}
+              compact={compact}
             />
           ))}
         </div>
@@ -227,15 +243,20 @@ function ChapterSection({
   chapter,
   items,
   defaultOpen,
+  compact,
 }: {
   subject: Subject;
   chapter: string;
   items: Simulator[];
   defaultOpen: boolean;
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const style = SUBJECT_STYLE[subject];
   const panelId = `chapter-${subject}-${chapter}`.replace(/\s+/g, "-");
+  const availableCount = items.filter((s) => s.status === "available").length;
+  const total = items.length;
+  const pct = total === 0 ? 0 : Math.round((availableCount / total) * 100);
 
   return (
     <section className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm">
@@ -255,17 +276,55 @@ function ChapterSection({
           >
             ▶
           </span>
-          <span
-            className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${style.chip}`}
-          >
-            {style.emoji} {subject}
-          </span>
+          {!compact && (
+            <span
+              className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${style.chip}`}
+            >
+              {style.emoji} {subject}
+            </span>
+          )}
           <span className="text-base font-bold text-zinc-900 sm:text-lg">
             {chapter}
           </span>
-          <span className="ml-auto shrink-0 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-600">
-            {items.length}
-          </span>
+          {compact && (
+            <span className="text-xs font-semibold text-zinc-500">
+              {total}개
+            </span>
+          )}
+          {compact ? (
+            <div
+              className="ml-auto flex shrink-0 items-center gap-2"
+              title={`이용 가능 ${availableCount} / 전체 ${total} (${pct}%)`}
+              aria-label={`이용률 ${pct}%`}
+            >
+              <div
+                className="h-1.5 w-20 overflow-hidden rounded-full bg-zinc-100"
+                role="progressbar"
+                aria-valuenow={pct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    pct === 100
+                      ? "bg-emerald-500"
+                      : pct === 0
+                        ? "bg-zinc-300"
+                        : "bg-gradient-to-r from-emerald-400 to-emerald-600"
+                  }`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <span className="tabular-nums text-[11px] font-semibold">
+                <span className="text-emerald-700">{availableCount}</span>
+                <span className="text-zinc-400">/{total}</span>
+              </span>
+            </div>
+          ) : (
+            <span className="ml-auto shrink-0 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-600">
+              {total}
+            </span>
+          )}
         </button>
       </h3>
 
