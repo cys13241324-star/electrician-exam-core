@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+// 다른 페이지에서 active="study" 식으로 호출하지만, 이제 main 탭 하나만 남았으므로
+// 호환을 위해 ID 종류는 받되 실제로는 main 만 렌더된다.
 type TabId =
   | "main"
   | "study"
@@ -10,11 +12,6 @@ type TabId =
 
 const TABS: { id: TabId; label: string; href: string; badge?: string }[] = [
   { id: "main", label: "전기기능사", href: "/cbt", badge: "구독중" },
-  { id: "study", label: "과목별 학습", href: "/cbt/study" },
-  { id: "exams", label: "모의고사", href: "/cbt/exams" },
-  { id: "wrong-notes", label: "오답노트", href: "/cbt/wrong-notes" },
-  { id: "frequent", label: "N회빈출", href: "/cbt/frequent" },
-  { id: "hard", label: "고난도모음", href: "/cbt/hard" },
 ];
 
 export default function SubTabs({ active }: { active: TabId }) {

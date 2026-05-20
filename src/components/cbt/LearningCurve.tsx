@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { readAttempts } from "@/lib/cbt/stats";
 import { mockExams } from "@/lib/cbt/mockData";
@@ -9,10 +8,38 @@ type Point = {
   ts: number;
   score: number;
   examTitle: string;
+  isDemo?: boolean;
 };
+
+/** 응시 기록이 없을 때 표시할 데모 곡선 (RecentAttempts 의 sampleRows 와 동일 데이터). */
+function samplePoints(): Point[] {
+  const DAY = 86400000;
+  const presets = [
+    { correct: 44, daysAgo: 14 },
+    { correct: 31, daysAgo: 9 },
+    { correct: 39, daysAgo: 5 },
+    { correct: 47, daysAgo: 2 },
+  ];
+  return presets
+    .map<Point | null>((p, i) => {
+      const exam = mockExams[i];
+      if (!exam) return null;
+      const total = exam.totalQuestions;
+      const correct = Math.min(p.correct, total);
+      return {
+        ts: Date.now() - p.daysAgo * DAY,
+        score: Math.round((correct / total) * 100),
+        examTitle: exam.title,
+        isDemo: true,
+      };
+    })
+    .filter((p): p is Point => p !== null)
+    .sort((a, b) => a.ts - b.ts);
+}
 
 export default function LearningCurve() {
   const [points, setPoints] = useState<Point[] | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     const attempts = readAttempts().filter((a) => a.submittedAt !== null);
@@ -32,30 +59,20 @@ export default function LearningCurve() {
       });
     }
     out.sort((a, b) => a.ts - b.ts);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage attempts 집계 → 학습 곡선 데이터
-    setPoints(out);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage attempts 집계 → 학습 곡선 데이터, 비어있으면 데모로 채워 차트 표시
+    if (out.length > 0) {
+      setPoints(out);
+      setIsDemo(false);
+    } else {
+      setPoints(samplePoints());
+      setIsDemo(true);
+    }
   }, []);
 
   if (points === null) {
     return (
       <div className="rounded-md bg-zinc-50 px-4 py-6 text-center text-xs text-zinc-500">
         불러오는 중...
-      </div>
-    );
-  }
-
-  if (points.length === 0) {
-    return (
-      <div className="rounded-md bg-zinc-50 px-4 py-8 text-center">
-        <p className="text-xs text-zinc-600">
-          모의고사를 응시하면 점수 변화가 그래프로 보입니다.
-        </p>
-        <Link
-          href="/cbt/exams"
-          className="mt-3 inline-block rounded-md bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
-        >
-          첫 응시하기 →
-        </Link>
       </div>
     );
   }
@@ -86,7 +103,14 @@ export default function LearningCurve() {
   return (
     <div>
       <div className="mb-2 flex items-center justify-between text-[11px]">
-        <span className="text-zinc-500">최근 점수 변화</span>
+        <span className="flex items-center gap-1.5 text-zinc-500">
+          최근 점수 변화
+          {isDemo && (
+            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 ring-1 ring-amber-100">
+              데모
+            </span>
+          )}
+        </span>
         <span
           className={
             trend > 0
