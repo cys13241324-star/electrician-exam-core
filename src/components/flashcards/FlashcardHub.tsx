@@ -151,9 +151,6 @@ export default function FlashcardHub() {
               </span>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-zinc-400">
-                    {card.no}
-                  </span>
                   <h2 className="text-lg font-bold text-zinc-900">
                     {card.title}
                   </h2>

@@ -93,14 +93,9 @@ export default function CbtHub() {
                 {card.icon}
               </span>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-zinc-400">
-                    {card.no}
-                  </span>
-                  <h2 className="text-lg font-bold text-zinc-900">
-                    {card.title}
-                  </h2>
-                </div>
+                <h2 className="text-lg font-bold text-zinc-900">
+                  {card.title}
+                </h2>
                 <p className="mt-1.5 text-[15px] leading-relaxed text-zinc-600">
                   {card.desc}
                 </p>
