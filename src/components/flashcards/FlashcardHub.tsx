@@ -135,7 +135,8 @@ export default function FlashcardHub() {
         </h1>
       </header>
 
-      {/* 진입 카드 4개 — 메인 액션 영역 */}
+      {/* 진입 카드 4개 — 메인 액션 영역 (살짝 다른 톤의 wrapper 로 그루핑) */}
+      <section className="rounded-3xl bg-zinc-100/50 p-3 ring-1 ring-zinc-200/60 sm:p-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {CARDS.map((card) => (
           <Link
@@ -168,15 +169,18 @@ export default function FlashcardHub() {
           </Link>
         ))}
       </div>
+      </section>
 
-      {/* 4-카드 ↔ 대시보드 시각적 분리 */}
+      {/* 4-카드 ↔ 대시보드 시각적 분리 — chip 형태 divider */}
       <div
         aria-hidden
-        className="my-10 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-400"
+        className="my-12 flex items-center gap-4"
       >
-        <span className="h-px flex-1 bg-gradient-to-r from-transparent to-zinc-200" />
-        내 학습 현황
-        <span className="h-px flex-1 bg-gradient-to-l from-transparent to-zinc-200" />
+        <span className="h-px flex-1 bg-zinc-200" />
+        <span className="rounded-full border border-zinc-200 bg-white px-4 py-1.5 text-[13px] font-bold uppercase tracking-[0.18em] text-zinc-600 shadow-sm">
+          내 학습 현황
+        </span>
+        <span className="h-px flex-1 bg-zinc-200" />
       </div>
 
       {/* 전체 진도 스트립 */}
