@@ -148,8 +148,8 @@ export default function SimulatorHub() {
         </Link>
       </header>
 
-      {/* 진입 카드 4개 */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {/* 진입 카드 4개 — 메인 액션 영역 */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {CARDS.map((card) => {
           const badge = badgeFor(card);
           return (
@@ -157,7 +157,7 @@ export default function SimulatorHub() {
               key={card.no}
               href={card.href}
               prefetch={card.kind !== "random"}
-              className="group relative flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md"
+              className="group relative flex flex-col rounded-2xl border border-zinc-200 bg-white p-7 pb-12 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg"
             >
               <div className="flex items-start gap-4">
                 <span
@@ -170,7 +170,7 @@ export default function SimulatorHub() {
                     <span className="text-xs font-bold text-zinc-400">
                       {card.no}
                     </span>
-                    <h2 className="text-base font-bold text-zinc-900">
+                    <h2 className="text-lg font-bold text-zinc-900">
                       {card.title}
                     </h2>
                     {badge && (
@@ -180,22 +180,32 @@ export default function SimulatorHub() {
                       </span>
                     )}
                   </div>
-                  <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">
+                  <p className="mt-1.5 text-[15px] leading-relaxed text-zinc-600">
                     {card.desc}
                   </p>
                 </div>
               </div>
-              <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-zinc-400 transition group-hover:text-zinc-900">
+              <span className="absolute bottom-5 right-5 inline-flex items-center gap-1 text-sm font-semibold text-zinc-500 transition group-hover:text-zinc-900">
                 {card.cta}
-                <span className="transition group-hover:translate-x-0.5">→</span>
+                <span className="transition group-hover:translate-x-1">→</span>
               </span>
             </Link>
           );
         })}
       </div>
 
+      {/* 4-카드 ↔ 섹션 시각적 분리 */}
+      <div
+        aria-hidden
+        className="my-10 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-400"
+      >
+        <span className="h-px flex-1 bg-gradient-to-r from-transparent to-zinc-200" />
+        시뮬레이터 현황
+        <span className="h-px flex-1 bg-gradient-to-l from-transparent to-zinc-200" />
+      </div>
+
       {/* 섹션 카드 2개 */}
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <SectionCard
           title="과목별 시뮬레이터"
           subtitle="현재 사용 가능 / 전체 (준비중 포함)"

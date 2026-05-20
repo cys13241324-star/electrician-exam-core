@@ -135,15 +135,15 @@ export default function FlashcardHub() {
         </h1>
       </header>
 
-      {/* 진입 카드 4개 */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {/* 진입 카드 4개 — 메인 액션 영역 */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {CARDS.map((card) => (
           <Link
             key={card.no}
             href={card.href}
-            className="group relative flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md"
+            className="group relative flex flex-col rounded-2xl border border-zinc-200 bg-white p-7 pb-12 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg"
           >
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4 pr-8">
               <span
                 className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border text-2xl ${card.accent}`}
               >
@@ -154,22 +154,32 @@ export default function FlashcardHub() {
                   <span className="text-xs font-bold text-zinc-400">
                     {card.no}
                   </span>
-                  <h2 className="text-base font-bold text-zinc-900">
+                  <h2 className="text-lg font-bold text-zinc-900">
                     {card.title}
                   </h2>
                   <HubBadge card={card} stats={{ dueCount, customCount: customCards.length }} hydrated={hydrated} />
                 </div>
-                <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">
+                <p className="mt-1.5 text-[15px] leading-relaxed text-zinc-600">
                   {card.desc}
                 </p>
               </div>
             </div>
-            <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-zinc-400 transition group-hover:text-zinc-900">
+            <span className="absolute bottom-5 right-5 inline-flex items-center gap-1 text-sm font-semibold text-zinc-500 transition group-hover:text-zinc-900">
               {card.cta}
-              <span className="transition group-hover:translate-x-0.5">→</span>
+              <span className="transition group-hover:translate-x-1">→</span>
             </span>
           </Link>
         ))}
+      </div>
+
+      {/* 4-카드 ↔ 대시보드 시각적 분리 */}
+      <div
+        aria-hidden
+        className="my-10 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-400"
+      >
+        <span className="h-px flex-1 bg-gradient-to-r from-transparent to-zinc-200" />
+        내 학습 현황
+        <span className="h-px flex-1 bg-gradient-to-l from-transparent to-zinc-200" />
       </div>
 
       {/* 전체 진도 스트립 */}

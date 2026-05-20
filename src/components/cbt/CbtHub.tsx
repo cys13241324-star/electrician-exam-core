@@ -78,15 +78,15 @@ export default function CbtHub() {
         </h1>
       </header>
 
-      {/* 진입 카드 4개 */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {/* 진입 카드 4개 — 메인 액션 영역 */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {CARDS.map((card) => (
           <Link
             key={card.no}
             href={card.href}
-            className="group relative flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md"
+            className="group relative flex flex-col rounded-2xl border border-zinc-200 bg-white p-7 pb-12 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg"
           >
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4 pr-8">
               <span
                 className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border text-2xl ${card.accent}`}
               >
@@ -97,21 +97,31 @@ export default function CbtHub() {
                   <span className="text-xs font-bold text-zinc-400">
                     {card.no}
                   </span>
-                  <h2 className="text-base font-bold text-zinc-900">
+                  <h2 className="text-lg font-bold text-zinc-900">
                     {card.title}
                   </h2>
                 </div>
-                <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">
+                <p className="mt-1.5 text-[15px] leading-relaxed text-zinc-600">
                   {card.desc}
                 </p>
               </div>
             </div>
-            <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-zinc-400 transition group-hover:text-zinc-900">
+            <span className="absolute bottom-5 right-5 inline-flex items-center gap-1 text-sm font-semibold text-zinc-500 transition group-hover:text-zinc-900">
               바로가기
-              <span className="transition group-hover:translate-x-0.5">→</span>
+              <span className="transition group-hover:translate-x-1">→</span>
             </span>
           </Link>
         ))}
+      </div>
+
+      {/* 4-카드 ↔ 대시보드 시각적 분리 */}
+      <div
+        aria-hidden
+        className="my-10 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-400"
+      >
+        <span className="h-px flex-1 bg-gradient-to-r from-transparent to-zinc-200" />
+        내 학습 현황
+        <span className="h-px flex-1 bg-gradient-to-l from-transparent to-zinc-200" />
       </div>
 
       {/* 대시보드 스트립 (압축) */}
@@ -167,26 +177,50 @@ function SectionCard({
   );
 }
 
+/**
+ * 응시 기록 없을 때 보여줄 데모 통계 (RecentAttempts/LearningCurve 와 일관).
+ * 4회 응시 평균 ~67%, 누적 학습 ~3시간 30분, 취약 영역 "전기설비 · 접지".
+ */
+const DEMO_STATS = {
+  accuracy: 67,
+  attempts: 4,
+  studyMinutesText: "3시간 30분",
+  weakest: { subject: "전기설비", topic: "접지", accuracy: 0.42 },
+};
+
 function DashboardStrip({ stats }: { stats: LearningStats | null }) {
   const hasData = stats?.hasAnyAttempt ?? false;
-  const accuracy = Math.round((stats?.averageAccuracy ?? 0) * 100);
-  const attempts = stats?.totalAttempts ?? 0;
-  const studyTime = formatHours(stats?.totalStudyMinutes ?? 0);
-  const weakest = stats?.weakestTopics?.[0] ?? null;
+  const accuracy = hasData
+    ? Math.round((stats?.averageAccuracy ?? 0) * 100)
+    : DEMO_STATS.accuracy;
+  const attempts = hasData
+    ? stats?.totalAttempts ?? 0
+    : DEMO_STATS.attempts;
+  const studyTime = hasData
+    ? formatHours(stats?.totalStudyMinutes ?? 0)
+    : DEMO_STATS.studyMinutesText;
+  const weakest = hasData
+    ? stats?.weakestTopics?.[0] ?? null
+    : DEMO_STATS.weakest;
 
   const metrics = [
     {
       label: "평균 정답률",
-      value: hasData ? `${accuracy}%` : "—",
-      tone: hasData && accuracy >= 60 ? "text-emerald-600" : "text-zinc-900",
+      value: `${accuracy}%`,
+      tone: accuracy >= 60 ? "text-emerald-600" : "text-zinc-900",
     },
-    { label: "응시 회차", value: hasData ? `${attempts}회` : "—", tone: "text-zinc-900" },
-    { label: "누적 학습", value: hasData ? studyTime : "—", tone: "text-zinc-900" },
+    { label: "응시 회차", value: `${attempts}회`, tone: "text-zinc-900" },
+    { label: "누적 학습", value: studyTime, tone: "text-zinc-900" },
   ];
 
   return (
     <section className="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-blue-50 px-6 py-5 sm:px-8">
       <BackgroundPattern variant="circuit" color="#1e40af" opacity={0.05} />
+      {!hasData && (
+        <span className="absolute right-3 top-3 z-10 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-amber-100">
+          데모 데이터
+        </span>
+      )}
       <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
           {metrics.map((m) => (
@@ -197,7 +231,7 @@ function DashboardStrip({ stats }: { stats: LearningStats | null }) {
           ))}
           <div className="min-w-0">
             <p className="text-xs font-medium text-zinc-500">취약 영역</p>
-            {hasData && weakest ? (
+            {weakest ? (
               <p className="mt-0.5 truncate text-sm font-semibold text-zinc-900">
                 {weakest.subject} · {weakest.topic}{" "}
                 <span className="text-rose-600">
