@@ -34,6 +34,14 @@ export const machineCards: Flashcard[] = [
     topic: "직류기",
     source: "preset",
     hint: "중권 a=P, 파권 a=2",
+    example: {
+      question: "6극 직류기를 중권으로 감았을 때 병렬회로수 $a$는?",
+      solution: [
+        "중권: $a = P$",
+        "$a = 6$",
+      ],
+      answer: "$a = 6$",
+    },
   },
   {
     id: "m-dc-armature-reaction",
@@ -43,6 +51,14 @@ export const machineCards: Flashcard[] = [
     topic: "직류기",
     source: "preset",
     hint: "감자·중성축 이동·정류불량 → 보극·보상권선",
+    example: {
+      question: "직류기에서 전기자 반작용으로 자속 감소·정류 불량이 발생할 때 가장 효과적인 대책은?",
+      solution: [
+        "주된 대책: 보극·보상권선 설치",
+        "특히 보상권선이 전기자 기자력을 직접 상쇄",
+      ],
+      answer: "보극·보상권선 설치",
+    },
   },
   {
     id: "m-dc-commutation",
@@ -52,6 +68,15 @@ export const machineCards: Flashcard[] = [
     topic: "직류기",
     source: "preset",
     hint: "보극·탄소브러시·정류주기 ↑",
+    example: {
+      question: "정류주기 $T_c = 0.005$ s, 코일 인덕턴스 $L = 0.001$ H, 정류전류 $I_c = 50$ A일 때 리액턴스 전압은?",
+      solution: [
+        "$e_L = L \\dfrac{2 I_c}{T_c}$",
+        "$e_L = 0.001 \\times \\dfrac{2 \\times 50}{0.005}$",
+        "$e_L = 0.001 \\times 20000 = 20\\ \\text{V}$",
+      ],
+      answer: "$e_L = 20\\ \\text{V}$",
+    },
   },
   {
     id: "m-dc-shunt-motor",
@@ -61,6 +86,14 @@ export const machineCards: Flashcard[] = [
     topic: "직류기",
     source: "preset",
     hint: "정속도 특성, 계자 단선 시 위험속도",
+    example: {
+      question: "$V = 220$ V, $I_a = 10$ A, $R_a = 0.2\\,\\Omega$, $K\\phi = 0.4$인 분권전동기의 회전수에 비례하는 역기전력은?",
+      solution: [
+        "$E = V - I_a R_a$",
+        "$E = 220 - 10 \\times 0.2 = 218\\ \\text{V}$",
+      ],
+      answer: "$E = 218\\ \\text{V}$",
+    },
   },
   {
     id: "m-dc-series-motor",
@@ -70,6 +103,14 @@ export const machineCards: Flashcard[] = [
     topic: "직류기",
     source: "preset",
     hint: "T∝Ia², 무부하 위험, 전동차용",
+    example: {
+      question: "직권전동기의 전기자 전류가 2배가 되면 토크는 몇 배?",
+      solution: [
+        "$T \\propto I_a^2$",
+        "$T' = 2^2 T = 4 T$",
+      ],
+      answer: "4배",
+    },
   },
   {
     id: "m-dc-speed-control",
@@ -79,6 +120,14 @@ export const machineCards: Flashcard[] = [
     topic: "직류기",
     source: "preset",
     hint: "계자·저항·전압 제어",
+    example: {
+      question: "효율은 좋지만 정출력 제어가 되는 직류전동기 속도제어 방식은?",
+      solution: [
+        "$\\phi$를 약하게 → 속도 증가, 토크 감소",
+        "출력 $P = E I_a$ 일정 → 정출력 제어",
+      ],
+      answer: "계자제어(정출력 제어)",
+    },
   },
   {
     id: "m-dc-braking",
@@ -88,6 +137,14 @@ export const machineCards: Flashcard[] = [
     topic: "직류기",
     source: "preset",
     hint: "발전·회생·역전(플러깅)",
+    example: {
+      question: "전기차가 내리막에서 모터의 발생전력을 배터리로 되돌리는 제동 방식은?",
+      solution: [
+        "발생전력을 전원(배터리)으로 반환",
+        "→ 회생제동",
+      ],
+      answer: "회생제동",
+    },
   },
   {
     id: "m-dc-starting",
@@ -114,6 +171,14 @@ export const machineCards: Flashcard[] = [
     topic: "직류기",
     source: "preset",
     hint: "분권 하강, 직권 상승",
+    example: {
+      question: "부하 증가 시 단자전압이 점차 떨어지는 자기여자식 발전기는?",
+      solution: [
+        "분권발전기: 자기여자 + 수하 특성",
+        "직권은 부하 증가 시 전압 상승",
+      ],
+      answer: "분권발전기",
+    },
   },
   {
     id: "m-dc-torque-formula",
@@ -140,6 +205,15 @@ export const machineCards: Flashcard[] = [
     topic: "직류기",
     source: "preset",
     hint: "고정손 = 가변손",
+    example: {
+      question: "정격에서 고정손 200 W, 가변손 200 W인 직류기에서 최대효율점 부하율은?",
+      solution: [
+        "최대효율: 고정손 = 가변손",
+        "가변손 $\\propto$ (부하율)$^2$ → 가변손 200 W는 이미 정격",
+        "→ 정격 부하(100 %)에서 최대효율",
+      ],
+      answer: "부하율 100 % (정격)",
+    },
   },
 
   // ──────────────────────────────────────────────────────────
@@ -170,6 +244,15 @@ export const machineCards: Flashcard[] = [
     topic: "변압기",
     source: "preset",
     hint: "철손전류 + 자화전류",
+    example: {
+      question: "철손전류 $I_i = 0.3$ A, 자화전류 $I_\\phi = 0.4$ A일 때 여자전류 크기는?",
+      solution: [
+        "$I_0 = \\sqrt{I_i^2 + I_\\phi^2}$",
+        "$I_0 = \\sqrt{0.3^2 + 0.4^2} = \\sqrt{0.25}$",
+        "$I_0 = 0.5\\ \\text{A}$",
+      ],
+      answer: "$I_0 = 0.5\\ \\text{A}$",
+    },
   },
   {
     id: "m-trans-voltage-regulation",
@@ -213,6 +296,14 @@ export const machineCards: Flashcard[] = [
     topic: "변압기",
     source: "preset",
     hint: "극성·변압비·%Z·R:X 비",
+    example: {
+      question: "두 변압기 병렬운전을 위해 반드시 같아야 하는 항목 중 하나는?",
+      solution: [
+        "권수비(변압비) 일치 — 다르면 순환전류 발생",
+        "또한 극성·%Z·내부 임피던스 비도 일치 필요",
+      ],
+      answer: "변압비(권수비)",
+    },
   },
   {
     id: "m-trans-polarity",
@@ -222,6 +313,14 @@ export const machineCards: Flashcard[] = [
     topic: "변압기",
     source: "preset",
     hint: "표준은 감극성(빼짐)",
+    example: {
+      question: "변압기 극성시험에서 $V_1 = 100$ V, $V_2 = 20$ V, 두 권선을 직렬로 했을 때 80 V가 측정되었다. 극성은?",
+      solution: [
+        "감극성: $V_1 - V_2 = 100 - 20 = 80\\ \\text{V}$",
+        "측정값과 일치",
+      ],
+      answer: "감극성 (표준)",
+    },
   },
   {
     id: "m-trans-3phase-connection",
@@ -231,6 +330,14 @@ export const machineCards: Flashcard[] = [
     topic: "변압기",
     source: "preset",
     hint: "Δ-Y 승압, Y-Δ 강압, 30° 변위",
+    example: {
+      question: "1차 Δ, 2차 Y 결선의 변압기에서 발생하는 1·2차 선간전압의 위상차는?",
+      solution: [
+        "Δ-Y 결선: 30° 위상변위",
+        "(또는 −30°, 결선군에 따라)",
+      ],
+      answer: "30°",
+    },
   },
   {
     id: "m-trans-vv-connection",
@@ -257,6 +364,14 @@ export const machineCards: Flashcard[] = [
     topic: "변압기",
     source: "preset",
     hint: "권선 공통 → 소형·고효율, 절연 곤란",
+    example: {
+      question: "1차 6.6 kV → 2차 6.0 kV로 강압하는 단권변압기의 자기용량 비(자기용량/부하용량)는?",
+      solution: [
+        "자기/부하 = $\\dfrac{V_h - V_l}{V_h} = \\dfrac{6.6 - 6.0}{6.6}$",
+        "$= \\dfrac{0.6}{6.6} \\approx 0.091$",
+      ],
+      answer: "약 9.1 % (자기용량이 부하용량의 9.1 %)",
+    },
   },
   {
     id: "m-trans-oc-sc-test",
@@ -266,6 +381,14 @@ export const machineCards: Flashcard[] = [
     topic: "변압기",
     source: "preset",
     hint: "무부하=철손, 단락=동손",
+    example: {
+      question: "변압기 무부하시험에서 1차 입력 100 W가 측정되었다. 이 값은 어떤 손실인가?",
+      solution: [
+        "무부하시험 → 정격전압 인가, 부하 없음",
+        "1차 입력 ≈ 철손(여자전류는 작아 동손 무시)",
+      ],
+      answer: "철손 약 100 W",
+    },
   },
   {
     id: "m-trans-cooling",
@@ -275,6 +398,15 @@ export const machineCards: Flashcard[] = [
     topic: "변압기",
     source: "preset",
     hint: "ONAN 자냉, ONAF 풍냉",
+    example: {
+      question: "내부 절연유 자연순환, 외부 송풍기 강제 냉각 방식의 약호는?",
+      solution: [
+        "내부 O(Oil) + N(자연) = ON",
+        "외부 A(Air) + F(강제) = AF",
+        "→ ONAF",
+      ],
+      answer: "ONAF",
+    },
   },
   {
     id: "m-trans-protection",
@@ -284,6 +416,14 @@ export const machineCards: Flashcard[] = [
     topic: "변압기",
     source: "preset",
     hint: "부흐홀츠·비율차동계전기",
+    example: {
+      question: "변압기 주탱크와 콘서베이터 사이에 설치되어 절연유 분해가스로 내부고장을 검출하는 계전기는?",
+      solution: [
+        "유실 가스·유동 검출",
+        "→ 부흐홀츠 계전기",
+      ],
+      answer: "부흐홀츠 계전기",
+    },
   },
   {
     id: "m-trans-insulating-oil",
@@ -293,6 +433,14 @@ export const machineCards: Flashcard[] = [
     topic: "변압기",
     source: "preset",
     hint: "절연내력↑·점도↓·인화점↑",
+    example: {
+      question: "변압기 절연유로 인화점이 낮은 유종을 쓰면 안 되는 이유는?",
+      solution: [
+        "인화점이 낮으면 운전 중 발화·화재 위험",
+        "절연유는 인화점이 높을수록 안전",
+      ],
+      answer: "발화·화재 위험 (인화점은 높아야 함)",
+    },
   },
   {
     id: "m-trans-load-loss",
@@ -319,6 +467,14 @@ export const machineCards: Flashcard[] = [
     topic: "변압기",
     source: "preset",
     hint: "하루 전력량 기준 효율",
+    example: {
+      question: "1일 출력전력량 200 kWh, 1일 철손량 5 kWh, 부하시 총 동손량 3 kWh일 때 전일효율은?",
+      solution: [
+        "$\\eta_{day} = \\dfrac{200}{200 + 5 + 3} \\times 100$",
+        "$= \\dfrac{200}{208} \\times 100 \\approx 96.2\\%$",
+      ],
+      answer: "약 96.2 %",
+    },
   },
 
   // ──────────────────────────────────────────────────────────
@@ -366,6 +522,14 @@ export const machineCards: Flashcard[] = [
     topic: "유도전동기",
     source: "preset",
     hint: "η₂ = 1 − s = N/Ns",
+    example: {
+      question: "슬립 3 %일 때 유도전동기의 2차 효율은?",
+      solution: [
+        "$\\eta_2 = 1 - s$",
+        "$\\eta_2 = 1 - 0.03 = 0.97 = 97\\%$",
+      ],
+      answer: "97 %",
+    },
   },
   {
     id: "m-im-starting-cage",
@@ -375,6 +539,14 @@ export const machineCards: Flashcard[] = [
     topic: "유도전동기",
     source: "preset",
     hint: "직입·Y-Δ·기동보상기·리액터",
+    example: {
+      question: "5.5 kW 이하 소형 농형 유도전동기에 주로 쓰는 기동법은?",
+      solution: [
+        "기동 전류가 허용 범위 → 부가 장치 불필요",
+        "→ 전전압(직입) 기동",
+      ],
+      answer: "전전압(직입) 기동",
+    },
   },
   {
     id: "m-im-ystart",
@@ -384,6 +556,14 @@ export const machineCards: Flashcard[] = [
     topic: "유도전동기",
     source: "preset",
     hint: "전압 1/√3 → 전류·토크 1/3",
+    example: {
+      question: "직입 기동 시 기동전류가 600 A인 농형 전동기를 Y-Δ 기동하면 선전류는?",
+      solution: [
+        "Y-Δ 기동: 선전류는 직입의 $\\dfrac{1}{3}$",
+        "$I = \\dfrac{600}{3} = 200\\ \\text{A}$",
+      ],
+      answer: "$I = 200\\ \\text{A}$",
+    },
   },
   {
     id: "m-im-wound-starting",
@@ -393,6 +573,14 @@ export const machineCards: Flashcard[] = [
     topic: "유도전동기",
     source: "preset",
     hint: "2차 외부저항(비례추이)",
+    example: {
+      question: "권선형 유도전동기에서 기동토크를 크게 하면서 기동전류는 줄이는 방법은?",
+      solution: [
+        "슬립링을 통해 2차에 외부저항 삽입",
+        "비례추이로 기동토크 ↑, 기동전류 ↓",
+      ],
+      answer: "2차 저항기동법",
+    },
   },
   {
     id: "m-im-speed-control",
@@ -402,6 +590,14 @@ export const machineCards: Flashcard[] = [
     topic: "유도전동기",
     source: "preset",
     hint: "주파수·극수·2차저항·2차여자",
+    example: {
+      question: "농형 유도전동기에서 가장 광범위하게 속도제어가 가능한 방식은?",
+      solution: [
+        "주파수 가변 → $N_s \\propto f$ 직접 변화",
+        "VVVF 인버터 제어",
+      ],
+      answer: "주파수 제어 (VVVF 인버터)",
+    },
   },
   {
     id: "m-im-vf-constant",
@@ -411,6 +607,14 @@ export const machineCards: Flashcard[] = [
     topic: "유도전동기",
     source: "preset",
     hint: "자속 일정 유지 → 토크 일정",
+    example: {
+      question: "60 Hz·220 V로 운전하던 전동기를 30 Hz로 운전할 때 V/f 일정 제어를 위한 전압은?",
+      solution: [
+        "$\\dfrac{V}{f}$ 일정 유지",
+        "$V = 220 \\times \\dfrac{30}{60} = 110\\ \\text{V}$",
+      ],
+      answer: "$V = 110\\ \\text{V}$",
+    },
   },
   {
     id: "m-im-no-load-test",
@@ -420,6 +624,14 @@ export const machineCards: Flashcard[] = [
     topic: "유도전동기",
     source: "preset",
     hint: "무부하=철·기계손, 구속=동손",
+    example: {
+      question: "유도전동기 구속(정지)시험으로 얻을 수 있는 값은?",
+      solution: [
+        "회전자 고정 후 저전압으로 정격전류 흘림",
+        "→ 동손, 누설임피던스",
+      ],
+      answer: "동손 + 누설임피던스",
+    },
   },
   {
     id: "m-im-frequency-effect",
@@ -429,6 +641,14 @@ export const machineCards: Flashcard[] = [
     topic: "유도전동기",
     source: "preset",
     hint: "속도↓, 자속↑(과열)",
+    example: {
+      question: "60 Hz·4극 유도전동기를 50 Hz 전원에 그대로 연결하면 동기속도는?",
+      solution: [
+        "$N_s = \\dfrac{120 f}{P}$",
+        "$N_s = \\dfrac{120 \\times 50}{4} = 1500\\ \\text{rpm}$",
+      ],
+      answer: "$N_s = 1500\\ \\text{rpm}$ (속도 감소)",
+    },
   },
   {
     id: "m-im-crawling",
@@ -438,6 +658,14 @@ export const machineCards: Flashcard[] = [
     topic: "유도전동기",
     source: "preset",
     hint: "고조파로 저속 고착 → 사구",
+    example: {
+      question: "유도전동기가 정상 동기속도까지 가속되지 못하고 동기속도의 1/7 부근에 머무는 현상은?",
+      solution: [
+        "공극 자속 고조파 영향으로 저속 안정점 발생",
+        "→ 크롤링 현상",
+      ],
+      answer: "크롤링 (Crawling)",
+    },
   },
   {
     id: "m-im-cogging",
@@ -447,6 +675,14 @@ export const machineCards: Flashcard[] = [
     topic: "유도전동기",
     source: "preset",
     hint: "슬롯수 정수배 → 기동불능, 사구 대책",
+    example: {
+      question: "유도전동기 기동 시 회전자가 슬롯에 자기적으로 끌려 기동하지 못하는 현상의 대책은?",
+      solution: [
+        "코깅 현상의 원인: 슬롯수가 정수배",
+        "대책: 회전자 슬롯을 비스듬히(사구·skew)",
+      ],
+      answer: "회전자 슬롯의 사구 설계",
+    },
   },
   {
     id: "m-im-power-factor",
@@ -456,6 +692,14 @@ export const machineCards: Flashcard[] = [
     topic: "유도전동기",
     source: "preset",
     hint: "자화전류로 지상, 콘덴서로 개선",
+    example: {
+      question: "유도전동기 부하의 역률을 개선하기 위해 가장 일반적으로 사용하는 기기는?",
+      solution: [
+        "지상 무효전력 보상 필요",
+        "→ 진상 콘덴서를 부하와 병렬",
+      ],
+      answer: "진상(전력) 콘덴서 (병렬 연결)",
+    },
   },
 
   // ──────────────────────────────────────────────────────────
@@ -469,6 +713,15 @@ export const machineCards: Flashcard[] = [
     topic: "동기기",
     source: "preset",
     hint: "E = 4.44 kw f N Φ",
+    example: {
+      question: "60 Hz, 권수 100, 권선계수 0.96, 자속 0.05 Wb일 때 동기발전기 유기 기전력은?",
+      solution: [
+        "$E = 4.44\\, k_w\\, f\\, N\\, \\phi$",
+        "$E = 4.44 \\times 0.96 \\times 60 \\times 100 \\times 0.05$",
+        "$E \\approx 1278\\ \\text{V}$",
+      ],
+      answer: "$E \\approx 1278\\ \\text{V}$",
+    },
   },
   {
     id: "m-sync-frequency",
@@ -495,6 +748,14 @@ export const machineCards: Flashcard[] = [
     topic: "동기기",
     source: "preset",
     hint: "고조파 감소·파형 개선",
+    example: {
+      question: "동기기에서 권선을 여러 슬롯에 분산해 감는 권선법의 효과는?",
+      solution: [
+        "분포권 → 고조파 감소, 정현파에 가까운 파형",
+        "단점은 기본파 기전력이 약간 감소",
+      ],
+      answer: "고조파 감소·파형 개선",
+    },
   },
   {
     id: "m-sync-armature-reaction",
@@ -504,6 +765,14 @@ export const machineCards: Flashcard[] = [
     topic: "동기기",
     source: "preset",
     hint: "지상=감자, 진상=증자",
+    example: {
+      question: "동기발전기가 진상(용량성) 부하에 전력을 공급할 때 전기자 반작용은?",
+      solution: [
+        "진상부하 → 증자작용",
+        "단자전압이 무부하 때보다 상승",
+      ],
+      answer: "증자작용",
+    },
   },
   {
     id: "m-sync-short-ratio",
@@ -513,6 +782,14 @@ export const machineCards: Flashcard[] = [
     topic: "동기기",
     source: "preset",
     hint: "Ks = 100/%Z, 클수록 안정",
+    example: {
+      question: "동기기의 %임피던스가 80 %일 때 단락비는?",
+      solution: [
+        "$K_s = \\dfrac{100}{\\%Z}$",
+        "$K_s = \\dfrac{100}{80} = 1.25$",
+      ],
+      answer: "$K_s = 1.25$",
+    },
   },
   {
     id: "m-sync-parallel-condition",
@@ -522,6 +799,14 @@ export const machineCards: Flashcard[] = [
     topic: "동기기",
     source: "preset",
     hint: "크기·위상·주파수·파형",
+    example: {
+      question: "두 동기발전기를 병렬운전하려는데 한 쪽 주파수가 0.5 Hz 더 높다. 가능한가?",
+      solution: [
+        "병렬운전 조건: 기전력 주파수가 같을 것",
+        "주파수가 다르면 위상이 어긋나 큰 횡류 발생",
+      ],
+      answer: "불가 (주파수 일치 필요)",
+    },
   },
   {
     id: "m-sync-hunting",
@@ -531,6 +816,14 @@ export const machineCards: Flashcard[] = [
     topic: "동기기",
     source: "preset",
     hint: "제동권선으로 방지",
+    example: {
+      question: "동기전동기의 난조 방지에 가장 효과적인 방법은?",
+      solution: [
+        "회전자 자극면에 도체 단락 권선",
+        "→ 제동권선 설치",
+      ],
+      answer: "제동권선 설치",
+    },
   },
   {
     id: "m-sync-condenser",
@@ -540,6 +833,14 @@ export const machineCards: Flashcard[] = [
     topic: "동기기",
     source: "preset",
     hint: "과여자=진상, 부족여자=지상",
+    example: {
+      question: "동기조상기를 과여자로 운전하면 어떤 효과가 있는가?",
+      solution: [
+        "과여자 → 진상 무효전력 공급(콘덴서 역할)",
+        "→ 계통 역률 개선, 전압 상승",
+      ],
+      answer: "진상 운전(역률 개선)",
+    },
   },
   {
     id: "m-sync-v-curve",
@@ -549,6 +850,14 @@ export const machineCards: Flashcard[] = [
     topic: "동기기",
     source: "preset",
     hint: "If-Ia V자 곡선, 최저점 역률 1",
+    example: {
+      question: "동기전동기 V곡선에서 최저점은 어떤 상태에 해당하는가?",
+      solution: [
+        "$I_a$ 최소 = 무효전류 0",
+        "→ 역률 1.0(정여자)",
+      ],
+      answer: "역률 1.0 (정여자)",
+    },
   },
   {
     id: "m-sync-motor-features",
@@ -558,6 +867,14 @@ export const machineCards: Flashcard[] = [
     topic: "동기기",
     source: "preset",
     hint: "정속·역률조정 / 기동 곤란",
+    example: {
+      question: "부하 변동에도 일정 속도로 회전하며 역률 조정도 가능한 전동기는?",
+      solution: [
+        "동기속도 일정 운전",
+        "계자전류로 역률 조정 가능",
+      ],
+      answer: "동기전동기",
+    },
   },
   {
     id: "m-sync-starting",
@@ -567,6 +884,14 @@ export const machineCards: Flashcard[] = [
     topic: "동기기",
     source: "preset",
     hint: "자기기동(제동권선)·기동전동기",
+    example: {
+      question: "동기전동기를 자기기동법으로 기동할 때 회전자 계자권선은 어떻게 처리하는가?",
+      solution: [
+        "회전자 회전 중 고전압 유도 방지",
+        "→ 계자권선을 단락(또는 저항을 통해 단락)",
+      ],
+      answer: "계자권선 단락",
+    },
   },
   {
     id: "m-sync-power-angle",
@@ -576,6 +901,15 @@ export const machineCards: Flashcard[] = [
     topic: "동기기",
     source: "preset",
     hint: "δ=90°가 안정한계",
+    example: {
+      question: "$E = 1.0$ pu, $V = 1.0$ pu, $X_s = 0.5$ pu, $\\delta = 30°$일 때 출력은?",
+      solution: [
+        "$P = \\dfrac{E V}{X_s}\\sin\\delta$",
+        "$P = \\dfrac{1.0 \\times 1.0}{0.5}\\sin 30°$",
+        "$P = 2 \\times 0.5 = 1.0\\ \\text{pu}$",
+      ],
+      answer: "$P = 1.0\\ \\text{pu}$",
+    },
   },
 
   // ──────────────────────────────────────────────────────────
@@ -589,6 +923,14 @@ export const machineCards: Flashcard[] = [
     topic: "정류·전력변환",
     source: "preset",
     hint: "Vdc ≈ 1.17 V",
+    example: {
+      question: "3상 반파 정류회로의 상전압이 100 V일 때 직류 평균전압은?",
+      solution: [
+        "$V_{dc} = 1.17 V$",
+        "$V_{dc} = 1.17 \\times 100 = 117\\ \\text{V}$",
+      ],
+      answer: "$V_{dc} = 117\\ \\text{V}$",
+    },
   },
   {
     id: "m-conv-3phase-full",
@@ -598,6 +940,14 @@ export const machineCards: Flashcard[] = [
     topic: "정류·전력변환",
     source: "preset",
     hint: "Vdc ≈ 1.35 VL, 맥동 6배",
+    example: {
+      question: "선간전압 200 V로 운전하는 3상 전파 정류회로의 직류 평균전압은?",
+      solution: [
+        "$V_{dc} = 1.35 V_L$",
+        "$V_{dc} = 1.35 \\times 200 = 270\\ \\text{V}$",
+      ],
+      answer: "$V_{dc} = 270\\ \\text{V}$",
+    },
   },
   {
     id: "m-conv-ripple-factor",
@@ -607,6 +957,14 @@ export const machineCards: Flashcard[] = [
     topic: "정류·전력변환",
     source: "preset",
     hint: "반파 121, 전파 48, 3상전파 4 %",
+    example: {
+      question: "가장 매끄러운 직류 출력을 얻을 수 있는 정류 방식은?",
+      solution: [
+        "맥동률이 작을수록 평활도 좋음",
+        "3상 전파(브리지) 맥동률 약 4 %",
+      ],
+      answer: "3상 전파(브리지) 정류",
+    },
   },
   {
     id: "m-conv-scr-firing",
@@ -616,6 +974,15 @@ export const machineCards: Flashcard[] = [
     topic: "정류·전력변환",
     source: "preset",
     hint: "α 클수록 출력 ↓",
+    example: {
+      question: "$V_m = 200$ V, 점호각 $\\alpha = 60°$인 단상 전파 SCR 정류기(저항부하) 직류 평균전압은?",
+      solution: [
+        "$V_{dc} = \\dfrac{V_m}{\\pi}(1+\\cos\\alpha)$",
+        "$V_{dc} = \\dfrac{200}{\\pi}(1+\\cos 60°)$",
+        "$V_{dc} = \\dfrac{200}{\\pi}(1+0.5) \\approx 95.5\\ \\text{V}$",
+      ],
+      answer: "약 $95.5\\ \\text{V}$",
+    },
   },
   {
     id: "m-conv-inverter",
@@ -625,6 +992,14 @@ export const machineCards: Flashcard[] = [
     topic: "정류·전력변환",
     source: "preset",
     hint: "인버터 DC→AC, 컨버터 AC→DC",
+    example: {
+      question: "태양광 패널의 DC 전력을 가정용 AC로 변환하는 장치는?",
+      solution: [
+        "DC → AC 변환",
+        "→ 인버터",
+      ],
+      answer: "인버터",
+    },
   },
   {
     id: "m-conv-chopper",
@@ -651,6 +1026,14 @@ export const machineCards: Flashcard[] = [
     topic: "정류·전력변환",
     source: "preset",
     hint: "TRIAC 양방향 교류제어",
+    example: {
+      question: "가정용 조광기(디머)에서 교류 전체 반주기를 위상제어하는 소자는?",
+      solution: [
+        "양방향 3단자, 교류 양·음 반주기 모두 제어",
+        "→ TRIAC",
+      ],
+      answer: "TRIAC",
+    },
   },
   {
     id: "m-conv-gto",
@@ -660,6 +1043,14 @@ export const machineCards: Flashcard[] = [
     topic: "정류·전력변환",
     source: "preset",
     hint: "게이트로 소호 가능한 SCR",
+    example: {
+      question: "SCR과 달리 게이트 신호만으로 OFF가 가능한 자기소호 소자는?",
+      solution: [
+        "게이트 역방향 전류로 직접 소호",
+        "→ GTO",
+      ],
+      answer: "GTO",
+    },
   },
   {
     id: "m-conv-freewheeling",
@@ -669,6 +1060,14 @@ export const machineCards: Flashcard[] = [
     topic: "정류·전력변환",
     source: "preset",
     hint: "인덕터 전류 환류로 소자 보호",
+    example: {
+      question: "릴레이·솔레노이드 OFF 시 발생하는 역기전력으로부터 소자를 보호하는 다이오드는?",
+      solution: [
+        "인덕터 전류의 환류 경로 제공",
+        "→ 환류 다이오드(프리휠링 다이오드)",
+      ],
+      answer: "환류(프리휠링) 다이오드",
+    },
   },
   {
     id: "m-conv-pwm",
@@ -678,6 +1077,14 @@ export const machineCards: Flashcard[] = [
     topic: "정류·전력변환",
     source: "preset",
     hint: "펄스폭으로 평균전압 조절",
+    example: {
+      question: "주기 100 µs, ON 시간 30 µs로 PWM 제어 시 듀티비는?",
+      solution: [
+        "$D = \\dfrac{T_{on}}{T} = \\dfrac{30}{100}$",
+        "$D = 0.3 = 30\\%$",
+      ],
+      answer: "30 %",
+    },
   },
 
   // ──────────────────────────────────────────────────────────
@@ -691,6 +1098,14 @@ export const machineCards: Flashcard[] = [
     topic: "제어기기",
     source: "preset",
     hint: "MC 주회로, 릴레이 제어회로",
+    example: {
+      question: "3상 유도전동기의 주회로를 직접 개폐하는 데 적합한 부품은?",
+      solution: [
+        "대전류 부하 직접 개폐",
+        "→ 전자접촉기(MC)",
+      ],
+      answer: "전자접촉기(MC)",
+    },
   },
   {
     id: "m-ctrl-thermal-relay",
@@ -700,6 +1115,14 @@ export const machineCards: Flashcard[] = [
     topic: "제어기기",
     source: "preset",
     hint: "전동기 과부하 보호(바이메탈)",
+    example: {
+      question: "전동기 운전 중 과부하로 권선 과열을 방지하기 위해 MC와 함께 설치하는 계전기는?",
+      solution: [
+        "바이메탈 변형으로 접점 동작",
+        "→ 열동계전기(THR)",
+      ],
+      answer: "열동계전기(THR) 또는 EOCR",
+    },
   },
   {
     id: "m-ctrl-self-hold",
@@ -709,6 +1132,14 @@ export const machineCards: Flashcard[] = [
     topic: "제어기기",
     source: "preset",
     hint: "보조 a접점 병렬로 회로 유지",
+    example: {
+      question: "기동 PB를 손에서 떼도 전동기가 계속 운전되도록 하는 회로는?",
+      solution: [
+        "MC의 보조 a접점을 기동 PB와 병렬",
+        "→ 자기유지회로",
+      ],
+      answer: "자기유지(자기보지) 회로",
+    },
   },
   {
     id: "m-ctrl-interlock",
@@ -718,6 +1149,14 @@ export const machineCards: Flashcard[] = [
     topic: "제어기기",
     source: "preset",
     hint: "동시동작 방지(상대 b접점)",
+    example: {
+      question: "정·역 운전 시 두 MC가 동시에 투입되어 단락사고가 나지 않도록 하는 회로는?",
+      solution: [
+        "상대 MC의 b접점을 자기 코일 회로에 직렬 삽입",
+        "→ 인터록 회로",
+      ],
+      answer: "인터록 회로",
+    },
   },
   {
     id: "m-ctrl-timer",
@@ -727,6 +1166,15 @@ export const machineCards: Flashcard[] = [
     topic: "제어기기",
     source: "preset",
     hint: "On-delay / Off-delay",
+    example: {
+      question: "입력 신호가 들어온 후 5초 뒤에 동작하고, 입력이 끊기면 즉시 복귀하는 타이머는?",
+      solution: [
+        "신호 ON → 시간지연 후 동작",
+        "신호 OFF → 즉시 복귀",
+        "→ 한시동작 순시복귀(On-delay)",
+      ],
+      answer: "한시동작 순시복귀(On-delay) 타이머",
+    },
   },
   {
     id: "m-ctrl-contact-symbol",
@@ -736,6 +1184,14 @@ export const machineCards: Flashcard[] = [
     topic: "제어기기",
     source: "preset",
     hint: "a=NO, b=NC, c=전환",
+    example: {
+      question: "평상시 닫혀 있다가 코일 여자 시 열리는 접점은?",
+      solution: [
+        "NC(Normally Closed) → 동작 시 OFF",
+        "→ b접점",
+      ],
+      answer: "b접점 (NC)",
+    },
   },
   {
     id: "m-ctrl-limit-switch",
@@ -745,6 +1201,14 @@ export const machineCards: Flashcard[] = [
     topic: "제어기기",
     source: "preset",
     hint: "접촉식 vs 비접촉식",
+    example: {
+      question: "기계 마모를 우려한 고속·정밀 검출이 필요할 때 적합한 스위치는?",
+      solution: [
+        "비접촉 검출 → 마모 없고 고속",
+        "→ 근접 스위치",
+      ],
+      answer: "근접 스위치",
+    },
   },
   {
     id: "m-ctrl-feedback",
@@ -754,6 +1218,14 @@ export const machineCards: Flashcard[] = [
     topic: "제어기기",
     source: "preset",
     hint: "되먹임 유무",
+    example: {
+      question: "외란에 강하고 정확한 출력을 얻기 위해 출력을 입력에 되돌리는 제어 방식은?",
+      solution: [
+        "출력 검출 → 목표와 비교 → 보정",
+        "→ 폐루프(피드백) 제어",
+      ],
+      answer: "폐루프(피드백) 제어",
+    },
   },
   {
     id: "m-ctrl-sequence",
@@ -763,6 +1235,14 @@ export const machineCards: Flashcard[] = [
     topic: "제어기기",
     source: "preset",
     hint: "정해진 순서대로 진행",
+    example: {
+      question: "교통신호등이 적색 → 녹색 → 황색 순으로 시간에 따라 진행되는 제어 방식은?",
+      solution: [
+        "미리 정한 순서·시간에 따라 진행",
+        "→ 시퀀스 제어",
+      ],
+      answer: "시퀀스 제어",
+    },
   },
   {
     id: "m-ctrl-pid",
@@ -772,6 +1252,14 @@ export const machineCards: Flashcard[] = [
     topic: "제어기기",
     source: "preset",
     hint: "P 비례, I 편차제거, D 속응성",
+    example: {
+      question: "PID 제어에서 정상편차(잔류편차)를 0으로 만드는 역할은?",
+      solution: [
+        "편차의 시간 적분으로 오프셋 제거",
+        "→ I(적분) 동작",
+      ],
+      answer: "I(적분) 동작",
+    },
   },
   {
     id: "m-ctrl-plc",
@@ -781,6 +1269,14 @@ export const machineCards: Flashcard[] = [
     topic: "제어기기",
     source: "preset",
     hint: "프로그램형 시퀀스 제어기",
+    example: {
+      question: "현장 자동화 설비의 시퀀스를 배선 변경 없이 프로그램만 수정해 변경할 수 있는 제어장치는?",
+      solution: [
+        "래더 다이어그램으로 시퀀스 구현",
+        "→ PLC",
+      ],
+      answer: "PLC",
+    },
   },
 
   // ──────────────────────────────────────────────────────────
@@ -794,6 +1290,14 @@ export const machineCards: Flashcard[] = [
     topic: "특수기기",
     source: "preset",
     hint: "고응답 정밀 위치제어(엔코더)",
+    example: {
+      question: "산업용 로봇 관절 위치제어에 가장 적합한 전동기는?",
+      solution: [
+        "위치·속도·토크 정밀 제어 + 빠른 응답",
+        "→ 서보모터",
+      ],
+      answer: "서보모터",
+    },
   },
   {
     id: "m-spec-universal-motor",
@@ -803,6 +1307,14 @@ export const machineCards: Flashcard[] = [
     topic: "특수기기",
     source: "preset",
     hint: "AC/DC 겸용, 고속·고토크",
+    example: {
+      question: "전기드릴, 믹서, 진공청소기처럼 AC·DC 모두 동작하는 소형 가전 전동기는?",
+      solution: [
+        "AC·DC 겸용 + 고속 + 큰 기동토크",
+        "→ 단상 직권(만능)전동기",
+      ],
+      answer: "단상 직권(만능)전동기",
+    },
   },
   {
     id: "m-spec-single-phase-im",
@@ -812,6 +1324,14 @@ export const machineCards: Flashcard[] = [
     topic: "특수기기",
     source: "preset",
     hint: "회전자계 없음 → 별도 기동권선",
+    example: {
+      question: "단상 유도전동기의 기동방식 중 기동토크가 가장 큰 방식은?",
+      solution: [
+        "토크 큰 순: 반발 > 콘덴서 > 분상 > 셰이딩",
+        "→ 반발기동형",
+      ],
+      answer: "반발기동형",
+    },
   },
   {
     id: "m-spec-capacitor-motor",
@@ -821,6 +1341,14 @@ export const machineCards: Flashcard[] = [
     topic: "특수기기",
     source: "preset",
     hint: "콘덴서로 위상차 → 회전자계",
+    example: {
+      question: "에어컨 실외기, 가정용 펌프 등에 널리 쓰이는 단상 유도전동기 형식은?",
+      solution: [
+        "콘덴서로 기동권선 전류 위상차 형성",
+        "→ 콘덴서 기동형",
+      ],
+      answer: "콘덴서 기동형 단상 유도전동기",
+    },
   },
   {
     id: "m-spec-shaded-pole",
@@ -830,6 +1358,14 @@ export const machineCards: Flashcard[] = [
     topic: "특수기기",
     source: "preset",
     hint: "셰이딩코일, 소형·저토크",
+    example: {
+      question: "소형 환풍기, 선풍기 등 구조가 간단한 단상 전동기는?",
+      solution: [
+        "셰이딩 코일로 이동자계 형성",
+        "→ 셰이딩 코일형",
+      ],
+      answer: "셰이딩 코일형 전동기",
+    },
   },
   {
     id: "m-spec-reluctance-motor",
@@ -839,6 +1375,14 @@ export const machineCards: Flashcard[] = [
     topic: "특수기기",
     source: "preset",
     hint: "자기저항 최소 위치로 회전",
+    example: {
+      question: "영구자석·권선 없는 돌극형 회전자가 자기저항 최소 위치로 끌리며 동기속도로 회전하는 전동기는?",
+      solution: [
+        "자기저항(릴럭턴스) 차로 토크 발생",
+        "→ 릴럭턴스 전동기",
+      ],
+      answer: "릴럭턴스 전동기",
+    },
   },
   {
     id: "m-spec-hysteresis-motor",
@@ -848,6 +1392,14 @@ export const machineCards: Flashcard[] = [
     topic: "특수기기",
     source: "preset",
     hint: "히스테리시스 토크, 동기속도",
+    example: {
+      question: "전축(턴테이블), 정밀 시계 등 소음·진동이 적어야 하는 곳에 쓰는 동기 전동기는?",
+      solution: [
+        "회전자 히스테리시스 손실 토크 → 동기 회전",
+        "→ 히스테리시스 전동기",
+      ],
+      answer: "히스테리시스 전동기",
+    },
   },
   {
     id: "m-spec-linear-motor",
@@ -857,6 +1409,14 @@ export const machineCards: Flashcard[] = [
     topic: "특수기기",
     source: "preset",
     hint: "직선운동 직접 생성",
+    example: {
+      question: "자기부상열차의 추진과 같이 직선운동을 직접 만드는 전동기는?",
+      solution: [
+        "회전형을 직선으로 펼친 구조",
+        "→ 리니어 모터",
+      ],
+      answer: "리니어(선형) 모터",
+    },
   },
   {
     id: "m-spec-srm",
@@ -866,6 +1426,14 @@ export const machineCards: Flashcard[] = [
     topic: "특수기기",
     source: "preset",
     hint: "돌극형, 견고·고속, 제어기 필수",
+    example: {
+      question: "회전자에 권선·자석이 없고 고정자·회전자 모두 돌극인 자기저항 전동기는?",
+      solution: [
+        "스위칭으로 돌극 위치별 자속 형성",
+        "→ SRM(스위치드 릴럭턴스 모터)",
+      ],
+      answer: "SRM",
+    },
   },
   {
     id: "m-spec-resolver",
@@ -875,6 +1443,14 @@ export const machineCards: Flashcard[] = [
     topic: "특수기기",
     source: "preset",
     hint: "엔코더 광학, 리졸버 자기식",
+    example: {
+      question: "분진·진동·고온 등 가혹 환경에서 절대 위치를 검출해야 한다면 어떤 센서가 유리한가?",
+      solution: [
+        "변압기 원리 → 내환경성·내진동 우수",
+        "→ 리졸버",
+      ],
+      answer: "리졸버",
+    },
   },
   {
     id: "m-spec-ac-servo",
@@ -884,6 +1460,14 @@ export const machineCards: Flashcard[] = [
     topic: "특수기기",
     source: "preset",
     hint: "무브러시 → 무보수·고속",
+    example: {
+      question: "현대 산업용 서보 시스템에서 주로 사용하는 모터 형식은?",
+      solution: [
+        "브러시·정류자 없음 → 무보수·고속",
+        "→ AC 서보(영구자석 동기형)",
+      ],
+      answer: "AC 서보모터",
+    },
   },
 
   // ──────────────────────────────────────────────────────────
@@ -931,6 +1515,14 @@ export const machineCards: Flashcard[] = [
     topic: "시험·정격",
     source: "preset",
     hint: "연속/단시간/반복 정격",
+    example: {
+      question: "엘리베이터 권상기처럼 운전·정지가 주기적으로 반복되는 부하에 맞는 정격은?",
+      solution: [
+        "운전·정지 주기 반복",
+        "→ 반복정격(S3)",
+      ],
+      answer: "반복정격 (S3)",
+    },
   },
   {
     id: "m-rate-insulation-class",
@@ -940,6 +1532,14 @@ export const machineCards: Flashcard[] = [
     topic: "시험·정격",
     source: "preset",
     hint: "Y90 A105 E120 B130 F155 H180",
+    example: {
+      question: "F종 절연물의 허용 최고온도는?",
+      solution: [
+        "Y90 / A105 / E120 / B130 / F155",
+        "→ F종: 155 ℃",
+      ],
+      answer: "155 ℃",
+    },
   },
   {
     id: "m-rate-temp-rise-test",
@@ -949,6 +1549,14 @@ export const machineCards: Flashcard[] = [
     topic: "시험·정격",
     source: "preset",
     hint: "절연 한도 이내 확인(저항법)",
+    example: {
+      question: "회전기 권선 온도를 가장 정확히 평균값으로 구하는 시험 방법은?",
+      solution: [
+        "권선 저항 변화로 온도 환산",
+        "→ 저항법",
+      ],
+      answer: "저항법",
+    },
   },
   {
     id: "m-rate-withstand-test",
@@ -958,6 +1566,14 @@ export const machineCards: Flashcard[] = [
     topic: "시험·정격",
     source: "preset",
     hint: "시험전압 1분 인가",
+    example: {
+      question: "변압기 출고 시 절연이 파괴되지 않는지를 확인하는 시험은?",
+      solution: [
+        "규정 시험전압을 1분간 인가 → 절연 견디는지 확인",
+        "→ 내전압(절연내력) 시험",
+      ],
+      answer: "내전압 시험",
+    },
   },
   {
     id: "m-rate-efficiency-types",
@@ -967,6 +1583,15 @@ export const machineCards: Flashcard[] = [
     topic: "시험·정격",
     source: "preset",
     hint: "발전기 출력기준, 전동기 입력기준",
+    example: {
+      question: "전동기 입력 5 kW, 총 손실 0.5 kW일 때 규약효율은?",
+      solution: [
+        "전동기: $\\eta = \\dfrac{입력-손실}{입력} \\times 100$",
+        "$\\eta = \\dfrac{5 - 0.5}{5} \\times 100$",
+        "$= 90\\%$",
+      ],
+      answer: "90 %",
+    },
   },
   {
     id: "m-rate-loss-types",
@@ -976,6 +1601,14 @@ export const machineCards: Flashcard[] = [
     topic: "시험·정격",
     source: "preset",
     hint: "고정손(철·기계) / 가변손(동손)",
+    example: {
+      question: "회전기의 손실 중 부하전류의 제곱에 비례해 변화하는 것은?",
+      solution: [
+        "$I^2 R$ → 부하 변동에 따라 변함",
+        "→ 동손(가변손)",
+      ],
+      answer: "동손 (가변손)",
+    },
   },
   {
     id: "m-rate-eddy-hysteresis",
@@ -985,6 +1618,14 @@ export const machineCards: Flashcard[] = [
     topic: "시험·정격",
     source: "preset",
     hint: "규소강판 + 성층(얇게)",
+    example: {
+      question: "변압기 철심에 얇은 강판을 절연하여 적층하는 이유는?",
+      solution: [
+        "성층 → 와전류 경로 단축",
+        "$P_e \\propto t^2$ → 두께 줄여 손실 감소",
+      ],
+      answer: "와전류 손실 감소",
+    },
   },
   {
     id: "m-rate-temp-resistance",
@@ -994,6 +1635,15 @@ export const machineCards: Flashcard[] = [
     topic: "시험·정격",
     source: "preset",
     hint: "구리: 234.5 상수 사용",
+    example: {
+      question: "시험 전 20 ℃에서 권선저항 1.0 Ω, 운전 후 저항이 1.2 Ω일 때 권선 온도는?",
+      solution: [
+        "$t_2 = \\dfrac{R_2 - R_1}{R_1}(234.5 + t_1) + t_1$",
+        "$t_2 = \\dfrac{1.2 - 1.0}{1.0}(234.5 + 20) + 20$",
+        "$t_2 = 0.2 \\times 254.5 + 20 \\approx 70.9\\ ℃$",
+      ],
+      answer: "약 70.9 ℃",
+    },
   },
   {
     id: "m-rate-nameplate",
@@ -1003,5 +1653,13 @@ export const machineCards: Flashcard[] = [
     topic: "시험·정격",
     source: "preset",
     hint: "출력·전압·전류·회전수·절연종별",
+    example: {
+      question: "전동기 명판에서 보호장치 정정을 위해 가장 먼저 확인해야 하는 값은?",
+      solution: [
+        "과전류·과부하 보호 기준",
+        "→ 정격전류 [A]",
+      ],
+      answer: "정격전류",
+    },
   },
 ];

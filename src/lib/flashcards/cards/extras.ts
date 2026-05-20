@@ -16,6 +16,14 @@ export const extraCards: Flashcard[] = [
     topic: "직류회로",
     source: "extra",
     hint: "HP·PS 환산 자주 출제",
+    example: {
+      question: "$5\\ \\text{HP}$ 전동기의 출력은 약 몇 kW?",
+      solution: [
+        "$1\\ \\text{HP} \\approx 746\\ \\text{W}$",
+        "$5 \\times 746 = 3{,}730\\ \\text{W} \\approx 3.73\\ \\text{kW}$",
+      ],
+      answer: "약 3.73 kW",
+    },
   },
   {
     id: "x-electric-energy",
@@ -53,6 +61,14 @@ export const extraCards: Flashcard[] = [
     topic: "정전기",
     source: "extra",
     hint: "전류 × 시간",
+    example: {
+      question: "$0.5\\ \\text{A}$가 2분 동안 흐를 때 이동 전하량은?",
+      solution: [
+        "$Q = I \\cdot t$",
+        "$Q = 0.5 \\times 120 = 60\\ \\text{C}$",
+      ],
+      answer: "$Q = 60\\ \\text{C}$",
+    },
   },
   {
     id: "x-capacitor-energy",
@@ -80,6 +96,14 @@ export const extraCards: Flashcard[] = [
     topic: "정전기",
     source: "extra",
     hint: "비유전율 배수만큼 ↑",
+    example: {
+      question: "공기 콘덴서 정전용량이 $5\\ \\mu\\text{F}$일 때 비유전율 4인 종이를 채우면?",
+      solution: [
+        "$C = \\varepsilon_r \\cdot C_0$",
+        "$C = 4 \\times 5 = 20\\ \\mu\\text{F}$",
+      ],
+      answer: "$C = 20\\ \\mu\\text{F}$",
+    },
   },
   {
     id: "x-flux-density",
@@ -89,6 +113,14 @@ export const extraCards: Flashcard[] = [
     topic: "자기·자기회로",
     source: "extra",
     hint: "T = Wb/m²",
+    example: {
+      question: "면적 $0.01\\ \\text{m}^2$를 통과하는 자속이 $0.05\\ \\text{Wb}$일 때 자속밀도는?",
+      solution: [
+        "$B = \\dfrac{\\phi}{A}$",
+        "$B = \\dfrac{0.05}{0.01} = 5\\ \\text{T}$",
+      ],
+      answer: "$B = 5\\ \\text{T}$",
+    },
   },
   {
     id: "x-permeability",
@@ -98,6 +130,15 @@ export const extraCards: Flashcard[] = [
     topic: "자기·자기회로",
     source: "extra",
     hint: "강자성체 = μ_r 큼",
+    example: {
+      question: "비투자율 1000인 철심의 투자율 $\\mu$는?",
+      solution: [
+        "$\\mu = \\mu_0 \\mu_r$",
+        "$\\mu = 4\\pi \\times 10^{-7} \\times 1000$",
+        "$\\mu \\approx 1.26 \\times 10^{-3}\\ \\text{H/m}$",
+      ],
+      answer: "$\\mu \\approx 1.26 \\times 10^{-3}\\ \\text{H/m}$",
+    },
   },
   {
     id: "x-mmf",
@@ -107,6 +148,14 @@ export const extraCards: Flashcard[] = [
     topic: "자기·자기회로",
     source: "extra",
     hint: "권수 × 전류 = AT",
+    example: {
+      question: "권수 300, 전류 0.5 A인 코일의 기자력은?",
+      solution: [
+        "$F = N \\cdot I$",
+        "$F = 300 \\times 0.5 = 150\\ \\text{AT}$",
+      ],
+      answer: "$F = 150\\ \\text{AT}$",
+    },
   },
   {
     id: "x-magnetic-reluctance",
@@ -116,6 +165,14 @@ export const extraCards: Flashcard[] = [
     topic: "자기·자기회로",
     source: "extra",
     hint: "자기판 옴의 법칙",
+    example: {
+      question: "기자력 200 AT, 자기저항 $4 \\times 10^4$ AT/Wb일 때 자속은?",
+      solution: [
+        "$\\phi = \\dfrac{F}{R_m}$",
+        "$\\phi = \\dfrac{200}{4 \\times 10^4} = 5 \\times 10^{-3}\\ \\text{Wb}$",
+      ],
+      answer: "$\\phi = 5\\ \\text{mWb}$",
+    },
   },
   {
     id: "x-self-inductance",
@@ -125,6 +182,15 @@ export const extraCards: Flashcard[] = [
     topic: "전자기 유도",
     source: "extra",
     hint: "전류 변화 ↔ 역기전력",
+    example: {
+      question: "권수 200, 전류 2 A일 때 자속 $5 \\times 10^{-3}$ Wb이 발생하는 코일의 자체 인덕턴스는?",
+      solution: [
+        "$L = \\dfrac{N \\phi}{I}$",
+        "$L = \\dfrac{200 \\times 5 \\times 10^{-3}}{2}$",
+        "$L = 0.5\\ \\text{H}$",
+      ],
+      answer: "$L = 0.5\\ \\text{H}$",
+    },
   },
   {
     id: "x-inductor-energy",
@@ -134,6 +200,15 @@ export const extraCards: Flashcard[] = [
     topic: "전자기 유도",
     source: "extra",
     hint: "½ L I²",
+    example: {
+      question: "$L = 0.2$ H 인덕터에 3 A가 흐를 때 저장 에너지는?",
+      solution: [
+        "$W = \\dfrac{1}{2} L I^2$",
+        "$W = \\dfrac{1}{2} \\times 0.2 \\times 9$",
+        "$W = 0.9\\ \\text{J}$",
+      ],
+      answer: "$W = 0.9\\ \\text{J}$",
+    },
   },
   {
     id: "x-impedance-rl",
@@ -143,6 +218,14 @@ export const extraCards: Flashcard[] = [
     topic: "교류회로",
     source: "extra",
     hint: "L 회로 = 전류 지상",
+    example: {
+      question: "$R = 3\\ \\Omega$, $\\omega L = 4\\ \\Omega$인 RL 직렬 회로의 임피던스 크기는?",
+      solution: [
+        "$|Z| = \\sqrt{R^2 + (\\omega L)^2}$",
+        "$|Z| = \\sqrt{9 + 16} = 5\\ \\Omega$",
+      ],
+      answer: "$|Z| = 5\\ \\Omega$",
+    },
   },
   {
     id: "x-impedance-rc",
@@ -152,6 +235,14 @@ export const extraCards: Flashcard[] = [
     topic: "교류회로",
     source: "extra",
     hint: "C 회로 = 전류 진상",
+    example: {
+      question: "$R = 6\\ \\Omega$, $\\dfrac{1}{\\omega C} = 8\\ \\Omega$인 RC 직렬 회로의 임피던스 크기는?",
+      solution: [
+        "$|Z| = \\sqrt{R^2 + X_C^2}$",
+        "$|Z| = \\sqrt{36 + 64} = 10\\ \\Omega$",
+      ],
+      answer: "$|Z| = 10\\ \\Omega$",
+    },
   },
   {
     id: "x-power-factor",
@@ -161,6 +252,14 @@ export const extraCards: Flashcard[] = [
     topic: "교류회로",
     source: "extra",
     hint: "P/S = cosθ",
+    example: {
+      question: "유효전력 80 kW, 피상전력 100 kVA인 부하의 역률은?",
+      solution: [
+        "$\\cos\\theta = \\dfrac{P}{S}$",
+        "$\\cos\\theta = \\dfrac{80}{100} = 0.8$",
+      ],
+      answer: "역률 0.8",
+    },
   },
   {
     id: "x-three-phase-power",
@@ -170,6 +269,15 @@ export const extraCards: Flashcard[] = [
     topic: "3상 교류",
     source: "extra",
     hint: "√3 V_L I_L cosθ",
+    example: {
+      question: "선간전압 380 V, 선전류 10 A, 역률 0.9인 3상 평형 부하의 유효전력은?",
+      solution: [
+        "$P = \\sqrt{3}\\, V_L I_L \\cos\\theta$",
+        "$P = 1.732 \\times 380 \\times 10 \\times 0.9$",
+        "$P \\approx 5{,}924\\ \\text{W} \\approx 5.92\\ \\text{kW}$",
+      ],
+      answer: "약 5.92 kW",
+    },
   },
   {
     id: "x-y-delta",
@@ -179,6 +287,14 @@ export const extraCards: Flashcard[] = [
     topic: "3상 교류",
     source: "extra",
     hint: "Y는 V에 √3, Δ는 I에 √3",
+    example: {
+      question: "Y결선에서 상전압이 220 V일 때 선간전압은?",
+      solution: [
+        "Y: $V_L = \\sqrt{3}\\, V_P$",
+        "$V_L = 1.732 \\times 220 \\approx 381\\ \\text{V}$",
+      ],
+      answer: "약 380 V",
+    },
   },
   {
     id: "x-form-factor",
@@ -188,6 +304,14 @@ export const extraCards: Flashcard[] = [
     topic: "비정현파 교류",
     source: "extra",
     hint: "1.11 / 1.414",
+    example: {
+      question: "최댓값 100 V인 정현파의 실효값과 평균값은?",
+      solution: [
+        "실효값 $= \\dfrac{V_m}{\\sqrt{2}} \\approx 0.707 \\times 100 \\approx 70.7\\ \\text{V}$",
+        "평균값 $= \\dfrac{2 V_m}{\\pi} \\approx 0.637 \\times 100 \\approx 63.7\\ \\text{V}$",
+      ],
+      answer: "실효값 ≈ 70.7 V, 평균값 ≈ 63.7 V",
+    },
   },
   {
     id: "x-thd",
@@ -197,6 +321,14 @@ export const extraCards: Flashcard[] = [
     topic: "비정현파 교류",
     source: "extra",
     hint: "고조파 합 / 기본파",
+    example: {
+      question: "기본파 100 V, 3고조파 30 V, 5고조파 40 V만 있을 때 왜형률은?",
+      solution: [
+        "분자 = $\\sqrt{30^2 + 40^2} = \\sqrt{900 + 1600} = 50$",
+        "THD $= \\dfrac{50}{100} \\times 100 = 50\\%$",
+      ],
+      answer: "50 %",
+    },
   },
   {
     id: "x-thevenin",
@@ -206,6 +338,14 @@ export const extraCards: Flashcard[] = [
     topic: "회로망 정리",
     source: "extra",
     hint: "V_open + 등가저항",
+    example: {
+      question: "테브난 등가회로의 두 요소는?",
+      solution: [
+        "개방 단자 전압 → $V_{TH}$",
+        "전원을 모두 제거하고 본 등가저항 → $R_{TH}$",
+      ],
+      answer: "$V_{TH}$(개방전압) + $R_{TH}$(직렬)",
+    },
   },
   {
     id: "x-superposition",
@@ -215,6 +355,15 @@ export const extraCards: Flashcard[] = [
     topic: "회로망 정리",
     source: "extra",
     hint: "선형 + 합산",
+    example: {
+      question: "중첩의 원리에서 다른 전원을 어떻게 처리하는가?",
+      solution: [
+        "전압원: 단락(0 V)",
+        "전류원: 개방(0 A)",
+        "각 전원 단독 해석 후 합산",
+      ],
+      answer: "전압원 단락 / 전류원 개방",
+    },
   },
 
   // ===== 전기기기 =====
@@ -226,6 +375,15 @@ export const extraCards: Flashcard[] = [
     topic: "직류기",
     source: "extra",
     hint: "PZφN/60a",
+    example: {
+      question: "$P=6$, $Z=300$, $\\phi=0.02$ Wb, $N=1200$ rpm, 중권($a=P$)인 직류기 기전력은?",
+      solution: [
+        "$a = P = 6$",
+        "$E = \\dfrac{6 \\times 300 \\times 0.02 \\times 1200}{60 \\times 6}$",
+        "$E = \\dfrac{43200}{360} = 120\\ \\text{V}$",
+      ],
+      answer: "$E = 120\\ \\text{V}$",
+    },
   },
   {
     id: "x-dc-torque",
@@ -235,6 +393,14 @@ export const extraCards: Flashcard[] = [
     topic: "직류기",
     source: "extra",
     hint: "T ∝ φ I_a",
+    example: {
+      question: "자속을 일정하게 두고 전기자전류를 2배로 늘리면 직류 전동기 토크는?",
+      solution: [
+        "$T \\propto \\phi I_a$",
+        "$\\phi$ 일정 → 토크는 $I_a$에 비례",
+      ],
+      answer: "2배",
+    },
   },
   {
     id: "x-transformer-loss",
@@ -244,6 +410,14 @@ export const extraCards: Flashcard[] = [
     topic: "변압기",
     source: "extra",
     hint: "철손 = 동손에서 최대 효율",
+    example: {
+      question: "정격 동손 400 W, 철손 100 W인 변압기에서 최대 효율점 부하율은?",
+      solution: [
+        "최대효율: 철손 = (부하율)² × 정격동손",
+        "$100 = k^2 \\times 400 \\Rightarrow k = 0.5$",
+      ],
+      answer: "부하율 50 %",
+    },
   },
   {
     id: "x-transformer-regulation",
@@ -253,6 +427,14 @@ export const extraCards: Flashcard[] = [
     topic: "변압기",
     source: "extra",
     hint: "낮을수록 좋음",
+    example: {
+      question: "무부하 단자전압 210 V, 전부하 단자전압 200 V인 변압기의 전압변동률은?",
+      solution: [
+        "$\\varepsilon = \\dfrac{V_0 - V_n}{V_n} \\times 100$",
+        "$\\varepsilon = \\dfrac{210 - 200}{200} \\times 100 = 5\\%$",
+      ],
+      answer: "5 %",
+    },
   },
   {
     id: "x-sync-speed",
@@ -262,6 +444,14 @@ export const extraCards: Flashcard[] = [
     topic: "유도전동기",
     source: "extra",
     hint: "120f/P",
+    example: {
+      question: "60 Hz, 6극 유도전동기의 동기속도는?",
+      solution: [
+        "$N_s = \\dfrac{120 f}{P}$",
+        "$N_s = \\dfrac{120 \\times 60}{6} = 1200\\ \\text{rpm}$",
+      ],
+      answer: "$N_s = 1200\\ \\text{rpm}$",
+    },
   },
   {
     id: "x-slip",
@@ -288,6 +478,13 @@ export const extraCards: Flashcard[] = [
     topic: "동기기",
     source: "extra",
     hint: "수차=돌극, 터빈=원통",
+    example: {
+      question: "고속회전(고속 증기 터빈)에 사용되는 동기발전기 회전자 형식은?",
+      solution: [
+        "고속 → 원심력 견딜 수 있는 원통형",
+      ],
+      answer: "원통형(cylindrical)",
+    },
   },
   {
     id: "x-rectifier-types",
@@ -297,6 +494,14 @@ export const extraCards: Flashcard[] = [
     topic: "정류·전력변환",
     source: "extra",
     hint: "전파일수록 평활도 좋음",
+    example: {
+      question: "교류 실효값 100 V를 단상 전파 정류했을 때 직류 평균전압은?",
+      solution: [
+        "$V_{dc} = 0.9 V$",
+        "$V_{dc} = 0.9 \\times 100 = 90\\ \\text{V}$",
+      ],
+      answer: "$V_{dc} = 90\\ \\text{V}$",
+    },
   },
   {
     id: "x-thyristor",
@@ -306,6 +511,14 @@ export const extraCards: Flashcard[] = [
     topic: "제어기기",
     source: "extra",
     hint: "게이트로 켜고 전류로 꺼짐",
+    example: {
+      question: "한 번 ON된 SCR을 OFF시키는 일반적 방법은?",
+      solution: [
+        "게이트로는 OFF 불가",
+        "전류를 유지전류 이하로 낮춤",
+      ],
+      answer: "전류를 유지전류 이하로 강하 (또는 역전압 인가)",
+    },
   },
   {
     id: "x-relay-types",
@@ -315,6 +528,14 @@ export const extraCards: Flashcard[] = [
     topic: "제어기기",
     source: "extra",
     hint: "OCR / OVR / DCR",
+    example: {
+      question: "정정값 이상의 과전류가 흐를 때 동작하는 보호 계전기는?",
+      solution: [
+        "과전류 검출 전용",
+        "→ OCR (Over Current Relay)",
+      ],
+      answer: "OCR",
+    },
   },
   {
     id: "x-insulation-class",
@@ -324,6 +545,14 @@ export const extraCards: Flashcard[] = [
     topic: "시험·정격",
     source: "extra",
     hint: "Y<A<E<B<F<H<C",
+    example: {
+      question: "허용 최고온도가 130 ℃인 절연물의 종별은?",
+      solution: [
+        "Y90 / A105 / E120 / B130",
+        "→ B종",
+      ],
+      answer: "B종",
+    },
   },
 
   // ===== 전기설비 =====
@@ -335,6 +564,14 @@ export const extraCards: Flashcard[] = [
     topic: "전선·케이블",
     source: "extra",
     hint: "굵기·절연·환경",
+    example: {
+      question: "같은 굵기·절연의 전선을 한 관에 더 많이 묶어 포설하면 허용전류는?",
+      solution: [
+        "방열 저하 → 감소계수 적용",
+        "허용전류 감소",
+      ],
+      answer: "감소",
+    },
   },
   {
     id: "x-voltage-drop",
@@ -344,6 +581,15 @@ export const extraCards: Flashcard[] = [
     topic: "전선·케이블",
     source: "extra",
     hint: "단상 35.6 / 3상 30.8",
+    example: {
+      question: "단상 2선식, 100 m, 10 A, 단면적 4 mm²의 전압강하는?",
+      solution: [
+        "$e = \\dfrac{35.6 \\times L \\times I}{1000 \\times A}$",
+        "$e = \\dfrac{35.6 \\times 100 \\times 10}{1000 \\times 4}$",
+        "$e = \\dfrac{35600}{4000} = 8.9\\ \\text{V}$",
+      ],
+      answer: "약 8.9 V",
+    },
   },
   {
     id: "x-wire-color",
@@ -353,6 +599,13 @@ export const extraCards: Flashcard[] = [
     topic: "전선·케이블",
     source: "extra",
     hint: "PE = 녹색-노랑",
+    example: {
+      question: "분전반 결선에서 녹색-노랑 줄무늬 전선은 어느 도체인가?",
+      solution: [
+        "녹/황 줄무늬 = 보호도체 전용 색",
+      ],
+      answer: "보호도체(PE)",
+    },
   },
   {
     id: "x-pliers",
@@ -362,6 +615,14 @@ export const extraCards: Flashcard[] = [
     topic: "배선재료·공구",
     source: "extra",
     hint: "펜치=다용도, 니퍼=절단",
+    example: {
+      question: "단자에 압착 슬리브를 끼우고 단단히 압착할 때 사용하는 공구는?",
+      solution: [
+        "단자·슬리브 압착 전용",
+        "→ 압착펜치",
+      ],
+      answer: "압착펜치",
+    },
   },
   {
     id: "x-conduit-types",
@@ -371,6 +632,14 @@ export const extraCards: Flashcard[] = [
     topic: "배선재료·공구",
     source: "extra",
     hint: "강도→금속, 절연→PVC",
+    example: {
+      question: "전동기처럼 진동·이동이 있는 부위의 배선에 적합한 전선관은?",
+      solution: [
+        "구부림·진동에 강한 관",
+        "→ 가요전선관",
+      ],
+      answer: "가요전선관",
+    },
   },
   {
     id: "x-conduit-fill",
@@ -380,6 +649,14 @@ export const extraCards: Flashcard[] = [
     topic: "배선공사",
     source: "extra",
     hint: "동일 48 / 혼합 32",
+    example: {
+      question: "관 내 단면적 200 mm²의 전선관에 다른 굵기 전선을 혼합 수용할 때 최대 점유 단면적은?",
+      solution: [
+        "혼합 점유율 32 %",
+        "$200 \\times 0.32 = 64\\ \\text{mm}^2$",
+      ],
+      answer: "약 64 mm² 이하",
+    },
   },
   {
     id: "x-conduit-bend",
@@ -389,6 +666,14 @@ export const extraCards: Flashcard[] = [
     topic: "배선공사",
     source: "extra",
     hint: "안지름의 6배 이상",
+    example: {
+      question: "안지름 28 mm 후강 전선관의 굽힘 곡률 반경은 최소 얼마 이상?",
+      solution: [
+        "$R \\geq 6 \\times 28$",
+        "$R \\geq 168\\ \\text{mm}$",
+      ],
+      answer: "약 168 mm 이상",
+    },
   },
   {
     id: "x-outlet-height",
@@ -398,6 +683,14 @@ export const extraCards: Flashcard[] = [
     topic: "옥내배선",
     source: "extra",
     hint: "콘센트 0.3 / 스위치 1.2",
+    example: {
+      question: "일반 옥내 점멸 스위치의 표준 설치 높이는?",
+      solution: [
+        "주거·일반 사용 편의 기준",
+        "→ 약 1.2 m",
+      ],
+      answer: "약 1.2 m",
+    },
   },
   {
     id: "x-grounding-types",
@@ -407,6 +700,14 @@ export const extraCards: Flashcard[] = [
     topic: "접지",
     source: "extra",
     hint: "KEC: 계통/보호/피뢰",
+    example: {
+      question: "KEC에서 인체 감전 방지 목적으로 기기 외함을 접지하는 것은 어떤 접지로 분류되는가?",
+      solution: [
+        "인체 감전 보호 목적",
+        "→ 보호접지",
+      ],
+      answer: "보호접지",
+    },
   },
   {
     id: "x-ground-resistance",
@@ -416,6 +717,14 @@ export const extraCards: Flashcard[] = [
     topic: "접지",
     source: "extra",
     hint: "10 Ω 이하가 표준",
+    example: {
+      question: "일반 보호접지의 권장 접지저항 값과 측정에 쓰는 계기는?",
+      solution: [
+        "권장: 10 Ω 이하",
+        "측정: 접지저항계(전위강하 3극법)",
+      ],
+      answer: "10 Ω 이하 / 접지저항계",
+    },
   },
   {
     id: "x-lightning-rod",
@@ -425,6 +734,14 @@ export const extraCards: Flashcard[] = [
     topic: "피뢰·보호",
     source: "extra",
     hint: "구체가 닿지 않는 곳",
+    example: {
+      question: "회전구체법에서 보호레벨 II의 구체 반지름은?",
+      solution: [
+        "LPL I=20, II=30, III=45, IV=60 m",
+        "→ II는 30 m",
+      ],
+      answer: "30 m",
+    },
   },
   {
     id: "x-spd",
@@ -434,6 +751,14 @@ export const extraCards: Flashcard[] = [
     topic: "피뢰·보호",
     source: "extra",
     hint: "서지 → 대지로 우회",
+    example: {
+      question: "수전 인입부에 직접 뇌격 서지로부터 보호하기 위해 설치하는 SPD 등급은?",
+      solution: [
+        "직격뢰 흐름 → 인입부 1차",
+        "→ Type 1 SPD",
+      ],
+      answer: "Type 1",
+    },
   },
   {
     id: "x-mccb",
@@ -443,6 +768,14 @@ export const extraCards: Flashcard[] = [
     topic: "차단기·보호장치",
     source: "extra",
     hint: "MCCB=과전류, ELCB=누전",
+    example: {
+      question: "주택 분전반에서 욕실 누전에 의한 감전을 방지하기 위해 사용하는 차단기는?",
+      solution: [
+        "누설전류 검출 → 차단",
+        "→ ELCB(RCD)",
+      ],
+      answer: "누전차단기(ELCB/RCD)",
+    },
   },
   {
     id: "x-fuse-types",
@@ -452,6 +785,14 @@ export const extraCards: Flashcard[] = [
     topic: "차단기·보호장치",
     source: "extra",
     hint: "gG / gM 특성",
+    example: {
+      question: "전동기 회로 보호용으로 사용되는 퓨즈의 시한특성 종류는?",
+      solution: [
+        "전동기는 기동 시 돌입전류 큼",
+        "→ gM (전동기 보호 특성)",
+      ],
+      answer: "gM",
+    },
   },
   {
     id: "x-substation-singletrans",
@@ -461,6 +802,14 @@ export const extraCards: Flashcard[] = [
     topic: "변전·배전",
     source: "extra",
     hint: "공유로 효율↑ 절연↓",
+    example: {
+      question: "단권 변압기와 일반 2권선 변압기를 비교했을 때 단권의 장점은?",
+      solution: [
+        "권선 공유 → 동량·철량 감소",
+        "→ 효율↑, 전압변동률↓",
+      ],
+      answer: "효율 향상·소형·전압변동률 감소",
+    },
   },
   {
     id: "x-distribution",
@@ -470,5 +819,13 @@ export const extraCards: Flashcard[] = [
     topic: "변전·배전",
     source: "extra",
     hint: "3선식 = 2가지 전압",
+    example: {
+      question: "한 변압기에서 110 V와 220 V를 동시에 공급할 수 있는 배전 방식은?",
+      solution: [
+        "중성선 추가로 2가지 전압",
+        "→ 단상 3선식",
+      ],
+      answer: "단상 3선식",
+    },
   },
 ];

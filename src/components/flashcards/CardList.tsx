@@ -240,7 +240,7 @@ function ChapterSection({
   onToggleFavorite: (id: string) => void;
   onStart: () => void;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const style = SUBJECT_STYLE[subject];
   const stats = useMemo(
     () => summarize(progress, cards.map((c) => c.id)),

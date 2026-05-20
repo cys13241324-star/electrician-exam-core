@@ -15,6 +15,14 @@ export const facilityCards: Flashcard[] = [
     topic: "전선·케이블",
     source: "preset",
     hint: "I=옥내, O=옥외, D=인입(Drop)",
+    example: {
+      question: "옥내 일반 분전반에서 분기회로용으로 가장 흔히 쓰는 절연전선 종류는?",
+      solution: [
+        "옥내 600 V 일반 절연 → IV",
+        "내열이 필요하면 HIV",
+      ],
+      answer: "IV(600V 비닐 절연전선)",
+    },
   },
   {
     id: "f-cable-sqmm-series",
@@ -24,6 +32,14 @@ export const facilityCards: Flashcard[] = [
     topic: "전선·케이블",
     source: "preset",
     hint: "1.5부터 약 1.5~2배씩",
+    example: {
+      question: "전선 표준 단면적 수열에서 16 mm² 다음에 오는 호칭은?",
+      solution: [
+        "표준 수열: 1.5, 2.5, 4, 6, 10, 16, 25, 35 ...",
+        "16 다음 → 25 mm²",
+      ],
+      answer: "25 mm²",
+    },
   },
   {
     id: "f-cable-ampacity-temp",
@@ -33,6 +49,14 @@ export const facilityCards: Flashcard[] = [
     topic: "전선·케이블",
     source: "preset",
     hint: "온도↑·집합↑ → 허용전류↓",
+    example: {
+      question: "한 전선관에 동일 굵기 전선 회로 수가 많아질수록 허용전류는 어떻게 되는가?",
+      solution: [
+        "방열 악화 → 절연물 허용온도 도달이 빨라짐",
+        "전류감소계수 적용 → 허용전류 감소",
+      ],
+      answer: "감소 (전류감소계수 적용)",
+    },
   },
   {
     id: "f-cable-resistance-formula",
@@ -80,6 +104,14 @@ export const facilityCards: Flashcard[] = [
     topic: "전선·케이블",
     source: "preset",
     hint: "C=가교PE, V=비닐, FR=난연",
+    example: {
+      question: "최고허용온도 90 ℃의 가교폴리에틸렌 절연·비닐 외장 전력케이블 약호는?",
+      solution: [
+        "C(가교PE) + V(비닐시스)",
+        "→ CV 케이블",
+      ],
+      answer: "CV 케이블",
+    },
   },
   {
     id: "f-cable-stranded",
@@ -105,6 +137,14 @@ export const facilityCards: Flashcard[] = [
     topic: "전선·케이블",
     source: "preset",
     hint: "강심=강도, Al=도전",
+    example: {
+      question: "장경간 가공 송전선로에 경동선보다 ACSR을 더 많이 쓰는 주된 이유는?",
+      solution: [
+        "Al 외층 + 강심 → 가볍고 인장강도 큼",
+        "동일 도전성에 경량·고강도",
+      ],
+      answer: "가볍고 인장강도 큼 (장경간 적합)",
+    },
   },
   {
     id: "f-cable-allowable-table",
@@ -114,6 +154,14 @@ export const facilityCards: Flashcard[] = [
     topic: "전선·케이블",
     source: "preset",
     hint: "수치는 조건별 변동 — 경향 암기",
+    example: {
+      question: "참고값 기준 IV 6 mm² 전선의 대략 허용전류는?",
+      solution: [
+        "2.5(27) / 4(35) / 6(48) / 10(66) A",
+        "→ 6 mm² ≈ 48 A",
+      ],
+      answer: "약 48 A",
+    },
   },
   {
     id: "f-cable-skin-effect",
@@ -123,6 +171,14 @@ export const facilityCards: Flashcard[] = [
     topic: "전선·케이블",
     source: "preset",
     hint: "주파수↑ → 표면 집중",
+    example: {
+      question: "표피효과가 심해지는 조건 두 가지를 고르면?",
+      solution: [
+        "주파수↑, 도체 굵기↑, 도전율↑, 투자율↑",
+        "→ 모두 표피효과 심화",
+      ],
+      answer: "주파수 ↑ / 도체 굵기 ↑ (실효저항 증가)",
+    },
   },
   {
     id: "f-cable-nominal-voltage",
@@ -132,6 +188,14 @@ export const facilityCards: Flashcard[] = [
     topic: "전선·케이블",
     source: "preset",
     hint: "KEC 개정값 — 저압 1 kV 이하",
+    example: {
+      question: "3.3 kV 교류 전압은 KEC 기준 무슨 전압 구분에 해당하는가?",
+      solution: [
+        "저압: 1 kV 이하 / 고압: 1 ~ 7 kV / 특고압: 7 kV 초과",
+        "3.3 kV는 1 kV 초과, 7 kV 이하 → 고압",
+      ],
+      answer: "고압",
+    },
   },
   {
     id: "f-cable-bundle-derating",
@@ -141,6 +205,14 @@ export const facilityCards: Flashcard[] = [
     topic: "전선·케이블",
     source: "preset",
     hint: "가닥↑ → 감소계수↓",
+    example: {
+      question: "허용전류 50 A의 전선 회로를 같은 관에 5회로 함께 포설하고 감소계수 0.6을 적용하면 회로별 사용 가능 전류는?",
+      solution: [
+        "$I' = I \\times k = 50 \\times 0.6$",
+        "$I' = 30\\ \\text{A}$",
+      ],
+      answer: "회로당 약 30 A",
+    },
   },
 
   // ───────────────────────── 배선재료·공구 ─────────────────────────
@@ -152,6 +224,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선재료·공구",
     source: "preset",
     hint: "DC 고압 인가 → 절연 판정",
+    example: {
+      question: "전선과 대지 사이 절연저항 MΩ을 측정하려면 어떤 계기를 써야 하는가?",
+      solution: [
+        "절연저항 측정 → DC 고전압 발생기 필요",
+        "→ 메거(절연저항계)",
+      ],
+      answer: "메거(절연저항계)",
+    },
   },
   {
     id: "f-tool-earth-tester",
@@ -161,6 +241,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선재료·공구",
     source: "preset",
     hint: "전위강하 3극법",
+    example: {
+      question: "접지저항계 측정 시 E·P·C 전극에서 P(전위전극)는 어디에 배치하는가?",
+      solution: [
+        "E-C 거리 기준 약 61.8 % 지점에 P 배치",
+        "전위강하 곡선의 평탄 구간",
+      ],
+      answer: "E-C 사이 약 61.8 % 지점",
+    },
   },
   {
     id: "f-tool-clamp-meter",
@@ -170,6 +258,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선재료·공구",
     source: "preset",
     hint: "CT 원리 — 자르지 않고 측정",
+    example: {
+      question: "활선 상태에서 전동기 부하전류를 회로 절단 없이 측정할 수 있는 계측기는?",
+      solution: [
+        "CT 원리로 도체를 감싸서 측정",
+        "→ 후크온(클램프) 미터",
+      ],
+      answer: "후크온(클램프) 미터",
+    },
   },
   {
     id: "f-tool-knockout",
@@ -178,6 +274,14 @@ export const facilityCards: Flashcard[] = [
     subject: "전기설비",
     topic: "배선재료·공구",
     source: "preset",
+    example: {
+      question: "분전반 철판에 28 mm 전선관 인입을 위해 원형 구멍을 깨끗하게 뚫을 때 사용하는 공구는?",
+      solution: [
+        "철판 가공용 원형 펀치",
+        "→ 녹아웃 펀치",
+      ],
+      answer: "녹아웃(노크아웃) 펀치",
+    },
   },
   {
     id: "f-tool-fish-tape",
@@ -187,6 +291,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선재료·공구",
     source: "preset",
     hint: "관에 전선 입선용 안내선",
+    example: {
+      question: "긴 전선관에 IV 전선을 입선할 때 먼저 통과시켜 전선을 끌어당기는 도구는?",
+      solution: [
+        "관 내 통선용 안내선",
+        "→ 철망(피시테이프)",
+      ],
+      answer: "피시테이프(철망)",
+    },
   },
   {
     id: "f-tool-connector",
@@ -195,6 +307,13 @@ export const facilityCards: Flashcard[] = [
     subject: "전기설비",
     topic: "배선재료·공구",
     source: "preset",
+    example: {
+      question: "전동기 단자에 IV 전선 끝을 볼트로 견고히 접속할 때 사용하는 접속재료는?",
+      solution: [
+        "기기 단자 접속 → O형·Y형 압착단자",
+      ],
+      answer: "압착단자(O형/Y형)",
+    },
   },
   {
     id: "f-tool-conduit-bender",
@@ -204,6 +323,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선재료·공구",
     source: "preset",
     hint: "곡률반지름 ≥ 안지름 6배",
+    example: {
+      question: "안지름 22 mm 후강전선관을 굽힐 때 최소 곡률반지름은?",
+      solution: [
+        "$R \\geq 6 d$",
+        "$R \\geq 6 \\times 22 = 132\\ \\text{mm}$",
+      ],
+      answer: "약 132 mm 이상",
+    },
   },
   {
     id: "f-tool-insulation-tape",
@@ -212,6 +339,14 @@ export const facilityCards: Flashcard[] = [
     subject: "전기설비",
     topic: "배선재료·공구",
     source: "preset",
+    example: {
+      question: "옥외 케이블 접속부를 빗물·습기로부터 보호하면서 절연하려면 어떤 테이프를 사용하는가?",
+      solution: [
+        "늘려 감으면 자체 융착 → 방수·절연",
+        "→ 자기융착 테이프",
+      ],
+      answer: "자기융착 테이프",
+    },
   },
   {
     id: "f-tool-switch-types",
@@ -221,6 +356,13 @@ export const facilityCards: Flashcard[] = [
     topic: "배선재료·공구",
     source: "preset",
     hint: "2개소=3로, 3개소=3로+4로",
+    example: {
+      question: "긴 복도의 한쪽 끝과 반대편 끝에서 모두 등을 켜고 끌 수 있도록 하는 스위치는?",
+      solution: [
+        "2개소 점멸 → 3로 스위치 2개",
+      ],
+      answer: "3로 스위치 2개",
+    },
   },
   {
     id: "f-tool-outlet-rating",
@@ -229,6 +371,13 @@ export const facilityCards: Flashcard[] = [
     subject: "전기설비",
     topic: "배선재료·공구",
     source: "preset",
+    example: {
+      question: "야외 정원에 설치하는 콘센트가 갖춰야 할 가장 중요한 정격은?",
+      solution: [
+        "옥외 습기·강우 → IP등급(방수형)",
+      ],
+      answer: "방수형 (IP등급 표시)",
+    },
   },
   {
     id: "f-tool-conduit-accessory",
@@ -238,6 +387,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선재료·공구",
     source: "preset",
     hint: "부싱=전선보호, 새들=지지",
+    example: {
+      question: "금속관 끝부분이 박스에 들어가는 곳에서 전선 피복 손상을 막기 위해 끼우는 부속은?",
+      solution: [
+        "관 끝의 날카로움 → 전선 피복 손상 방지",
+        "→ 부싱",
+      ],
+      answer: "부싱",
+    },
   },
   {
     id: "f-tool-pliers",
@@ -246,6 +403,13 @@ export const facilityCards: Flashcard[] = [
     subject: "전기설비",
     topic: "배선재료·공구",
     source: "preset",
+    example: {
+      question: "전선 끝을 고리(아이) 모양으로 동그랗게 만들 때 가장 적합한 공구는?",
+      solution: [
+        "좁은 부분에서 정밀한 굽힘 → 롱노즈",
+      ],
+      answer: "롱노즈(라디오뺀치)",
+    },
   },
   {
     id: "f-tool-test-lamp",
@@ -255,6 +419,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선재료·공구",
     source: "preset",
     hint: "검상기 = 3상 상회전 확인",
+    example: {
+      question: "3상 유도전동기가 역회전 했을 때 상회전이 R-S-T 정상인지 확인하는 기기는?",
+      solution: [
+        "3상 상회전 방향 확인",
+        "→ 검상기(상회전계)",
+      ],
+      answer: "검상기(상회전계)",
+    },
   },
 
   // ───────────────────────── 배선공사 ─────────────────────────
@@ -266,6 +438,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선공사",
     source: "preset",
     hint: "동일굵기 48%, 혼합 32%",
+    example: {
+      question: "관 내부 단면적 100 mm²의 금속관에 동일 굵기 전선을 넣을 때 최대 점유 단면적은?",
+      solution: [
+        "동일 굵기 → 48 % 이하",
+        "$100 \\times 0.48 = 48\\ \\text{mm}^2$",
+      ],
+      answer: "약 48 mm² 이하",
+    },
   },
   {
     id: "f-work-metal-conduit-thick",
@@ -275,6 +455,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선공사",
     source: "preset",
     hint: "후강=안지름 짝수, 박강=바깥지름 홀수",
+    example: {
+      question: "다음 호칭 중 후강전선관 규격은? (16, 19, 25, 28)",
+      solution: [
+        "후강: 안지름 짝수 → 16, 22, 28 ...",
+        "박강: 바깥지름 홀수 → 19, 25, 31 ...",
+      ],
+      answer: "16, 28 (후강전선관)",
+    },
   },
   {
     id: "f-work-raceway",
@@ -283,6 +471,14 @@ export const facilityCards: Flashcard[] = [
     subject: "전기설비",
     topic: "배선공사",
     source: "preset",
+    example: {
+      question: "백화점에서 진열대 위치에 따라 조명을 자유롭게 옮기고 싶을 때 적합한 공사 방식은?",
+      solution: [
+        "임의 위치에서 조명기구 접속 가능",
+        "→ 라이팅덕트 공사",
+      ],
+      answer: "라이팅덕트 공사",
+    },
   },
   {
     id: "f-work-duct-fill",
@@ -292,6 +488,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선공사",
     source: "preset",
     hint: "금속덕트 일반 20% 이하",
+    example: {
+      question: "내부 단면적 1000 mm²의 금속덕트에 일반 전력 전선을 수용할 때 최대 점유 단면적은?",
+      solution: [
+        "일반 20 % 이하",
+        "$1000 \\times 0.2 = 200\\ \\text{mm}^2$",
+      ],
+      answer: "약 200 mm² 이하",
+    },
   },
   {
     id: "f-work-cable-tray",
@@ -300,6 +504,14 @@ export const facilityCards: Flashcard[] = [
     subject: "전기설비",
     topic: "배선공사",
     source: "preset",
+    example: {
+      question: "공장 천장 위에 다수의 동력 케이블을 점검·증설이 쉬운 형태로 포설하려면?",
+      solution: [
+        "사다리형 등 트레이로 케이블 포설",
+        "→ 케이블 트레이 공사",
+      ],
+      answer: "케이블 트레이 공사",
+    },
   },
   {
     id: "f-work-floor-duct",
@@ -308,6 +520,14 @@ export const facilityCards: Flashcard[] = [
     subject: "전기설비",
     topic: "배선공사",
     source: "preset",
+    example: {
+      question: "사무실 책상 위치를 자주 바꾸는 환경에서 바닥 임의 지점에 전원·통신을 인출할 수 있는 공사는?",
+      solution: [
+        "콘크리트 바닥 매입 덕트 + 인출구",
+        "→ 플로어덕트 공사",
+      ],
+      answer: "플로어덕트 공사",
+    },
   },
   {
     id: "f-work-bus-duct",
@@ -317,6 +537,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선공사",
     source: "preset",
     hint: "대전류 간선 — 모선을 함에 수용",
+    example: {
+      question: "초고층 빌딩의 수직 간선에 대전류를 공급하기 위해 사용하는 공사 방식은?",
+      solution: [
+        "대전류 + 수직 간선 → 모선을 함에 수용",
+        "→ 버스덕트(부스덕트)",
+      ],
+      answer: "버스덕트 공사",
+    },
   },
   {
     id: "f-work-underground",
@@ -326,6 +554,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선공사",
     source: "preset",
     hint: "직매·관로·전력구",
+    example: {
+      question: "대도시 도심 대용량 지중송전선로에 가장 적합한 매설 방식은?",
+      solution: [
+        "대용량·보수 용이",
+        "→ 전력구(암거)식",
+      ],
+      answer: "전력구(암거)식",
+    },
   },
   {
     id: "f-work-wet-location",
@@ -334,6 +570,14 @@ export const facilityCards: Flashcard[] = [
     subject: "전기설비",
     topic: "배선공사",
     source: "preset",
+    example: {
+      question: "지하 기계실(상시 습한 장소)에 적합한 배선공사 방식은?",
+      solution: [
+        "습기에 강한 보호 공사",
+        "→ 금속관/합성수지관/케이블 공사",
+      ],
+      answer: "금속관 또는 케이블 공사 (방수형 부속)",
+    },
   },
   {
     id: "f-work-explosive",
@@ -343,6 +587,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선공사",
     source: "preset",
     hint: "방폭 + 금속관/케이블 + 실링",
+    example: {
+      question: "프로판가스가 누설될 우려가 있는 가연성 가스 장소의 전기 배선 공사는?",
+      solution: [
+        "점화원 차단 → 방폭기기 + 두꺼운 금속관",
+        "관 접속부 실링피팅",
+      ],
+      answer: "방폭공사 (금속관 + 실링피팅)",
+    },
   },
   {
     id: "f-work-support-distance",
@@ -352,6 +604,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선공사",
     source: "preset",
     hint: "대략 2 m 이하 — 굴곡부 더 짧게",
+    example: {
+      question: "금속전선관을 새들로 고정할 때 일반 직선 구간의 지지점 간격 권장값은?",
+      solution: [
+        "일반 직선부 약 2 m 이하",
+        "굴곡부·박스 부근은 더 짧게",
+      ],
+      answer: "약 2 m 이하",
+    },
   },
   {
     id: "f-work-bend-radius",
@@ -361,6 +621,14 @@ export const facilityCards: Flashcard[] = [
     topic: "배선공사",
     source: "preset",
     hint: "외경의 6~8배 이상",
+    example: {
+      question: "외경 20 mm 저압 단심 케이블의 굴곡 최소 반지름은?",
+      solution: [
+        "단심: 외경의 약 8배 이상",
+        "$R \\geq 8 \\times 20 = 160\\ \\text{mm}$",
+      ],
+      answer: "약 160 mm 이상",
+    },
   },
 
   // ───────────────────────── 옥내배선 ─────────────────────────
@@ -389,6 +657,13 @@ export const facilityCards: Flashcard[] = [
     topic: "옥내배선",
     source: "preset",
     hint: "표준부하밀도 × 면적",
+    example: {
+      question: "표준부하밀도 30 VA/m², 바닥면적 100 m²인 사무실의 기본 부하 추정치는?",
+      solution: [
+        "$P = 30 \\times 100 = 3000\\ \\text{VA}$",
+      ],
+      answer: "약 3 kVA",
+    },
   },
   {
     id: "f-indoor-demand-factor",
@@ -414,6 +689,14 @@ export const facilityCards: Flashcard[] = [
     subject: "전기설비",
     topic: "옥내배선",
     source: "preset",
+    example: {
+      question: "분전반 내에서 각 분기회로를 개별 보호·차단하는 장치는?",
+      solution: [
+        "각 분기마다 설치되는 보호기",
+        "→ 분기차단기(MCB)",
+      ],
+      answer: "분기차단기(MCB)",
+    },
   },
   {
     id: "f-indoor-circuit-diagram",
@@ -422,6 +705,14 @@ export const facilityCards: Flashcard[] = [
     subject: "전기설비",
     topic: "옥내배선",
     source: "preset",
+    example: {
+      question: "옥내 배선도에서 천장 은폐 배선과 노출 배선을 구분하는 일반 표기 규약은?",
+      solution: [
+        "천장 은폐: 실선",
+        "노출: 점선",
+      ],
+      answer: "은폐=실선, 노출=점선",
+    },
   },
   {
     id: "f-indoor-three-way-wiring",
@@ -431,6 +722,14 @@ export const facilityCards: Flashcard[] = [
     topic: "옥내배선",
     source: "preset",
     hint: "공통-공통, 사이에 진행선 2가닥",
+    example: {
+      question: "3로 스위치 2개로 2개소 점멸을 구성할 때 두 스위치 사이에 필요한 진행선 가닥 수는?",
+      solution: [
+        "각 3로의 1·2번 단자끼리 연결",
+        "→ 진행선 2가닥",
+      ],
+      answer: "2가닥",
+    },
   },
   {
     id: "f-indoor-neutral-rule",
@@ -440,6 +739,14 @@ export const facilityCards: Flashcard[] = [
     topic: "옥내배선",
     source: "preset",
     hint: "N 단독 차단 금지 — 단선 시 위험",
+    example: {
+      question: "중성선(N)에 단독 과전류차단기를 설치하면 안 되는 이유는?",
+      solution: [
+        "N 단선 시 단상부하에 과전압 인가",
+        "→ 기기 손상·감전 위험",
+      ],
+      answer: "단선 시 과전압 위험",
+    },
   },
   {
     id: "f-indoor-lamp-circuit",
@@ -449,6 +756,14 @@ export const facilityCards: Flashcard[] = [
     topic: "옥내배선",
     source: "preset",
     hint: "스위치는 무조건 상선(L)에",
+    example: {
+      question: "단극 점멸기를 중성선(N) 쪽에 설치할 때 발생하는 위험은?",
+      solution: [
+        "스위치 OFF여도 등기구는 상선(L)에 연결",
+        "→ 등기구가 충전 상태 → 감전 위험",
+      ],
+      answer: "감전 위험 (스위치는 상선에 설치)",
+    },
   },
   {
     id: "f-indoor-pilot-switch",
@@ -457,6 +772,14 @@ export const facilityCards: Flashcard[] = [
     subject: "전기설비",
     topic: "옥내배선",
     source: "preset",
+    example: {
+      question: "어두운 복도에서 스위치 위치를 쉽게 찾을 수 있게 하는 스위치는?",
+      solution: [
+        "OFF 시 약하게 점등 → 위치 안내",
+        "→ 위치표시등 (네온·형광 내장 스위치)",
+      ],
+      answer: "위치표시등(네온) 스위치",
+    },
   },
   {
     id: "f-indoor-branch-capacity",
@@ -466,6 +789,14 @@ export const facilityCards: Flashcard[] = [
     topic: "옥내배선",
     source: "preset",
     hint: "큰 부하 = 전용회로",
+    example: {
+      question: "10 kW 가정용 에어컨에 적합한 분기회로 구성은?",
+      solution: [
+        "큰 부하·단일기기 → 다른 콘센트와 분리",
+        "→ 전용 분기회로 + 전용 차단기",
+      ],
+      answer: "전용 분기회로 (단독)",
+    },
   },
   {
     id: "f-indoor-three-phase-balance",
@@ -475,6 +806,14 @@ export const facilityCards: Flashcard[] = [
     topic: "옥내배선",
     source: "preset",
     hint: "불평형 → 중성선 과열",
+    example: {
+      question: "3상 4선식에서 한 상에만 단상 부하를 집중시키면 어떤 문제가 생기는가?",
+      solution: [
+        "상 불평형 → 중성선 전류 증가",
+        "→ 중성선 과열·전압 불평형",
+      ],
+      answer: "중성선 과열·전압 불평형",
+    },
   },
   {
     id: "f-indoor-conductor-min",
@@ -484,6 +823,14 @@ export const facilityCards: Flashcard[] = [
     topic: "옥내배선",
     source: "preset",
     hint: "강도·허용전류·전압강하 동시 만족",
+    example: {
+      question: "일반 옥내 분기회로 동 도체의 최소 단면적 기준은?",
+      solution: [
+        "기계적 강도 + 허용전류 고려",
+        "일반 분기 최소 약 2.5 mm² 이상",
+      ],
+      answer: "2.5 mm² 이상 (전등 일부 1.5 mm²)",
+    },
   },
 
   // ───────────────────────── 접지 ─────────────────────────
@@ -495,6 +842,14 @@ export const facilityCards: Flashcard[] = [
     topic: "접지",
     source: "preset",
     hint: "1번=전원, 2번=기기 / TN·TT·IT",
+    example: {
+      question: "전원측은 직접접지, 기기측은 독립된 자체 접지전극을 사용하는 KEC 접지방식은?",
+      solution: [
+        "전원 T(직접접지) + 기기 T(독립접지)",
+        "→ TT 방식",
+      ],
+      answer: "TT 방식",
+    },
   },
   {
     id: "f-ground-tn-types",
@@ -504,6 +859,14 @@ export const facilityCards: Flashcard[] = [
     topic: "접지",
     source: "preset",
     hint: "S=분리, C=겸용(PEN)",
+    example: {
+      question: "전원에서는 PEN(겸용), 옥내 분기부터는 PE/N을 분리하는 접지방식은?",
+      solution: [
+        "C(겸용) + S(분리) 혼합",
+        "→ TN-C-S",
+      ],
+      answer: "TN-C-S 방식",
+    },
   },
   {
     id: "f-ground-purpose",
@@ -513,6 +876,14 @@ export const facilityCards: Flashcard[] = [
     topic: "접지",
     source: "preset",
     hint: "감전·이상전압·동작·노이즈",
+    example: {
+      question: "기기 외함을 접지하는 가장 중요한 목적은?",
+      solution: [
+        "외함 누전 시 대지전위로 유지 → 인체 감전 방지",
+        "동시에 보호장치 동작 보장",
+      ],
+      answer: "감전 보호",
+    },
   },
   {
     id: "f-ground-soil-resistivity",
@@ -522,6 +893,14 @@ export const facilityCards: Flashcard[] = [
     topic: "접지",
     source: "preset",
     hint: "길게·여러개·심타·저감제",
+    example: {
+      question: "건조한 토양에서 접지저항이 100 Ω으로 큰 경우 가장 손쉽게 저감하는 방법은?",
+      solution: [
+        "접지극 깊이·개수 증가",
+        "접지저감제 도포",
+      ],
+      answer: "접지봉 심타 + 접지저감제 사용",
+    },
   },
   {
     id: "f-ground-equipotential",
@@ -531,6 +910,14 @@ export const facilityCards: Flashcard[] = [
     topic: "접지",
     source: "preset",
     hint: "금속체 전위차 제거",
+    example: {
+      question: "건물 인입부에서 수도관·가스관·통신접지 등을 같은 본딩바에 접속하는 이유는?",
+      solution: [
+        "금속체 간 전위차 → 감전·아크 위험",
+        "본딩으로 전위 동일화",
+      ],
+      answer: "전위차 제거 (등전위본딩)",
+    },
   },
   {
     id: "f-ground-parallel-rod",
@@ -556,6 +943,14 @@ export const facilityCards: Flashcard[] = [
     topic: "접지",
     source: "preset",
     hint: "녹/황, 상도체 크기로 PE 단면적",
+    example: {
+      question: "상도체 단면적이 10 mm²인 분기회로의 PE 도체 단면적 기준은?",
+      solution: [
+        "상도체 ≤16 mm²인 경우: PE는 상도체와 동일",
+        "→ PE 10 mm²",
+      ],
+      answer: "10 mm² (상도체와 동일)",
+    },
   },
   {
     id: "f-ground-step-touch",
@@ -565,6 +960,14 @@ export const facilityCards: Flashcard[] = [
     topic: "접지",
     source: "preset",
     hint: "보폭=발-발, 접촉=손-발",
+    example: {
+      question: "지락사고 시 사람이 기기 외함을 만졌을 때 손과 발 사이에 걸리는 전압은?",
+      solution: [
+        "기기 외함과 발이 딛은 대지 간 전위차",
+        "→ 접촉전압",
+      ],
+      answer: "접촉전압",
+    },
   },
   {
     id: "f-ground-neutral-multi",
@@ -574,6 +977,14 @@ export const facilityCards: Flashcard[] = [
     topic: "접지",
     source: "preset",
     hint: "22.9 kV-Y = 중성점 다중접지",
+    example: {
+      question: "한국 22.9 kV 배전선로의 중성점 접지 방식은?",
+      solution: [
+        "Y결선 + 중성점 다중접지",
+        "지락전류 경로 확보로 보호장치 신속 동작",
+      ],
+      answer: "중성점 다중접지 (22.9 kV-Y)",
+    },
   },
   {
     id: "f-ground-fault-loop",
@@ -600,6 +1011,14 @@ export const facilityCards: Flashcard[] = [
     subject: "전기설비",
     topic: "접지",
     source: "preset",
+    example: {
+      question: "신축 빌딩에서 별도 매설 없이 활용할 수 있는 접지극은?",
+      solution: [
+        "건물 기초 철근 활용",
+        "→ 기초접지극",
+      ],
+      answer: "기초접지극",
+    },
   },
   {
     id: "f-ground-extra-low",
@@ -609,6 +1028,14 @@ export const facilityCards: Flashcard[] = [
     topic: "접지",
     source: "preset",
     hint: "S=비접지, P=접지가능, F=기능용",
+    example: {
+      question: "안전 분리 변압기를 통해 비접지 상태로 공급하여 감전 위험을 본질적으로 낮춘 전압은?",
+      solution: [
+        "절연된 비접지 회로",
+        "→ SELV",
+      ],
+      answer: "SELV",
+    },
   },
 
   // ───────────────────────── 피뢰·보호 ─────────────────────────
@@ -620,6 +1047,14 @@ export const facilityCards: Flashcard[] = [
     topic: "피뢰·보호",
     source: "preset",
     hint: "구체가 못 닿는 곳 = 보호",
+    example: {
+      question: "회전구체법으로 보호레벨 I 적용 시 구체 반지름은 다른 레벨보다 어떠한가?",
+      solution: [
+        "LPL I = 가장 엄격",
+        "구체 반지름이 가장 작음 (20 m)",
+      ],
+      answer: "가장 작다 (엄격한 보호)",
+    },
   },
   {
     id: "f-lps-components",
@@ -629,6 +1064,14 @@ export const facilityCards: Flashcard[] = [
     topic: "피뢰·보호",
     source: "preset",
     hint: "수뢰부 → 인하도선 → 접지",
+    example: {
+      question: "외부 피뢰시스템(LPS)에서 뇌격을 직접 받는 부분은?",
+      solution: [
+        "옥상에 설치된 돌침·수평도체·메시",
+        "→ 수뢰부 시스템",
+      ],
+      answer: "수뢰부 시스템",
+    },
   },
   {
     id: "f-lps-down-conductor",
@@ -638,6 +1081,14 @@ export const facilityCards: Flashcard[] = [
     topic: "피뢰·보호",
     source: "preset",
     hint: "최단·직선·복수·등간격",
+    example: {
+      question: "인하도선을 굴곡 적게 직선으로 시공하는 이유는?",
+      solution: [
+        "급격한 굴곡 → 인덕턴스 증가",
+        "측면 섬락·소호 곤란 → 손상 위험",
+      ],
+      answer: "측면섬락 방지 + 임피던스 최소화",
+    },
   },
   {
     id: "f-lps-arrester-la",
@@ -647,6 +1098,14 @@ export const facilityCards: Flashcard[] = [
     topic: "피뢰·보호",
     source: "preset",
     hint: "제한전압 낮을수록 보호 양호",
+    example: {
+      question: "수전설비 변압기 1차측에 설치되어 뇌서지로부터 변압기를 보호하는 장치는?",
+      solution: [
+        "이상전압을 대지로 방류 + 속류 차단",
+        "→ 피뢰기(LA)",
+      ],
+      answer: "피뢰기(LA)",
+    },
   },
   {
     id: "f-lps-arrester-position",
@@ -656,6 +1115,14 @@ export const facilityCards: Flashcard[] = [
     topic: "피뢰·보호",
     source: "preset",
     hint: "보호기기에 가깝게 = 효과↑",
+    example: {
+      question: "피뢰기를 변압기에서 멀리 떨어진 곳에 설치하면 어떤 문제가 생기는가?",
+      solution: [
+        "거리만큼 진행파 반사 → 변압기 단자 전압↑",
+        "→ 보호효과 감소",
+      ],
+      answer: "보호효과 저하",
+    },
   },
   {
     id: "f-lps-spd-position",
@@ -665,6 +1132,14 @@ export const facilityCards: Flashcard[] = [
     topic: "피뢰·보호",
     source: "preset",
     hint: "LA=고압측, SPD=저압·정보기기",
+    example: {
+      question: "사무실 분전반에 컴퓨터·통신기기 보호를 위해 설치하는 서지보호 장치는?",
+      solution: [
+        "저압 옥내 회로 + 정보통신기기 보호",
+        "→ SPD (서지보호장치)",
+      ],
+      answer: "SPD",
+    },
   },
   {
     id: "f-lps-bonding",
@@ -674,6 +1149,13 @@ export const facilityCards: Flashcard[] = [
     topic: "피뢰·보호",
     source: "preset",
     hint: "LPZ 경계마다 본딩",
+    example: {
+      question: "건물 인입부에 들어오는 금속배관·전력선·통신선을 어떻게 처리해야 하는가?",
+      solution: [
+        "LPZ 경계 → 본딩바에 직접 또는 SPD 통해 접속",
+      ],
+      answer: "본딩바에 등전위본딩 (또는 SPD 경유)",
+    },
   },
   {
     id: "f-lps-protection-level",
@@ -683,6 +1165,13 @@ export const facilityCards: Flashcard[] = [
     topic: "피뢰·보호",
     source: "preset",
     hint: "I = 가장 엄격",
+    example: {
+      question: "위험성 평가 결과 가장 엄격한 보호가 필요한 시설에 적용하는 뇌보호레벨은?",
+      solution: [
+        "I~IV 중 I이 가장 엄격",
+      ],
+      answer: "LPL I",
+    },
   },
   {
     id: "f-lps-mesh",
@@ -692,6 +1181,14 @@ export const facilityCards: Flashcard[] = [
     topic: "피뢰·보호",
     source: "preset",
     hint: "평지붕 보호 — 레벨↑ 촘촘",
+    example: {
+      question: "넓은 평지붕의 LPS 수뢰부 시스템으로 가장 적합한 방식은?",
+      solution: [
+        "평탄한 지붕을 격자 도체망으로 보호",
+        "→ 메시법",
+      ],
+      answer: "메시법",
+    },
   },
   {
     id: "f-lps-grounding-r",
@@ -701,6 +1198,14 @@ export const facilityCards: Flashcard[] = [
     topic: "피뢰·보호",
     source: "preset",
     hint: "10 Ω 이하 목표 + 저임피던스",
+    example: {
+      question: "피뢰설비 접지저항의 일반 권장 목표값은?",
+      solution: [
+        "통상 10 Ω 이하 목표",
+        "저임피던스 접지 형태(환상·방사상)",
+      ],
+      answer: "10 Ω 이하",
+    },
   },
   {
     id: "f-lps-air-termination",
@@ -710,6 +1215,14 @@ export const facilityCards: Flashcard[] = [
     topic: "피뢰·보호",
     source: "preset",
     hint: "모서리·돌출부 우선",
+    example: {
+      question: "건물 옥상 LPS 설치 시 수뢰부를 우선 배치해야 하는 위치는?",
+      solution: [
+        "낙뢰가 집중되는 곳",
+        "→ 모서리·돌출부·높은 부분",
+      ],
+      answer: "건물 모서리·돌출부",
+    },
   },
   {
     id: "f-lps-side-flash",
@@ -719,6 +1232,14 @@ export const facilityCards: Flashcard[] = [
     topic: "피뢰·보호",
     source: "preset",
     hint: "이격 확보 or 본딩으로 방지",
+    example: {
+      question: "인하도선과 가까운 금속 배관 사이에서 공기 방전이 일어나는 현상은?",
+      solution: [
+        "전위차 절연내력 초과 → 공기 중 아크",
+        "→ 측면 섬락(side flash)",
+      ],
+      answer: "측면 섬락 (side flash)",
+    },
   },
 
   // ───────────────────────── 차단기·보호장치 ─────────────────────────
@@ -730,6 +1251,14 @@ export const facilityCards: Flashcard[] = [
     topic: "차단기·보호장치",
     source: "preset",
     hint: "퓨즈=교체식 한류, CB=재투입",
+    example: {
+      question: "사고 차단 후 재투입이 가능한 보호기기는?",
+      solution: [
+        "기계적 개폐 → 재투입 가능",
+        "→ 차단기(CB)",
+      ],
+      answer: "차단기 (퓨즈는 교체 필요)",
+    },
   },
   {
     id: "f-prot-breaking-capacity",
@@ -739,6 +1268,14 @@ export const facilityCards: Flashcard[] = [
     topic: "차단기·보호장치",
     source: "preset",
     hint: "예상 단락전류 < 정격차단용량",
+    example: {
+      question: "설치점 예상 단락전류가 8 kA일 때 선정해야 할 차단기 정격차단용량은?",
+      solution: [
+        "예상 단락전류보다 차단용량이 커야 함",
+        "→ 10 kA 이상 (여유 포함)",
+      ],
+      answer: "10 kA 이상 (여유 있게 선정)",
+    },
   },
   {
     id: "f-prot-short-circuit-calc",
@@ -766,6 +1303,14 @@ export const facilityCards: Flashcard[] = [
     topic: "차단기·보호장치",
     source: "preset",
     hint: "DS=무부하, LBS=부하, CB=사고",
+    example: {
+      question: "수전실에서 변압기 점검을 위해 무부하 상태에서 회로를 확실하게 분리하는 기기는?",
+      solution: [
+        "소호능력 없음 → 무부하 개폐만 가능",
+        "→ 단로기(DS)",
+      ],
+      answer: "단로기(DS)",
+    },
   },
   {
     id: "f-prot-relay-types",
@@ -775,6 +1320,14 @@ export const facilityCards: Flashcard[] = [
     topic: "차단기·보호장치",
     source: "preset",
     hint: "OCR·GR·OVR·UVR·차동",
+    example: {
+      question: "변압기 내부 권선 단락 등 내부 고장 검출에 가장 효과적인 보호계전기는?",
+      solution: [
+        "1·2차 전류차로 내부 고장 검출",
+        "→ 차동계전기",
+      ],
+      answer: "차동계전기 (87)",
+    },
   },
   {
     id: "f-prot-cb-arc-medium",
@@ -784,6 +1337,14 @@ export const facilityCards: Flashcard[] = [
     topic: "차단기·보호장치",
     source: "preset",
     hint: "배전 주력 = VCB(진공)",
+    example: {
+      question: "현재 22.9 kV 배전용 차단기로 가장 일반적으로 사용되는 종류는?",
+      solution: [
+        "보수 적고 신뢰성 높음 → 진공 중 소호",
+        "→ VCB(진공차단기)",
+      ],
+      answer: "VCB",
+    },
   },
   {
     id: "f-prot-trip-curve",
@@ -793,6 +1354,14 @@ export const facilityCards: Flashcard[] = [
     topic: "차단기·보호장치",
     source: "preset",
     hint: "B<C<D (순시배율 커짐)",
+    example: {
+      question: "기동 시 큰 돌입전류가 흐르는 변압기·대형 모터 회로에 적합한 배선용차단기 트립곡선은?",
+      solution: [
+        "순시배율 가장 큼 (10~20배)",
+        "→ D형",
+      ],
+      answer: "D형",
+    },
   },
   {
     id: "f-prot-elb-sensitivity",
@@ -802,6 +1371,14 @@ export const facilityCards: Flashcard[] = [
     topic: "차단기·보호장치",
     source: "preset",
     hint: "감전보호 = 30 mA / 0.03 s",
+    example: {
+      question: "욕실 등 인체 감전 위험 장소의 콘센트에 설치하는 누전차단기 사양은?",
+      solution: [
+        "고감도·고속형",
+        "정격감도전류 30 mA 이하 / 동작시간 0.03초 이하",
+      ],
+      answer: "30 mA, 0.03 s 이하 (고감도 고속형)",
+    },
   },
   {
     id: "f-prot-selectivity",
@@ -811,6 +1388,14 @@ export const facilityCards: Flashcard[] = [
     topic: "차단기·보호장치",
     source: "preset",
     hint: "사고 가까운 것만 동작",
+    example: {
+      question: "한 분기회로의 단락사고로 같은 분전반의 다른 분기까지 정전되지 않도록 하는 설계 개념은?",
+      solution: [
+        "사고에 가까운 차단기만 동작",
+        "→ 보호협조 (선택차단)",
+      ],
+      answer: "보호협조 (선택차단)",
+    },
   },
   {
     id: "f-prot-pf-improve",
@@ -840,6 +1425,14 @@ export const facilityCards: Flashcard[] = [
     topic: "차단기·보호장치",
     source: "preset",
     hint: "CT 2차 개방 금지 / PT 2차 단락 금지",
+    example: {
+      question: "운전 중 CT(변류기) 2차측을 개방하면 어떤 위험이 생기는가?",
+      solution: [
+        "2차 개방 → 2차 임피던스 무한대",
+        "1차 자속이 모두 자화 → 2차에 매우 큰 유기전압",
+      ],
+      answer: "고전압 유기 → 절연 파괴·감전 위험",
+    },
   },
   {
     id: "f-prot-overload-thermal",
@@ -849,6 +1442,14 @@ export const facilityCards: Flashcard[] = [
     topic: "차단기·보호장치",
     source: "preset",
     hint: "과부하=열동, 단락=차단기",
+    example: {
+      question: "전동기 권선 과열을 막기 위해 MC와 함께 설치하는 보호기기와 보호 대상은?",
+      solution: [
+        "과부하 보호 → 열동계전기(EOCR/THR)",
+        "단락 보호는 별도 차단기·퓨즈",
+      ],
+      answer: "열동계전기 (과부하 보호 전용)",
+    },
   },
 
   // ───────────────────────── 변전·배전 ─────────────────────────
@@ -860,6 +1461,13 @@ export const facilityCards: Flashcard[] = [
     topic: "변전·배전",
     source: "preset",
     hint: "단상 220 / 3상 380",
+    example: {
+      question: "한국 일반 빌딩의 3상 4선식 표준전압은?",
+      solution: [
+        "선간 380 V, 상-중성 220 V",
+      ],
+      answer: "380/220 V",
+    },
   },
   {
     id: "f-dist-pole-transformer",
@@ -869,6 +1477,14 @@ export const facilityCards: Flashcard[] = [
     topic: "변전·배전",
     source: "preset",
     hint: "22.9 kV → 380/220 V 강압",
+    example: {
+      question: "전봇대 위에 설치되어 22.9 kV를 일반 수용가용 220 V로 강압하는 변압기는?",
+      solution: [
+        "배전선로 강압 + 옥외 전주 설치",
+        "→ 주상변압기",
+      ],
+      answer: "주상변압기 (P.Tr)",
+    },
   },
   {
     id: "f-dist-distribution-system",
@@ -878,6 +1494,14 @@ export const facilityCards: Flashcard[] = [
     topic: "변전·배전",
     source: "preset",
     hint: "수지<환상<망상 (신뢰도·비용↑)",
+    example: {
+      question: "공급 신뢰도가 가장 높지만 비용이 가장 비싼 배전 방식은?",
+      solution: [
+        "다중 경로로 무정전 가능",
+        "→ 망상식 (네트워크)",
+      ],
+      answer: "망상식",
+    },
   },
   {
     id: "f-dist-power-loss",
@@ -922,6 +1546,14 @@ export const facilityCards: Flashcard[] = [
     topic: "변전·배전",
     source: "preset",
     hint: "역률↓ → 전류↑ → 손실↑",
+    example: {
+      question: "같은 유효전력 100 kW 부하의 역률이 1.0에서 0.5로 떨어지면 전류는 몇 배?",
+      solution: [
+        "$P = VI\\cos\\theta \\Rightarrow I = \\dfrac{P}{V\\cos\\theta}$",
+        "$\\cos\\theta = 0.5$ → 전류 2배",
+      ],
+      answer: "2배 (전류 ∝ 1/cosθ)",
+    },
   },
   {
     id: "f-dist-substation-type",
@@ -931,6 +1563,14 @@ export const facilityCards: Flashcard[] = [
     topic: "변전·배전",
     source: "preset",
     hint: "큐비클=폐쇄형, GIS=가스절연",
+    example: {
+      question: "도심 변전소에서 공간을 적게 차지하면서 신뢰성도 높여야 할 때 채택하는 개폐장치는?",
+      solution: [
+        "SF6 가스 절연 → 초소형 + 고신뢰",
+        "→ GIS",
+      ],
+      answer: "GIS (가스절연개폐장치)",
+    },
   },
   {
     id: "f-dist-cos-ass",
@@ -940,6 +1580,14 @@ export const facilityCards: Flashcard[] = [
     topic: "변전·배전",
     source: "preset",
     hint: "ASS=사고 자동 구분 분리",
+    example: {
+      question: "수용가측 사고가 배전선로 전체로 파급되지 않도록 자동으로 사고구간을 분리하는 기기는?",
+      solution: [
+        "자동 고장구분 + 자체 차단",
+        "→ ASS",
+      ],
+      answer: "ASS (자동고장구분개폐기)",
+    },
   },
   {
     id: "f-dist-neutral-grounding",
@@ -949,6 +1597,14 @@ export const facilityCards: Flashcard[] = [
     topic: "변전·배전",
     source: "preset",
     hint: "직접접지=이상전압↓·고장전류↑",
+    example: {
+      question: "154 kV·345 kV 송전계통 중성점 접지방식의 표준은?",
+      solution: [
+        "이상전압 억제 + 보호장치 확실 동작",
+        "→ 직접접지",
+      ],
+      answer: "직접접지",
+    },
   },
   {
     id: "f-dist-overhead-vs-underground",
@@ -958,6 +1614,14 @@ export const facilityCards: Flashcard[] = [
     topic: "변전·배전",
     source: "preset",
     hint: "가공=싸고 빠름, 지중=안전·미관",
+    example: {
+      question: "도시 미관 향상과 태풍·낙뢰에 대한 안정성 향상을 위해 도심에서 추진하는 배전방식은?",
+      solution: [
+        "전봇대 없음 + 외란 영향 적음",
+        "→ 지중배전(지중화)",
+      ],
+      answer: "지중배전",
+    },
   },
   {
     id: "f-dist-recloser-sectionalizer",
@@ -967,6 +1631,14 @@ export const facilityCards: Flashcard[] = [
     topic: "변전·배전",
     source: "preset",
     hint: "리클로저=재투입, 섹셔널=구간분리",
+    example: {
+      question: "낙뢰로 인한 일시적인 지락사고에 대응해 자동으로 차단·재투입을 반복하는 배전설비는?",
+      solution: [
+        "일시고장 자동복구 → 자체 차단·재투입",
+        "→ 리클로저(R/C)",
+      ],
+      answer: "리클로저 (R/C)",
+    },
   },
   {
     id: "f-dist-transformer-connection",
