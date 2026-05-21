@@ -18,6 +18,47 @@ type WrongItem = {
 
 const SUBJECTS: (Subject | "전체")[] = ["전체", "전기이론", "전기기기", "전기설비"];
 
+/** 데모 오답을 제공할 회차 — 응시 기록이 없을 때 회차별 3개 + 전체 집계용. */
+const DEMO_WRONG_PRESETS: {
+  examId: string;
+  daysAgo: number;
+  wrongIdx: number[];
+}[] = [
+  { examId: "exam-32", daysAgo: 2, wrongIdx: [3, 11, 19, 28, 41] },
+  { examId: "exam-31", daysAgo: 6, wrongIdx: [1, 14, 33, 47] },
+  { examId: "exam-30", daysAgo: 11, wrongIdx: [5, 9, 22, 30, 38, 52] },
+];
+
+/**
+ * 응시 기록이 없을 때 보여줄 데모 오답. examId 가 데모 회차면 그 회차만,
+ * 없으면(전체 탭) 3개 회차의 오답을 합쳐 반환한다.
+ */
+function sampleWrongItems(examId?: string): WrongItem[] {
+  const DAY = 86400000;
+  const out: WrongItem[] = [];
+  for (const preset of DEMO_WRONG_PRESETS) {
+    if (examId && preset.examId !== examId) continue;
+    const exam = mockExams.find((e) => e.id === preset.examId);
+    if (!exam) continue;
+    const date = Date.now() - preset.daysAgo * DAY;
+    for (const i of preset.wrongIdx) {
+      const question = exam.questions[i];
+      if (!question) continue;
+      out.push({
+        attemptId: `demo-${preset.examId}`,
+        examTitle: exam.title,
+        examId: preset.examId,
+        qIndex: i,
+        question,
+        userAnswer: (question.answer % 4) + 1,
+        date,
+      });
+    }
+  }
+  out.sort((a, b) => b.date - a.date);
+  return out;
+}
+
 /**
  * examId 가 주어지면 그 회차 한정 오답노트(회차별), 없으면 전체 회차 집계(바깥 탭).
  */
@@ -52,8 +93,8 @@ export default function WrongNotes({ examId }: { examId?: string } = {}) {
       });
     }
     out.sort((a, b) => b.date - a.date);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage attempts 에서 오답만 추출
-    setItems(out);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage attempts 에서 오답 추출, 없으면 데모 대체
+    setItems(out.length > 0 ? out : sampleWrongItems(examId));
   }, [examId]);
 
   const filtered = useMemo(() => {
@@ -125,8 +166,17 @@ export default function WrongNotes({ examId }: { examId?: string } = {}) {
     });
   }
 
+  const isDemo = items.some((it) => it.attemptId.startsWith("demo-"));
+
   return (
     <div>
+      {isDemo && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-800">
+          아직 응시 기록이 없어 <strong>데모 오답 데이터</strong>를 보여주고
+          있어요. 실제 모의고사를 응시하면 내가 틀린 문제로 채워집니다.
+        </div>
+      )}
+
       {/* Stats + filter */}
       <div className="mb-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-rose-200 bg-rose-50 p-5 sm:flex-row sm:items-center">
         <div>
