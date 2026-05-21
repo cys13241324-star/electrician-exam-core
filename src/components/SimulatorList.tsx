@@ -215,11 +215,11 @@ export default function SimulatorList({
         <div className="space-y-6">
           {groups.map((g) => (
             <ChapterSection
-              key={`${g.subject}-${g.chapter}`}
+              key={`${g.subject}-${g.chapter}-${isSearching}`}
               subject={g.subject}
               chapter={g.chapter}
               items={g.items}
-              defaultOpen={!isSearching}
+              defaultOpen={isSearching}
               compact={compact}
             />
           ))}
@@ -331,7 +331,7 @@ function ChapterSection({
       {open && (
         <div
           id={panelId}
-          className="grid grid-cols-1 gap-3 border-t border-zinc-100 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3"
+          className="flex flex-col gap-2.5 border-t border-zinc-100 p-4 sm:p-5"
         >
           {items.map((sim) => (
             <SimCard key={sim.id} sim={sim} style={style} />
@@ -353,18 +353,28 @@ function SimCard({
   return (
     <Link
       href={`/simulator/${sim.id}`}
-      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-100 bg-white p-4 ring-1 transition-all duration-200 hover:-translate-y-1 hover:border-zinc-200 hover:shadow-lg ${style.ring}`}
+      className={`group relative flex items-stretch gap-3 overflow-hidden rounded-2xl border border-zinc-100 bg-white p-4 ring-1 transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-200 hover:shadow-lg sm:gap-4 ${style.ring}`}
     >
       <span
         aria-hidden
-        className={`absolute inset-x-0 top-0 h-1 origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100 ${style.bar}`}
+        className={`absolute inset-y-0 left-0 w-1 origin-top scale-y-0 transition-transform duration-300 group-hover:scale-y-100 ${style.bar}`}
       />
-      <div className="flex items-start justify-between gap-2">
-        <span
-          className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br ${style.soft} to-white text-2xl ring-1 ${style.ring}`}
-        >
-          {sim.emoji}
-        </span>
+      <span
+        className={`flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-2xl bg-gradient-to-br ${style.soft} to-white text-2xl ring-1 ${style.ring}`}
+      >
+        {sim.emoji}
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <h4 className="text-sm font-bold leading-snug text-zinc-900 transition-colors group-hover:text-indigo-700">
+          {sim.title}
+        </h4>
+        <p className="mt-1 line-clamp-2 text-xs leading-5 text-zinc-500">
+          {sim.description}
+        </p>
+      </div>
+
+      <div className="flex shrink-0 flex-col items-end justify-between gap-2">
         {available ? (
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-100">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -375,19 +385,13 @@ function SimCard({
             준비중
           </span>
         )}
+        <span
+          className={`inline-flex items-center gap-1 whitespace-nowrap text-xs font-semibold transition-transform group-hover:translate-x-0.5 ${style.accent}`}
+        >
+          {available ? "체험하기" : "공식 보기"}
+          <span aria-hidden>→</span>
+        </span>
       </div>
-      <h4 className="mt-3.5 text-sm font-bold leading-snug text-zinc-900 transition-colors group-hover:text-indigo-700">
-        {sim.title}
-      </h4>
-      <p className="mt-1.5 line-clamp-2 flex-1 text-xs leading-5 text-zinc-500">
-        {sim.description}
-      </p>
-      <span
-        className={`mt-3.5 inline-flex items-center gap-1 text-xs font-semibold transition-transform group-hover:translate-x-0.5 ${style.accent}`}
-      >
-        {available ? "체험하기" : "공식 보기"}
-        <span aria-hidden>→</span>
-      </span>
     </Link>
   );
 }
