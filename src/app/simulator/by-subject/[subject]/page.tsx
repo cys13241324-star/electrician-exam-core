@@ -8,9 +8,7 @@ import { simulators, SIMULATOR_SUBJECTS } from "@/lib/simulators";
 import type { Subject } from "@/lib/simulators";
 
 export async function generateStaticParams() {
-  return SIMULATOR_SUBJECTS.map((subject) => ({
-    subject: encodeURIComponent(subject),
-  }));
+  return SIMULATOR_SUBJECTS.map((subject) => ({ subject }));
 }
 
 const SUBJECT_LABEL: Record<Subject, { eyebrow: string; subtitle: string }> = {
