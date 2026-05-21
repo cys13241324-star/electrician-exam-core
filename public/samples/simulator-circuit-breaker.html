@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>차단기 동작 시뮬레이터</title>
+<link rel="stylesheet" href="/samples/_tailwind.css">
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+:root {
+    --bg-0: #0d1117;
+    --bg-1: #11161d;
+    --panel: #131922;
+    --panel-2: #161d27;
+    --border: rgba(148, 163, 184, 0.16);
+    --border-soft: rgba(148, 163, 184, 0.10);
+    --grid: rgba(125, 211, 252, 0.055);
+    --grid-strong: rgba(125, 211, 252, 0.10);
+    --teal: #5eddd6;
+    --amber: #e0a458;
+    --slate-txt: #c4ccd6;
+    --ink: #aab4c0;
+}
+body {
+    background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    color: #d3dae3;
+    font-family: 'Pretendard', system-ui, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.canvas-wrap {
+    position: relative;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #0b0f15;
+    overflow: hidden;
+}
+canvas#cv {
+    display: block;
+    width: 100%;
+    height: 460px;
+    background: #0b0f15;
+}
+.glass, .instrument {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
+}
+.pulse-dot {
+    display: inline-block;
+    width: 7px; height: 7px; border-radius: 9999px;
+    background: var(--teal);
+    box-shadow: 0 0 5px rgba(94, 221, 214, 0.55);
+    transition: background 240ms, box-shadow 240ms;
+}
+.pulse-dot.warn { background: var(--amber); box-shadow: 0 0 5px rgba(224,164,88,0.55); }
+.pulse-dot.trip { background: #d97777; box-shadow: 0 0 5px rgba(217,119,119,0.6); }
+
+input[type=range] {
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.22);
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: #cdd5df;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+    cursor: pointer;
+    border: 3px solid #2a3340;
+}
+input[type=range]:focus { outline: none; }
+input[type=range]:focus::-webkit-slider-thumb { background: var(--teal); }
+.chip-rated { background: var(--panel-2); border: 1px solid rgba(224,164,88,0.30); border-left: 2px solid rgba(224,164,88,0.7); color: var(--slate-txt); }
+
+select {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--slate-txt);
+}
+select option { background: #0f172a; color: #e5e7eb; }
+
+.live-pill {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    transition: border-color 200ms;
+}
+.live-pill.warn { border-color: rgba(224, 164, 88, 0.45); }
+.live-pill.trip { border-color: rgba(217, 119, 119, 0.5); }
+.live-pill.ok { border-color: rgba(94, 221, 214, 0.40); }
+.live-num {
+    font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    color: #d8f3f0;
+    letter-spacing: 0.01em;
+}
+.math-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 2px solid rgba(94, 221, 214, 0.35);
+}
+.math-container { font-size: 1.0rem; color: #cdd5df; }
+.feature-row {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    transition: border-color 180ms;
+}
+.feature-row:hover { border-color: rgba(94, 221, 214, 0.30); }
+.reset-btn {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--slate-txt);
+    transition: border-color 160ms, color 160ms;
+}
+.reset-btn:hover { border-color: rgba(94, 221, 214, 0.5); color: #d8f3f0; }
+.sc-tab {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    color: var(--ink);
+    transition: border-color 160ms, color 160ms, background 160ms;
+    cursor: pointer;
+}
+.sc-tab:hover { border-color: var(--border); color: var(--slate-txt); }
+.sc-tab.active {
+    background: rgba(94, 221, 214, 0.10);
+    border-color: rgba(94, 221, 214, 0.55);
+    color: #d8f3f0;
+}
+.neon-divider {
+    height: 1px;
+    background: var(--border-soft);
+}
+.screen-flash { display: none; }
+.eyebrow { color: #74808d; }
+</style>
+</head>
+<body class="p-4 md:p-8">
+
+<div class="max-w-6xl mx-auto relative">
+    <header class="mb-6" id="hdr">
+        <div class="flex items-center gap-2 text-xs font-semibold tracking-widest" style="color:#7d8a97">
+            <span class="pulse-dot" id="hdrDot"></span>
+            INTERACTIVE · CIRCUIT BREAKER · INVERSE-TIME TRIP
+        </div>
+        <h1 class="mt-2 text-3xl md:text-4xl font-bold" style="color:#e3e9f0">
+            차단기 동작 시뮬레이터
+        </h1>
+        <p class="mt-2 text-sm" style="color:#8b97a4">
+            정격·과부하·단락 상황에서 <span class="font-semibold" style="color:#e0a458">역시간 특성</span>에 따라
+            차단기가 어떻게 <span class="font-semibold" style="color:#d97777">트립(차단)</span>되는지 실시간으로 확인합니다.
+        </p>
+    </header>
+
+    <div id="livePanel" class="mb-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="live-pill rounded-xl p-3" id="pill-i">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">현재 전류 I</p>
+            <p class="mt-1 text-lg font-bold"><span id="iCur" class="live-num">— A</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-ratio">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">정격 대비 배수</p>
+            <p class="mt-1 text-lg font-bold"><span id="ratio" class="live-num">—×</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-trip">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">트립 시간 t</p>
+            <p class="mt-1 text-lg font-bold"><span id="tripTime" class="live-num">— s</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3 ok" id="pill-state">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">차단기 상태</p>
+            <p class="mt-1 text-lg font-bold"><span id="state" style="color:#5eddd6">정상</span></p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div class="lg:col-span-2 glass rounded-2xl p-4 shadow-2xl" id="canvasCard">
+            <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
+                <span class="text-xs font-semibold text-slate-400 tracking-wide">TRIP CURVE · 시간-전류 곡선 + 라이브 측정 전류</span>
+                <button id="restart" class="reset-btn rounded-md px-3 py-1.5 text-xs font-bold">시뮬레이션 재시작</button>
+            </div>
+            <div class="canvas-wrap">
+                <canvas id="cv" width="800" height="460"></canvas>
+            </div>
+        </div>
+
+        <div class="space-y-4" id="sideCol">
+            <div class="glass rounded-2xl p-5">
+                <h2 class="text-base font-bold flex items-center gap-2">
+                    <span style="color:#e3e9f0">시나리오</span>
+                </h2>
+                <p class="mt-2 text-xs text-slate-400">부하 조건을 선택하면 정격 대비 배수가 결정됩니다.</p>
+                <div class="mt-3 grid grid-cols-2 gap-2">
+                    <button class="sc-tab active rounded-md px-2 py-2 text-xs font-bold" data-sc="normal">정상 운전<br><span class="text-[10px] opacity-70">1.0×</span></button>
+                    <button class="sc-tab rounded-md px-2 py-2 text-xs font-bold" data-sc="overload">과부하<br><span class="text-[10px] opacity-70">1.5×</span></button>
+                    <button class="sc-tab rounded-md px-2 py-2 text-xs font-bold" data-sc="heavy">중과부하<br><span class="text-[10px] opacity-70">3×</span></button>
+                    <button class="sc-tab rounded-md px-2 py-2 text-xs font-bold" data-sc="short">단락<br><span class="text-[10px] opacity-70">15×</span></button>
+                </div>
+            </div>
+
+            <div class="glass rounded-2xl p-5 space-y-4">
+                <div class="chip-rated rounded-lg p-3">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>정격 전류 I<sub>n</sub></span><span id="inVal" class="font-mono text-sm">20</span></label>
+                    <input type="range" id="in" min="5" max="100" value="20" class="w-full mt-2 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 mt-1 text-right">A</p>
+                </div>
+                <div>
+                    <label class="text-[11px] font-bold tracking-wider text-slate-300">차단기 종류</label>
+                    <select id="kind" class="w-full mt-2 rounded-md px-2 py-1.5 text-sm">
+                        <option value="mccb">MCCB (배선용)</option>
+                        <option value="elcb">ELCB (누전)</option>
+                        <option value="fuse">퓨즈</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="math-card rounded-2xl p-5">
+                <h3 class="font-bold text-sm mb-2 tracking-wider text-orange-200">역시간 특성</h3>
+                <div class="math-container text-center">
+                    $$t \approx \frac{K}{(I/I_n)^2 - 1}$$
+                </div>
+                <div class="neon-divider my-3"></div>
+                <ul class="space-y-2 text-xs text-slate-300">
+                    <li class="feature-row rounded-lg p-2"><span class="font-bold" style="color:#e0a458">역시간</span> · 전류가 클수록 트립 시간이 짧아짐</li>
+                    <li class="feature-row rounded-lg p-2"><span class="font-bold" style="color:#d97777">단락 시</span> · 즉시 차단 (≤ 0.02 s)</li>
+                    <li class="feature-row rounded-lg p-2"><span class="font-bold" style="color:#5eddd6">현재</span> · t = <span id="reqVal" class="font-mono font-bold" style="color:#5eddd6">—</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const cv = $("cv"), ctx = cv.getContext("2d");
+const W = cv.width, H = cv.height;
+
+let trace = [];          // {t, i}
+let startTime = null;
+let tripped = false;
+let tripT = null;
+let arcParticles = [];   // 트립 아크/스파크 (시각 효과 전용)
+let curScenario = "normal";
+let flashFired = false;
+let dispShake = 0;
+
+// ---- 시나리오 탭 (라디오 동작과 동일하게 restart) ----
+document.querySelectorAll('.sc-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sc-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    curScenario = btn.dataset.sc;
+    restart();
+  });
+});
+$("in").addEventListener("input", () => { $("inVal").textContent=$("in").value; restart(); });
+$("kind").addEventListener("change", restart);
+$("restart").addEventListener("click", () => {
+  restart();
+  if (window.gsap) gsap.fromTo('#canvasCard',
+    { borderColor: 'rgba(94,221,214,0.35)' },
+    { borderColor: 'rgba(148,163,184,0.16)', duration: 0.7, ease: 'power2.out' });
+});
+
+function restart(){
+  trace = []; startTime = null; tripped = false; tripT = null;
+  arcParticles = []; flashFired = false; dispShake = 0;
+}
+
+function getMultiplier(){
+  return +curScenario === undefined ? 1 :
+    ({normal:1, overload:1.5, heavy:3, short:15})[curScenario];
+}
+
+function tripTimeFor(ratio, kind){
+  // inverse-time approximation: t = K/(ratio^2 - 1)
+  if (ratio <= 1.05) return Infinity;
+  let K = 60; // mccb
+  if (kind === "fuse") K = 30;
+  if (kind === "elcb") K = 0.03; // very fast for ground fault simulation
+  if (ratio >= 8) return 0.02;
+  return K / (ratio*ratio - 1);
+}
+
+// ---- 트립 순간 동작점 마커 (절제된 시각 표시) ----
+function spawnArc(x, y){
+  arcParticles.push({ x0: x, y0: y, x, y, life: 1 });
+}
+
+function loop(now){
+  if (startTime === null) startTime = now;
+  const elapsed = (now - startTime)/1000;
+  const In = +$("in").value;
+  const mult = getMultiplier();
+  const kind = $("kind").value;
+  let I = In * mult;
+  // small noise
+  I += Math.sin(elapsed*8)*In*0.02;
+
+  if (!tripped) {
+    const tt = tripTimeFor(mult, kind);
+    if (elapsed >= tt) {
+      tripped = true; tripT = elapsed;
+    }
+  }
+
+  const displayI = tripped ? 0 : I;
+  trace.push({t: elapsed, i: displayI});
+  if (trace.length > 600) trace.shift();
+
+  $("iCur").textContent = displayI.toFixed(1)+" A";
+  $("ratio").textContent = mult.toFixed(2)+"×";
+  const tt = tripTimeFor(mult, kind);
+  $("tripTime").textContent = isFinite(tt) ? tt.toFixed(2)+" s" : "트립 안 함";
+  $("reqVal").textContent = isFinite(tt) ? tt.toFixed(2)+" s" : "트립 안 함";
+  const stateTxt = tripped ? "트립됨" : (mult > 1.05 ? "과전류 감지" : "정상");
+  $("state").textContent = stateTxt;
+  $("state").style.color = tripped ? "#d97777" : (mult>1.05 ? "#e0a458" : "#5eddd6");
+
+  // 상태 인디케이터 (헤더 점 + 패널 보더)
+  const dot = $("hdrDot");
+  dot.className = "pulse-dot" + (tripped ? " trip" : (mult>1.05 ? " warn" : ""));
+  const sp = $("pill-state");
+  sp.className = "live-pill rounded-xl p-3 " + (tripped ? "trip" : (mult>1.05 ? "warn" : "ok"));
+
+  // 트립 진입 순간 1회: 섬광 + 아크 스폰
+  if (tripped && !flashFired) {
+    flashFired = true;
+    const tMax = 5;
+    const padL=70, padR=20, padT=24, padB=44;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    const xt = padL + Math.min(tripT/tMax, 1)*plotW;
+    spawnArc(xt, padT + plotH*0.45);
+  }
+
+  draw(In, mult, tt);
+  requestAnimationFrame(loop);
+}
+
+function draw(In, mult, tt){
+  ctx.clearRect(0,0,W,H);
+
+  // ---- 배경: 오실로스코프 모눈 그리드 + HUD 라벨 ----
+  ctx.fillStyle = '#0b0f15';
+  ctx.fillRect(0,0,W,H);
+  ctx.save();
+  ctx.strokeStyle = 'rgba(125, 211, 252, 0.055)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= W; i += 20){ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,H); ctx.stroke(); }
+  for (let i = 0; i <= H; i += 20){ ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(W,i); ctx.stroke(); }
+  ctx.strokeStyle = 'rgba(125, 211, 252, 0.10)';
+  for (let i = 0; i <= W; i += 100){ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,H); ctx.stroke(); }
+  for (let i = 0; i <= H; i += 100){ ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(W,i); ctx.stroke(); }
+  ctx.restore();
+
+  const padL=70, padB=44, padT=24, padR=20;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  // 트립 시 화면 흔들림(시각 전용)
+  let sx = 0, sy = 0;
+  if (dispShake > 0) {
+    sx = (Math.random()-0.5) * dispShake;
+    sy = (Math.random()-0.5) * dispShake;
+    dispShake *= 0.86;
+    if (dispShake < 0.4) dispShake = 0;
+  }
+  ctx.save();
+  ctx.translate(sx, sy);
+
+  // HUD 텍스트
+  ctx.font = 'bold 10px ui-monospace, monospace';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = 'rgba(116, 128, 141, 0.85)';
+  ctx.textAlign = 'left';
+  ctx.fillText('▮ BREAKER · INVERSE-TIME TRIP CURVE', 12, 8);
+  ctx.fillStyle = tripped ? 'rgba(217, 119, 119, 0.85)' : (mult>1.05 ? 'rgba(224, 164, 88, 0.85)' : 'rgba(94, 221, 214, 0.75)');
+  ctx.textAlign = 'right';
+  ctx.fillText(`◯ STATE · ${tripped ? 'TRIPPED' : (mult>1.05 ? 'OVERCURRENT' : 'NORMAL')}`, W - 12, 8);
+  ctx.textBaseline = 'alphabetic';
+
+  // 플롯 보더 (얇은 정밀선)
+  ctx.strokeStyle = "rgba(148,163,184,0.20)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(padL, padT, plotW, plotH);
+
+  const tMax = 5; // 5 seconds visible
+  const iMax = Math.max(In*4, In*mult*1.2);
+
+  // grid + ticks
+  ctx.fillStyle = "rgba(148,163,184,0.65)"; ctx.font = "11px ui-monospace, monospace"; ctx.textAlign="center";
+  for(let t=0;t<=5;t++){
+    const x = padL + (t/tMax)*plotW;
+    ctx.fillText(t+"s", x, H-padB+16);
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT+plotH); ctx.strokeStyle="rgba(148,163,184,0.06)"; ctx.stroke();
+  }
+  ctx.textAlign="right";
+  for(let t=0;t<=4;t++){
+    const y = padT + plotH - (t/4)*plotH;
+    ctx.fillText(((t/4)*iMax).toFixed(0)+"A", padL-6, y+4);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL+plotW, y); ctx.strokeStyle="rgba(148,163,184,0.06)"; ctx.stroke();
+  }
+
+  // rated current line (teal 점선, 절제)
+  const yIn = padT + plotH - (In/iMax)*plotH;
+  ctx.strokeStyle = "rgba(94,221,214,0.55)"; ctx.setLineDash([5,4]); ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.moveTo(padL, yIn); ctx.lineTo(padL+plotW, yIn); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle="rgba(94,221,214,0.85)"; ctx.textAlign="left"; ctx.font="bold 11px ui-monospace, monospace";
+  ctx.fillText("정격 In", padL+plotW-56, yIn-6);
+
+  // trip threshold (1.13 * In) for reference (amber 점선)
+  const trip = padT + plotH - (In*1.13/iMax)*plotH;
+  ctx.strokeStyle = "rgba(224,164,88,0.5)"; ctx.setLineDash([5,4]); ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.moveTo(padL, trip); ctx.lineTo(padL+plotW, trip); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ---- 전류 파형: 정밀 얇은 선 ----
+  const lineColor = tripped ? '#d97777' : (mult>1.05 ? '#e0a458' : '#5eddd6');
+  ctx.save();
+  ctx.strokeStyle = lineColor; ctx.lineWidth=1.6;
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.beginPath();
+  let started = false, lastX = padL, lastY = padT+plotH;
+  trace.forEach((p,i) => {
+    const x = padL + (p.t/tMax)*plotW;
+    const y = padT + plotH - (p.i/iMax)*plotH;
+    if (x > padL+plotW) return;
+    if (!started){ ctx.moveTo(x,y); started = true; } else ctx.lineTo(x,y);
+    lastX = x; lastY = y;
+  });
+  ctx.stroke();
+  ctx.restore();
+
+  // 파형 헤드 점 (작고 은은하게)
+  if (started && !tripped){
+    ctx.save();
+    ctx.fillStyle = lineColor;
+    ctx.beginPath(); ctx.arc(lastX, lastY, 3, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  // ---- trip marker: 얇은 점선 + 절제된 라벨 ----
+  if (tripT !== null) {
+    const xt = padL + Math.min(tripT/tMax,1)*plotW;
+    ctx.strokeStyle = "rgba(217,119,119,0.6)"; ctx.lineWidth=1.4; ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(xt, padT); ctx.lineTo(xt, padT+plotH); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 트립 라벨 칩 (절제)
+    ctx.save();
+    ctx.font='bold 12px ui-monospace, monospace'; ctx.textAlign="center"; ctx.textBaseline='middle';
+    const tlabel = "트립";
+    const lw = ctx.measureText(tlabel).width;
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    roundRect(ctx, xt - lw/2 - 8, padT+4, lw+16, 20, 6); ctx.fill();
+    ctx.strokeStyle = 'rgba(217, 119, 119, 0.55)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle = '#d97777';
+    ctx.fillText(tlabel, xt, padT+14);
+    ctx.restore();
+  }
+
+  // ---- 트립 마커 점 (아크/스파크 과한 효과 제거 → 작은 정지점) ----
+  if (arcParticles.length){
+    const ap = arcParticles[0];
+    ctx.save();
+    ctx.fillStyle = 'rgba(217,119,119,0.75)';
+    ctx.beginPath(); ctx.arc(ap.x0 ?? ap.x, ap.y0 ?? ap.y, 3.5, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+    arcParticles = arcParticles.filter(p => (p.life -= 0.05) > 0);
+  }
+
+  // ---- legend ----
+  ctx.font="11px ui-monospace, monospace"; ctx.textAlign="left"; ctx.textBaseline='alphabetic';
+  ctx.fillStyle = lineColor; ctx.fillRect(padL+10, padT+12, 14, 3);
+  ctx.fillStyle="rgba(196,204,214,0.85)"; ctx.fillText("측정 전류", padL+30, padT+17);
+  ctx.fillStyle = "#5eddd6"; ctx.fillRect(padL+130, padT+12, 14, 3);
+  ctx.fillStyle="rgba(196,204,214,0.85)"; ctx.fillText("정격 In", padL+150, padT+17);
+  ctx.fillStyle = "#e0a458"; ctx.fillRect(padL+230, padT+12, 14, 3);
+  ctx.fillStyle="rgba(196,204,214,0.85)"; ctx.fillText("트립 임계", padL+250, padT+17);
+
+  ctx.restore(); // shake translate
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+window.addEventListener('load', () => {
+  requestAnimationFrame(loop);
+  if (window.gsap) {
+    gsap.from('#hdr', { y: -10, opacity: 0, duration: 0.5, ease: 'power2.out' });
+    gsap.from('#livePanel > *', { y: 8, opacity: 0, duration: 0.45, stagger: 0.05, delay: 0.1, ease: 'power2.out' });
+    gsap.from('#canvasCard', { opacity: 0, duration: 0.55, delay: 0.15, ease: 'power2.out' });
+    gsap.from('#sideCol > *', { y: 10, opacity: 0, duration: 0.45, stagger: 0.08, delay: 0.25, ease: 'power2.out' });
+  }
+});
+</script>
+</body>
+</html>

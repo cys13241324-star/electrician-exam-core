@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전기기능사 - 패러데이 전자기 유도 법칙 시뮬레이터</title>
+<link rel="stylesheet" href="/samples/_tailwind.css">
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+:root {
+    --bg-0: #0d1117;
+    --bg-1: #11161d;
+    --panel: #131922;
+    --panel-2: #161d27;
+    --border: rgba(148, 163, 184, 0.16);
+    --border-soft: rgba(148, 163, 184, 0.10);
+    --grid: rgba(125, 211, 252, 0.055);
+    --grid-strong: rgba(125, 211, 252, 0.10);
+    --teal: #5eddd6;
+    --amber: #e0a458;
+    --slate-txt: #c4ccd6;
+    --ink: #aab4c0;
+}
+body {
+    background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    color: #d3dae3;
+    font-family: 'Pretendard', system-ui, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+.stars { display: none; }
+
+.canvas-wrap {
+    position: relative;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #0b0f15;
+    overflow: hidden;
+}
+canvas#main {
+    display: block;
+    width: 100%;
+    height: 540px;
+    background: #0b0f15;
+    cursor: grab;
+    touch-action: none;
+}
+canvas#main.grabbing { cursor: grabbing; }
+canvas#mini {
+    display: block;
+    width: 100%;
+    height: 140px;
+    background: #0b0f15;
+}
+
+.glass {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
+}
+.neon-divider {
+    height: 1px;
+    background: var(--border-soft);
+}
+.pulse-dot {
+    display: inline-block;
+    width: 7px; height: 7px; border-radius: 9999px;
+    background: var(--teal);
+    box-shadow: 0 0 5px rgba(94, 221, 214, 0.55);
+}
+
+input[type=range] {
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.22);
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: #cdd5df;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+    cursor: pointer;
+    border: 3px solid #2a3340;
+}
+input[type=range]:focus { outline: none; }
+input[type=range]:focus::-webkit-slider-thumb { background: var(--teal); }
+
+.chip { background: var(--panel-2); border: 1px solid var(--border-soft); }
+.chip-v { background: var(--panel-2); border-color: var(--border-soft); border-left: 2px solid rgba(224,164,88,0.6); color: var(--slate-txt); }
+.chip-b { background: var(--panel-2); border-color: var(--border-soft); border-left: 2px solid rgba(190,165,215,0.55); color: var(--slate-txt); }
+.chip-n { background: var(--panel-2); border-color: var(--border-soft); border-left: 2px solid rgba(94,221,214,0.55); color: var(--slate-txt); }
+
+.live-pill {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    transition: border-color 200ms;
+}
+.live-pill.flash { border-color: rgba(94, 221, 214, 0.40); }
+.live-pill.zero {
+    border-color: var(--border-soft);
+    opacity: 0.8;
+}
+.live-num {
+    font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    color: #d8f3f0;
+    letter-spacing: 0.01em;
+}
+.live-num.zero {
+    color: #74808d;
+}
+
+.math-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 2px solid rgba(94, 221, 214, 0.35);
+}
+.math-container { font-size: 1.1rem; color: #cdd5df; }
+.feature-row {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    transition: border-color 180ms;
+}
+.feature-row:hover { border-color: rgba(94, 221, 214, 0.30); }
+.mode-btn {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    color: var(--ink);
+    transition: border-color 160ms, color 160ms, background 160ms;
+}
+.mode-btn:hover { border-color: var(--border); color: var(--slate-txt); }
+.mode-btn.active {
+    background: rgba(94, 221, 214, 0.10);
+    border-color: rgba(94, 221, 214, 0.55);
+    color: #d8f3f0;
+}
+.formula-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 2px solid rgba(224, 164, 88, 0.28);
+}
+.alert-zero {
+    background: var(--panel-2);
+    border: 1px dashed var(--border);
+    color: #9aa6b3;
+}
+.alert-active {
+    background: var(--panel-2);
+    border: 1px solid rgba(94,221,214,0.45);
+    color: #d8f3f0;
+}
+.mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
+.eyebrow { color: #74808d; }
+</style>
+</head>
+<body class="p-4 md:p-8">
+
+<div class="max-w-6xl mx-auto relative">
+    <header class="mb-6" id="hdr">
+        <div class="flex items-center gap-2 text-xs font-semibold tracking-widest" style="color:#7d8a97">
+            <span class="pulse-dot"></span>
+            FARADAY'S LAW · DRAG THE MAGNET
+        </div>
+        <h1 class="mt-2 text-3xl md:text-4xl font-bold" style="color:#e3e9f0">
+            패러데이 전자기 유도 시뮬레이터
+        </h1>
+        <p class="mt-2 text-sm" style="color:#8b97a4">자석을 직접 드래그하거나 자동 진동 모드로 움직이세요. 자속이 변하는 순간에만 코일에 기전력이 유도됩니다.</p>
+    </header>
+
+    <!-- 라이브 4칩 -->
+    <div id="livePanel" class="mb-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="live-pill rounded-xl p-3" id="pill-flux">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">자속 Φ</p>
+            <p class="mt-1 text-lg font-bold"><span id="fluxVal" class="live-num">—</span> <span class="text-[10px] text-slate-400">mWb</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-dflux">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">자속 변화율 dΦ/dt</p>
+            <p class="mt-1 text-lg font-bold"><span id="dfluxVal" class="live-num">—</span> <span class="text-[10px] text-slate-400">Wb/s</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-emf">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">유도 기전력 e</p>
+            <p class="mt-1 text-lg font-bold"><span id="emfVal" class="live-num">—</span> <span class="text-[10px] text-slate-400">V</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-cur">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">유도 전류 i</p>
+            <p class="mt-1 text-lg font-bold"><span id="curVal" class="live-num">—</span> <span class="text-[10px] text-slate-400">mA</span></p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <!-- 캔버스 영역 -->
+        <div class="lg:col-span-2 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto glass rounded-2xl p-4 shadow-2xl" id="canvasCard">
+            <div class="flex justify-between items-center mb-3 gap-2 flex-wrap">
+                <span class="text-xs font-semibold eyebrow tracking-wide mono">DRAG · 자석을 직접 끌어 움직이기</span>
+                <div class="flex gap-2">
+                    <button id="modeManual" class="mode-btn active rounded-md px-3 py-1.5 text-xs font-bold">수동 드래그</button>
+                    <button id="modeAuto" class="mode-btn rounded-md px-3 py-1.5 text-xs font-bold">자동 진동</button>
+                </div>
+            </div>
+            <div class="canvas-wrap">
+                <canvas id="main"></canvas>
+            </div>
+
+            <!-- 상태 알림 -->
+            <div id="zeroAlert" class="mt-3 rounded-lg px-3 py-2 text-xs alert-zero">
+                <span class="font-bold">정지 상태</span> · 자석이 움직이지 않아 자속 변화 dΦ/dt = 0 → 유도 기전력도 0
+            </div>
+
+            <!-- e(t) 미니 그래프 -->
+            <div class="mt-3 canvas-wrap" style="border-radius: 13px;">
+                <canvas id="mini"></canvas>
+            </div>
+            <p class="mt-2 text-[10px] eyebrow tracking-wider mono">EMF · TIME RESPONSE — 유도 기전력의 시간 변화</p>
+
+            <!-- 컨트롤 (자동 모드 속도 + B + N) -->
+            <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="chip-v chip rounded-lg p-3">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>자석 속도 v</span><span id="vDisp" class="font-mono text-base">3</span></label>
+                    <input type="range" id="vRange" min="0" max="10" step="0.1" value="3" class="w-full mt-2 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 mt-1 text-right">자동 모드용 · 0 = 정지</p>
+                </div>
+                <div class="chip-b chip rounded-lg p-3">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>자속 밀도 B</span><span id="bDisp" class="font-mono text-base">1.0</span></label>
+                    <input type="range" id="bRange" min="0.2" max="2" step="0.1" value="1.0" class="w-full mt-2 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 mt-1 text-right">자석 세기 (T)</p>
+                </div>
+                <div class="chip-n chip rounded-lg p-3">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>코일 권수 N</span><span id="nDisp" class="font-mono text-base">10</span></label>
+                    <input type="range" id="nRange" min="2" max="20" step="1" value="10" class="w-full mt-2 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 mt-1 text-right">turns</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사이드 -->
+        <div class="space-y-4" id="sideCol">
+            <div class="glass rounded-2xl p-5">
+                <h2 class="text-base font-bold flex items-center gap-2">
+                    <span style="color:#9fb0c0">패러데이 법칙 핵심 5</span>
+                </h2>
+                <ul class="mt-4 space-y-2 text-xs" style="color:#9aa6b3">
+                    <li class="feature-row rounded-lg p-3"><span class="font-bold" style="color:#e0a458">1. 변화가 핵심</span> · 자속이 <span class="font-bold" style="color:#e0a458">변할 때만</span> 기전력 발생</li>
+                    <li class="feature-row rounded-lg p-3"><span class="font-bold" style="color:#9fb0c0">2. 속도 ↑</span> · 자석 속도가 빠를수록 dΦ/dt 커짐 → e 커짐</li>
+                    <li class="feature-row rounded-lg p-3"><span class="font-bold" style="color:#9fb0c0">3. 권수 ↑</span> · 코일 권수 N이 많을수록 e 커짐</li>
+                    <li class="feature-row rounded-lg p-3"><span class="font-bold" style="color:#9fb0c0">4. 렌츠 법칙</span> · 유도 전류는 자속 변화를 <span class="font-bold" style="color:#5eddd6">방해</span>하는 방향</li>
+                    <li class="feature-row rounded-lg p-3"><span class="font-bold" style="color:#9fb0c0">5. (−) 부호</span> · e = −N·dΦ/dt 의 음수가 렌츠 법칙을 의미</li>
+                </ul>
+            </div>
+
+            <div class="math-card rounded-2xl p-5">
+                <h3 class="font-bold text-sm mb-3 tracking-wider" style="color:#9fb0c0">패러데이 법칙</h3>
+                <div class="math-container">
+                    $$e = -N\,\frac{d\Phi}{dt} \;\;[\text{V}]$$
+                </div>
+                <div class="neon-divider my-3"></div>
+                <p class="text-[11px]" style="color:#8b97a4">N: 코일 권수, Φ: 코일을 통과하는 자속(Wb)</p>
+            </div>
+
+            <div class="formula-card rounded-2xl p-5">
+                <h3 class="font-bold text-sm mb-3 tracking-wider" style="color:#9fb0c0">지금 이 순간</h3>
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between"><span style="color:#8b97a4">자석 위치</span><span id="posLabel" class="mono" style="color:#e9c08a">—</span></div>
+                    <div class="flex justify-between"><span style="color:#8b97a4">자석 속도</span><span id="velLabel" class="mono" style="color:#e9c08a">—</span></div>
+                    <div class="flex justify-between"><span style="color:#8b97a4">전류 방향</span><span id="dirLabel" class="mono" style="color:#9fe9e4">—</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $('main');
+const ctx = canvas.getContext('2d');
+const mini = $('mini');
+const mctx = mini.getContext('2d');
+
+// ============================================
+// 상태
+// ============================================
+let state = {
+    B: 1.0,       // 자속 밀도 (T) 시각화 상수
+    N: 10,        // 권수
+    vSlider: 3,   // 자동 모드 속도
+    mode: 'manual', // 'manual' | 'auto'
+    magX: 0,      // 자석 중심 x (px)
+    magY: 0,      // 자석 중심 y (px)
+    coilX: 0,     // 코일 중심 x
+    coilY: 0,     // 코일 중심 y
+    coilR: 70,    // 코일 반경
+    prevFlux: 0,  // 이전 자속
+    flux: 0,      // 자속 (정규화)
+    dflux: 0,     // dΦ/dt
+    emf: 0,       // 유도 기전력
+    cur: 0,       // 유도 전류
+    velocity: 0,  // 자석 속도 (px/frame)
+    prevX: 0,
+    autoT: 0,
+    dragging: false,
+    t: 0,
+};
+
+// EMF 시간 응답 버퍼
+const EMF_BUF_LEN = 200;
+const emfBuf = new Array(EMF_BUF_LEN).fill(0);
+
+// 외부 회로 입자
+let circuitParticles = [];
+
+// ============================================
+// 리사이즈
+// ============================================
+function resize() {
+    canvas.width = canvas.parentElement.clientWidth - 2;
+    canvas.height = 540;
+    state.coilX = canvas.width * 0.6;
+    state.coilY = canvas.height * 0.45;
+    if (state.magX === 0) {
+        state.magX = canvas.width * 0.18;
+        state.magY = state.coilY;
+        state.prevX = state.magX;
+    }
+    mini.width = mini.parentElement.clientWidth - 2;
+    mini.height = 140;
+    seedCircuitParticles();
+}
+window.addEventListener('resize', resize);
+
+// ============================================
+// 컨트롤
+// ============================================
+$('vRange').addEventListener('input', e => {
+    state.vSlider = +e.target.value;
+    $('vDisp').textContent = state.vSlider.toFixed(1);
+    flashCard();
+});
+$('bRange').addEventListener('input', e => {
+    state.B = +e.target.value;
+    $('bDisp').textContent = state.B.toFixed(1);
+    flashCard();
+});
+$('nRange').addEventListener('input', e => {
+    state.N = +e.target.value;
+    $('nDisp').textContent = state.N;
+    flashCard();
+});
+$('modeManual').addEventListener('click', () => {
+    state.mode = 'manual';
+    $('modeManual').classList.add('active');
+    $('modeAuto').classList.remove('active');
+});
+$('modeAuto').addEventListener('click', () => {
+    state.mode = 'auto';
+    state.autoT = 0;
+    $('modeAuto').classList.add('active');
+    $('modeManual').classList.remove('active');
+});
+
+function flashCard() {
+    if (window.gsap) gsap.fromTo('#canvasCard',
+        { borderColor: 'rgba(94,221,214,0.35)' },
+        { borderColor: 'rgba(148,163,184,0.16)', duration: 0.6, ease: 'power2.out' });
+}
+
+// ============================================
+// 마우스 / 터치 드래그
+// ============================================
+function pointerPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const t0 = e.touches ? e.touches[0] : e;
+    return { x: t0.clientX - rect.left, y: t0.clientY - rect.top };
+}
+function tryStartDrag(e) {
+    if (state.mode !== 'manual') return;
+    const { x, y } = pointerPos(e);
+    // 자석 hitbox: 가로 직사각형 (자석 길이 90, 높이 36 가량) + 여유
+    const dx = x - state.magX, dy = y - state.magY;
+    if (Math.abs(dx) < 60 && Math.abs(dy) < 30) {
+        state.dragging = true;
+        canvas.classList.add('grabbing');
+    }
+}
+function dragMove(e) {
+    if (!state.dragging) return;
+    const { x, y } = pointerPos(e);
+    // x만 따라가게 (자석이 좌우로만 움직임)
+    state.magX = Math.max(60, Math.min(canvas.width - 60, x));
+    // y는 약간 따라가게 하되 코일 중심 근처로 끌어당김
+    state.magY = state.coilY + (y - state.coilY) * 0.3;
+    state.magY = Math.max(state.coilY - 30, Math.min(state.coilY + 30, state.magY));
+}
+function endDrag() {
+    state.dragging = false;
+    canvas.classList.remove('grabbing');
+}
+canvas.addEventListener('mousedown', tryStartDrag);
+canvas.addEventListener('mousemove', dragMove);
+window.addEventListener('mouseup', endDrag);
+canvas.addEventListener('touchstart', e => { tryStartDrag(e); }, { passive: true });
+canvas.addEventListener('touchmove', e => { dragMove(e); e.preventDefault(); }, { passive: false });
+window.addEventListener('touchend', endDrag);
+
+// ============================================
+// 물리 (시각화용 normalize)
+// ============================================
+function computeFlux() {
+    // 자석이 코일 면을 가로지르면 자속 부호 반전 (N → 통과 → S)
+    // dx > 0: 자석이 코일 왼쪽 (자속 + 방향), dx < 0: 자석이 코일 오른쪽 통과 후 (자속 - 방향)
+    const dx = state.coilX - state.magX;
+    const dy = state.coilY - state.magY;
+    const r = Math.hypot(dx, dy);
+    const sigma = state.coilR * 1.6;
+    // tanh(dx/sigma)는 ±1로 부드럽게 saturate → 자석이 코일을 관통할 때 부호가 부드럽게 반전
+    const sign = Math.tanh(dx / (sigma * 0.6));
+    const envelope = Math.exp(-(dy * dy) / (2 * sigma * sigma)); // y축 감쇠
+    // peak는 코일 면 근처에서 가장 큼 (dx ≈ 0 부근에서 변화율 최대)
+    const peak = 1 / (1 + Math.pow(r / sigma, 2));
+    return state.B * sign * envelope * peak;
+}
+
+function updatePhysics() {
+    // 자동 모드: sin파로 자석 좌우 진동
+    if (state.mode === 'auto') {
+        state.autoT += 0.016;
+        const amp = canvas.width * 0.25;
+        const freq = state.vSlider * 0.15;
+        state.magX = canvas.width * 0.5 + Math.sin(state.autoT * freq) * amp;
+        state.magY = state.coilY;
+    }
+
+    // 속도 (px/frame) — 평활화
+    const rawV = state.magX - state.prevX;
+    state.velocity = state.velocity * 0.6 + rawV * 0.4;
+    state.prevX = state.magX;
+
+    // 자속 + 변화율
+    const newFlux = computeFlux();
+    state.dflux = newFlux - state.flux;
+    state.flux = newFlux;
+
+    // 유도 기전력 e = -N · dΦ/dt
+    // dΦ/dt를 적당한 스케일로 (1프레임 = 1/60s → 60배)
+    state.emf = -state.N * state.dflux * 60;
+
+    // 유도 전류 i = e / R (가정 R=50Ω)
+    state.cur = state.emf / 50;
+
+    // EMF 버퍼 push
+    emfBuf.shift();
+    emfBuf.push(state.emf);
+}
+
+// ============================================
+// 그리기 헬퍼
+// ============================================
+function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+}
+
+// ============================================
+// 메인 캔버스 그리기
+// ============================================
+function drawBg() {
+    ctx.save();
+    ctx.fillStyle = '#0b0f15';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 오실로스코프 모눈 그리드 (20px 미세 + 100px 강조)
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.055)';
+    for (let i = 0; i < canvas.width; i += 20) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+    }
+    for (let i = 0; i < canvas.height; i += 20) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.10)';
+    for (let i = 0; i < canvas.width; i += 100) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+    }
+    for (let i = 0; i < canvas.height; i += 100) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+    }
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = 'rgba(116, 128, 141, 0.85)';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('FARADAY · SIDE VIEW', 12, 10);
+    ctx.restore();
+}
+
+function drawFluxLines() {
+    // 자석에서 나오는 자속선 — 양극은 오른쪽(N), 왼쪽이 S
+    // 자속선 8개, 자석 N극에서 나와 S극으로 돌아오는 루프
+    const mx = state.magX, my = state.magY;
+    const magLen = 90, magHalf = magLen / 2;
+    const Nx = mx + magHalf, Ny = my; // N극 위치
+    const Sx = mx - magHalf, Sy = my; // S극
+
+    ctx.save();
+    const intensity = state.B; // 0.2 ~ 2
+    const lineAlpha = 0.18 + intensity * 0.16;
+
+    for (let k = 0; k < 6; k++) {
+        const phase = (k / 6) * Math.PI * 2 - Math.PI / 2;
+        const amp = 50 + k * 18 + intensity * 12;
+        // 베지어로 N→S 곡선
+        const cx1 = Nx + 60 + k * 8;
+        const cy1 = Ny + Math.sin(phase) * amp;
+        const cx2 = Sx - 60 - k * 8;
+        const cy2 = Sy + Math.sin(phase) * amp;
+        ctx.strokeStyle = `rgba(190, 165, 215, ${lineAlpha})`;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(Nx, Ny);
+        ctx.bezierCurveTo(cx1, cy1, cx2, cy2, Sx, Sy);
+        ctx.stroke();
+
+        // 위쪽 루프와 대칭 (아래쪽)
+        ctx.beginPath();
+        ctx.moveTo(Nx, Ny);
+        ctx.bezierCurveTo(cx1, Ny - Math.sin(phase) * amp, cx2, Sy - Math.sin(phase) * amp, Sx, Sy);
+        ctx.stroke();
+    }
+    ctx.restore();
+
+    // 자속선 위의 작은 화살표 (방향 표시) — N→S 외부
+    ctx.save();
+    ctx.fillStyle = 'rgba(190, 165, 215, 0.6)';
+    for (let k = 0; k < 4; k++) {
+        const arrowT = ((state.t * 0.02 + k * 0.25) % 1);
+        const phase = (k / 4) * Math.PI * 2 - Math.PI / 2;
+        const amp = 60 + k * 22;
+        const t = arrowT;
+        const cx1 = Nx + 60, cy1 = Ny + Math.sin(phase) * amp;
+        const cx2 = Sx - 60, cy2 = Sy + Math.sin(phase) * amp;
+        const x = (1-t)**3 * Nx + 3*(1-t)**2*t*cx1 + 3*(1-t)*t*t*cx2 + t**3*Sx;
+        const y = (1-t)**3 * Ny + 3*(1-t)**2*t*cy1 + 3*(1-t)*t*t*cy2 + t**3*Sy;
+        ctx.beginPath();
+        ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+function drawMagnet() {
+    const mx = state.magX, my = state.magY;
+    const w = 90, h = 36;
+
+    // 자석 본체 — 절반 N(호박), 절반 S(청록), 계측 솔리드
+    ctx.save();
+    // N (오른쪽)
+    ctx.fillStyle = '#e0a458';
+    roundRect(ctx, mx, my - h/2, w/2, h, 6);
+    ctx.fill();
+
+    // S (왼쪽)
+    ctx.fillStyle = '#5eddd6';
+    roundRect(ctx, mx - w/2, my - h/2, w/2, h, 6);
+    ctx.fill();
+    ctx.restore();
+
+    // 테두리
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = 'rgba(170, 180, 192, 0.85)';
+    roundRect(ctx, mx - w/2, my - h/2, w, h, 6);
+    ctx.stroke();
+    // 가운데 분할선
+    ctx.strokeStyle = 'rgba(170, 180, 192, 0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(mx, my - h/2); ctx.lineTo(mx, my + h/2);
+    ctx.stroke();
+
+    // N / S 라벨
+    ctx.fillStyle = '#11161d';
+    ctx.font = 'bold 18px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('S', mx - w/4, my);
+    ctx.fillText('N', mx + w/4, my);
+
+    // 속도 화살표 (움직임 표시)
+    if (Math.abs(state.velocity) > 0.3) {
+        const dir = Math.sign(state.velocity);
+        const speed = Math.min(60, Math.abs(state.velocity) * 8 + 20);
+        const ax = mx + dir * (w/2 + 12);
+        const ay = my - h/2 - 18;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(224, 164, 88, 0.95)';
+        ctx.fillStyle = 'rgba(224, 164, 88, 0.95)';
+        ctx.lineWidth = 2.2;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(ax - dir * speed, ay);
+        ctx.lineTo(ax, ay);
+        ctx.stroke();
+        // 화살촉
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(ax - dir * 8, ay - 5);
+        ctx.lineTo(ax - dir * 8, ay + 5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.font = 'bold 10px ui-monospace, monospace';
+        ctx.textAlign = dir > 0 ? 'right' : 'left';
+        ctx.fillStyle = '#e9c08a';
+        ctx.fillText('v', ax - dir * speed - 4 * dir, ay - 8);
+        ctx.restore();
+    }
+}
+
+function drawCoil() {
+    // 코일을 측면에서 본 형태: 권수에 따라 위/아래로 작은 원들이 늘어남
+    const cx = state.coilX, cy = state.coilY;
+    const R = state.coilR;
+    const N = state.N;
+
+    ctx.save();
+    // 코일 본체 글로우 (자속 변화량에 따라 강해짐)
+    const intensity = Math.min(1, Math.abs(state.emf) / 50);
+
+    // 각 코일 turn — 측면 뷰에서는 세로 타원
+    // 코일 가로 폭 (turns 만큼 펼침)
+    const coilW = Math.min(180, N * 9);
+    const startX = cx - coilW / 2;
+    const stepX = N > 1 ? coilW / (N - 1) : 0;
+
+    for (let k = 0; k < N; k++) {
+        const tx = startX + k * stepX;
+        // 뒤쪽 반원 (코일 뒤에 자석/자속선이 보이도록 분리)
+        ctx.strokeStyle = 'rgba(125, 211, 252, 0.85)';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.ellipse(tx, cy, 8, R, 0, Math.PI, Math.PI * 2);
+        ctx.stroke();
+    }
+    ctx.restore();
+
+    // 자속선 위에 그려서 코일 앞쪽 표현
+    ctx.save();
+    for (let k = 0; k < N; k++) {
+        const tx = startX + k * stepX;
+        ctx.strokeStyle = `rgba(94, 221, 214, ${0.55 + intensity * 0.4})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(tx, cy, 8, R, 0, 0, Math.PI);
+        ctx.stroke();
+    }
+    ctx.restore();
+
+    // 코일 양 끝의 도선 점프 (turn 이어주기 — 시각적 힌트)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(94, 221, 214, 0.45)';
+    ctx.lineWidth = 1.2;
+    for (let k = 0; k < N - 1; k++) {
+        const tx1 = startX + k * stepX;
+        const tx2 = startX + (k+1) * stepX;
+        ctx.beginPath();
+        ctx.moveTo(tx1, cy - R);
+        ctx.lineTo(tx2, cy - R + 3);
+        ctx.stroke();
+    }
+    ctx.restore();
+
+    // 코일 N 라벨
+    ctx.save();
+    ctx.font = 'bold 11px ui-monospace, monospace';
+    const label = `N = ${N}`;
+    const tw = ctx.measureText(label).width;
+    ctx.fillStyle = 'rgba(19, 25, 34, 0.9)';
+    roundRect(ctx, cx - tw/2 - 6, cy + R + 10, tw + 12, 18, 6);
+    ctx.fill();
+    ctx.fillStyle = '#9fe9e4';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, cx, cy + R + 19);
+    ctx.restore();
+
+    // 코일 안쪽 → 자속 동심원 표시 (자속 강도에 따라)
+    if (state.flux > 0.05) {
+        ctx.save();
+        ctx.globalAlpha = Math.min(0.6, state.flux * 0.7);
+        ctx.strokeStyle = 'rgba(190, 165, 215, 0.55)';
+        ctx.setLineDash([3, 4]);
+        ctx.lineWidth = 1;
+        for (let r = 18; r < R - 8; r += 12) {
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, 6, r, 0, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        ctx.restore();
+    }
+}
+
+function drawExternalCircuit() {
+    // 코일에서 아래쪽 외부 회로 → 전류계 → 부하 → 코일
+    // 코일 양 끝점
+    const cx = state.coilX, cy = state.coilY;
+    const R = state.coilR;
+    const coilW = Math.min(180, state.N * 9);
+    const lx = cx - coilW / 2; // 코일 왼쪽 끝
+    const rx = cx + coilW / 2; // 코일 오른쪽 끝
+    const wireY = cy + R + 50; // 도선 가로 라인 (전류계 라벨 아래)
+    const botY = canvas.height - 60;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(127, 140, 153, 0.85)';
+    ctx.lineWidth = 1.8;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // 왼쪽: 코일 끝 → 아래 → 가로 → 위로 (오른쪽으로)
+    ctx.beginPath();
+    ctx.moveTo(lx, cy - R);
+    ctx.lineTo(lx, cy + R + 4);
+    ctx.stroke();
+
+    // 오른쪽: 코일 끝 → 아래
+    ctx.beginPath();
+    ctx.moveTo(rx, cy - R);
+    ctx.lineTo(rx, cy + R + 4);
+    ctx.stroke();
+
+    // 코일 양 끝에서 아래로 내려와 가로 회로
+    ctx.beginPath();
+    ctx.moveTo(lx, cy + R + 4);
+    ctx.lineTo(lx, botY);
+    ctx.lineTo(rx, botY);
+    ctx.lineTo(rx, cy + R + 4);
+    ctx.stroke();
+    ctx.restore();
+
+    // 전류계 (가운데)
+    const ammX = (lx + rx) / 2 - 50;
+    const ammR = 22;
+    ctx.save();
+    ctx.fillStyle = '#1a212b';
+    ctx.beginPath();
+    ctx.arc(ammX, botY, ammR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(224, 164, 88, 0.6)';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    // A 글자
+    ctx.fillStyle = '#e9c08a';
+    ctx.font = 'bold 18px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('A', ammX, botY);
+    // 전류계 바늘
+    const needle = Math.atan2(state.cur, 1) * 0.7; // -π/2 ~ π/2
+    const nLen = ammR - 6;
+    ctx.strokeStyle = '#e0a458';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(ammX, botY);
+    ctx.lineTo(ammX + Math.sin(needle) * nLen, botY - Math.cos(needle) * nLen);
+    ctx.stroke();
+    ctx.restore();
+
+    // 부하 (오른쪽) — 저항 박스
+    const loadX = (lx + rx) / 2 + 50;
+    const lw = 60, lh = 20;
+    ctx.save();
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.9)';
+    roundRect(ctx, loadX - lw/2, botY - lh/2, lw, lh, 5);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(224, 164, 88, 0.6)';
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    // zigzag
+    ctx.strokeStyle = '#e0a458';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    const zs = loadX - lw/2 + 6, ze = loadX + lw/2 - 6;
+    for (let k = 0; k <= 6; k++) {
+        const x = zs + ((ze - zs) * k) / 6;
+        const y = botY + (k % 2 === 0 ? -5 : 5);
+        if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+    // 라벨 R
+    ctx.save();
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = '#e9c08a';
+    ctx.textAlign = 'center';
+    ctx.fillText('R', loadX, botY + lh/2 + 12);
+    ctx.restore();
+
+    // 전류 입자 흐름
+    drawCircuitFlow(lx, rx, cy, R, botY);
+
+    // 전류 방향 표시 (코일 위쪽에 화살표)
+    if (Math.abs(state.cur) > 0.001) {
+        const dir = Math.sign(state.cur); // +면 왼쪽→오른쪽
+        const cax = cx;
+        const cay = cy - R - 25;
+        ctx.save();
+        ctx.strokeStyle = dir > 0 ? 'rgba(94, 221, 214, 0.95)' : 'rgba(224, 164, 88, 0.95)';
+        ctx.fillStyle = dir > 0 ? 'rgba(94, 221, 214, 0.95)' : 'rgba(224, 164, 88, 0.95)';
+        ctx.lineWidth = 2.2;
+        ctx.lineCap = 'round';
+        const half = 40;
+        ctx.beginPath();
+        ctx.moveTo(cax - dir * half, cay);
+        ctx.lineTo(cax + dir * half, cay);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cax + dir * half, cay);
+        ctx.lineTo(cax + dir * (half - 8), cay - 5);
+        ctx.lineTo(cax + dir * (half - 8), cay + 5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.font = 'bold 10px ui-monospace, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = dir > 0 ? '#9fe9e4' : '#e9c08a';
+        ctx.fillText('i', cax, cay - 8);
+        ctx.restore();
+    }
+}
+
+function seedCircuitParticles() {
+    circuitParticles = [];
+    // 회로 경로 길이 따라 입자 배치
+    for (let i = 0; i < 36; i++) {
+        circuitParticles.push({ progress: i / 36, jit: Math.random() * 0.6 - 0.3 });
+    }
+}
+
+function buildCircuitPath() {
+    const cx = state.coilX, cy = state.coilY;
+    const R = state.coilR;
+    const coilW = Math.min(180, state.N * 9);
+    const lx = cx - coilW / 2;
+    const rx = cx + coilW / 2;
+    const botY = canvas.height - 60;
+    // 경로: lx,cy+R+4 → lx,botY → rx,botY → rx,cy+R+4 (단방향)
+    return [
+        { x: lx, y: cy + R + 4 },
+        { x: lx, y: botY },
+        { x: rx, y: botY },
+        { x: rx, y: cy + R + 4 },
+    ];
+}
+
+function pathPointAt(path, t) {
+    // 총 길이 기준
+    let lens = [];
+    let total = 0;
+    for (let i = 0; i < path.length - 1; i++) {
+        const d = Math.hypot(path[i+1].x - path[i].x, path[i+1].y - path[i].y);
+        lens.push(d); total += d;
+    }
+    const target = ((t % 1) + 1) % 1 * total;
+    let acc = 0;
+    for (let i = 0; i < lens.length; i++) {
+        if (target <= acc + lens[i]) {
+            const u = (target - acc) / lens[i];
+            return {
+                x: path[i].x + (path[i+1].x - path[i].x) * u,
+                y: path[i].y + (path[i+1].y - path[i].y) * u,
+            };
+        }
+        acc += lens[i];
+    }
+    return path[path.length-1];
+}
+
+function drawCircuitFlow(lx, rx, cy, R, botY) {
+    const path = buildCircuitPath();
+    const speed = Math.min(0.025, Math.abs(state.cur) * 0.008 + 0.0005);
+    const dir = state.cur >= 0 ? 1 : -1;
+
+    ctx.save();
+    const fillColor = dir > 0 ? 'rgba(94, 221, 214, 0.8)' : 'rgba(224, 164, 88, 0.8)';
+
+    if (Math.abs(state.cur) < 0.002) {
+        // 전류 없음 — 입자 흐름 멈춤, 흐릿하게
+        for (const p of circuitParticles) {
+            const pt = pathPointAt(path, p.progress);
+            ctx.fillStyle = 'rgba(116, 128, 141, 0.3)';
+            ctx.beginPath();
+            ctx.arc(pt.x + p.jit, pt.y + p.jit, 1.2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+        return;
+    }
+
+    for (const p of circuitParticles) {
+        p.progress = (p.progress + dir * speed + 1) % 1;
+        const pt = pathPointAt(path, p.progress);
+        ctx.fillStyle = fillColor;
+        ctx.beginPath();
+        ctx.arc(pt.x + p.jit, pt.y + p.jit, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+// ============================================
+// 미니 그래프 — e(t)
+// ============================================
+function drawMiniGraph() {
+    const W = mini.width, H = mini.height;
+    mctx.save();
+    mctx.fillStyle = '#0b0f15';
+    mctx.fillRect(0, 0, W, H);
+    // 오실로스코프 모눈 그리드
+    mctx.lineWidth = 1;
+    mctx.strokeStyle = 'rgba(125, 211, 252, 0.055)';
+    for (let i = 0; i < W; i += 20) {
+        mctx.beginPath(); mctx.moveTo(i, 0); mctx.lineTo(i, H); mctx.stroke();
+    }
+    for (let i = 0; i < H; i += 20) {
+        mctx.beginPath(); mctx.moveTo(0, i); mctx.lineTo(W, i); mctx.stroke();
+    }
+    mctx.strokeStyle = 'rgba(125, 211, 252, 0.10)';
+    for (let i = 0; i < W; i += 100) {
+        mctx.beginPath(); mctx.moveTo(i, 0); mctx.lineTo(i, H); mctx.stroke();
+    }
+    // 0축
+    mctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+    mctx.setLineDash([4, 4]);
+    mctx.beginPath();
+    mctx.moveTo(0, H/2); mctx.lineTo(W, H/2);
+    mctx.stroke();
+    mctx.setLineDash([]);
+
+    // 라벨
+    mctx.font = 'bold 9px ui-monospace, monospace';
+    mctx.fillStyle = 'rgba(116, 128, 141, 0.85)';
+    mctx.textAlign = 'left'; mctx.textBaseline = 'top';
+    mctx.fillText('EMF e(t)', 8, 6);
+
+    // y 스케일
+    let maxAbs = 1;
+    for (const v of emfBuf) if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v);
+    maxAbs = Math.max(maxAbs, 5); // 최소 스케일
+
+    // 곡선
+    mctx.save();
+    mctx.strokeStyle = 'rgba(94, 221, 214, 0.9)';
+    mctx.lineWidth = 1.6;
+    mctx.lineCap = 'round';
+    mctx.beginPath();
+    for (let i = 0; i < emfBuf.length; i++) {
+        const x = (i / (emfBuf.length - 1)) * W;
+        const y = H/2 - (emfBuf[i] / maxAbs) * (H/2 - 14);
+        if (i === 0) mctx.moveTo(x, y); else mctx.lineTo(x, y);
+    }
+    mctx.stroke();
+    mctx.restore();
+
+    // 현재 값 마커
+    mctx.save();
+    const lastV = emfBuf[emfBuf.length - 1];
+    const lastY = H/2 - (lastV / maxAbs) * (H/2 - 14);
+    mctx.fillStyle = 'rgba(224, 164, 88, 0.95)';
+    mctx.beginPath();
+    mctx.arc(W - 4, lastY, 3.5, 0, Math.PI * 2);
+    mctx.fill();
+    mctx.restore();
+
+    mctx.restore();
+}
+
+// ============================================
+// 라이브 패널 갱신
+// ============================================
+function updateLivePanel() {
+    const fluxMWb = state.flux * 100; // 시각화 단위
+    const dfluxWbS = state.dflux * 60 * 0.1;
+    $('fluxVal').textContent = fluxMWb.toFixed(2);
+    $('dfluxVal').textContent = dfluxWbS.toFixed(3);
+    $('emfVal').textContent = state.emf.toFixed(2);
+    $('curVal').textContent = (state.cur * 1000).toFixed(1);
+
+    const isZero = Math.abs(state.emf) < 0.05;
+    ['pill-flux','pill-dflux','pill-emf','pill-cur'].forEach(id => {
+        const el = $(id);
+        el.classList.toggle('zero', isZero && (id === 'pill-dflux' || id === 'pill-emf' || id === 'pill-cur'));
+        el.querySelector('.live-num').classList.toggle('zero', isZero && (id === 'pill-dflux' || id === 'pill-emf' || id === 'pill-cur'));
+    });
+
+    // 알림 전환
+    const alert = $('zeroAlert');
+    if (isZero) {
+        alert.className = 'mt-3 rounded-lg px-3 py-2 text-xs alert-zero';
+        alert.innerHTML = '<span class="font-bold">정지 상태</span> · 자석이 움직이지 않아 자속 변화 dΦ/dt = 0 → 유도 기전력도 0';
+    } else {
+        alert.className = 'mt-3 rounded-lg px-3 py-2 text-xs alert-active';
+        const approach = state.velocity > 0 ? (state.magX < state.coilX) : (state.magX > state.coilX);
+        alert.innerHTML = `<span class="font-bold">유도 진행 중</span> · 자석이 ${approach ? '코일로 접근' : '코일에서 멀어짐'} → 자속 ${approach ? '증가' : '감소'} → e ≈ ${state.emf.toFixed(2)} V`;
+    }
+
+    // 사이드 정보
+    $('posLabel').textContent = `${Math.round(state.magX - state.coilX)} px`;
+    $('velLabel').textContent = `${(state.velocity * 60).toFixed(1)} px/s`;
+    if (Math.abs(state.cur) < 0.002) $('dirLabel').textContent = '—';
+    else $('dirLabel').textContent = state.cur > 0 ? '→ (시계방향)' : '← (반시계)';
+}
+
+// ============================================
+// 메인 루프
+// ============================================
+function animate() {
+    state.t++;
+    updatePhysics();
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBg();
+    drawFluxLines();
+    drawCoil();
+    drawMagnet();
+    drawExternalCircuit();
+
+    drawMiniGraph();
+    updateLivePanel();
+
+    requestAnimationFrame(animate);
+}
+
+window.onload = () => {
+    resize();
+    seedCircuitParticles();
+    animate();
+    if (window.gsap) {
+        gsap.from('#hdr', { y: -20, opacity: 0, duration: 0.7, ease: 'power3.out' });
+        gsap.from('#livePanel .live-pill', { y: 14, opacity: 0, duration: 0.6, stagger: 0.08, delay: 0.15, ease: 'power3.out' });
+        gsap.from('#canvasCard', { scale: 0.97, opacity: 0, duration: 0.8, delay: 0.2, ease: 'power3.out' });
+        gsap.from('#sideCol > *', { x: 30, opacity: 0, duration: 0.6, stagger: 0.12, delay: 0.35, ease: 'power3.out' });
+    }
+};
+</script>
+</body>
+</html>

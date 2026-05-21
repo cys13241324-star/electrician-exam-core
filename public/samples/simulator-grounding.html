@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>접지 저항 시뮬레이터</title>
+<link rel="stylesheet" href="/samples/_tailwind.css">
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+:root {
+    --bg-0: #0d1117;
+    --bg-1: #11161d;
+    --panel: #131922;
+    --panel-2: #161d27;
+    --border: rgba(148, 163, 184, 0.16);
+    --border-soft: rgba(148, 163, 184, 0.10);
+    --grid: rgba(125, 211, 252, 0.055);
+    --grid-strong: rgba(125, 211, 252, 0.10);
+    --teal: #5eddd6;
+    --amber: #e0a458;
+    --slate-txt: #c4ccd6;
+    --ink: #aab4c0;
+}
+body {
+    background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    color: #d3dae3;
+    font-family: 'Pretendard', system-ui, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.canvas-wrap {
+    position: relative;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #0b0f15;
+    overflow: hidden;
+}
+canvas#main {
+    display: block;
+    width: 100%;
+    height: 600px;
+    background: #0b0f15;
+}
+.glass, .instrument {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
+}
+.pulse-dot {
+    display: inline-block;
+    width: 7px; height: 7px; border-radius: 9999px;
+    background: var(--teal);
+    box-shadow: 0 0 5px rgba(94, 221, 214, 0.55);
+}
+
+input[type=range] {
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.22);
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: #cdd5df;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+    cursor: pointer;
+    border: 3px solid #2a3340;
+}
+input[type=range]:focus { outline: none; }
+input[type=range]:focus::-webkit-slider-thumb { background: var(--teal); }
+.chip-rho { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(224,164,88,0.6); color: var(--slate-txt); }
+.chip-l { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(94,221,214,0.55); color: var(--slate-txt); }
+.chip-d { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(170,180,192,0.5); color: var(--slate-txt); }
+.chip-a { background: var(--panel-2); border: 1px solid var(--border-soft); border-left: 2px solid rgba(120,200,150,0.5); color: var(--slate-txt); }
+
+.live-pill {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    transition: border-color 200ms;
+}
+.live-pill.verified { border-color: rgba(94, 221, 214, 0.40); }
+.live-pill.danger { border-color: rgba(217, 119, 119, 0.5); }
+.live-num {
+    font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    color: #d8f3f0;
+    letter-spacing: 0.01em;
+}
+.math-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 2px solid rgba(94, 221, 214, 0.35);
+}
+.math-container { font-size: 1.0rem; color: #cdd5df; }
+.feature-row {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    transition: border-color 180ms;
+}
+.feature-row:hover { border-color: rgba(94, 221, 214, 0.30); }
+.reset-btn {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--slate-txt);
+    transition: border-color 160ms, color 160ms;
+}
+.reset-btn:hover { border-color: rgba(94, 221, 214, 0.5); color: #d8f3f0; }
+.type-tab {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    color: var(--ink);
+    transition: border-color 160ms, color 160ms, background 160ms;
+    cursor: pointer;
+}
+.type-tab:hover { border-color: var(--border); color: var(--slate-txt); }
+.type-tab.active {
+    background: rgba(94, 221, 214, 0.10);
+    border-color: rgba(94, 221, 214, 0.55);
+    color: #d8f3f0;
+}
+.neon-divider {
+    height: 1px;
+    background: var(--border-soft);
+}
+select#grade-sel {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--slate-txt);
+}
+select#grade-sel option { background: #0f172a; color: #e5e7eb; }
+.eyebrow { color: #74808d; }
+</style>
+</head>
+<body class="p-4 md:p-8">
+
+<div class="max-w-6xl mx-auto relative">
+    <header class="mb-6" id="hdr">
+        <div class="flex items-center gap-2 text-xs font-semibold tracking-widest" style="color:#7d8a97">
+            <span class="pulse-dot"></span>
+            INTERACTIVE · GROUNDING RESISTANCE · 접지 저항
+        </div>
+        <h1 class="mt-2 text-3xl md:text-4xl font-bold" style="color:#e3e9f0">
+            접지 저항 시뮬레이터
+        </h1>
+        <p class="mt-2 text-sm" style="color:#8b97a4">
+            토양 저항률과 전극 형상에 따른 접지 저항을 <span class="font-semibold" style="color:#5eddd6">봉형</span>·<span class="font-semibold" style="color:#78c896">판형</span>으로 비교합니다.
+            대지로 퍼지는 <span class="font-semibold" style="color:#e0a458">등전위 파동</span>과 <span class="font-semibold" style="color:#d97777">접촉·보폭전압</span> 위험을 실시간 시각화합니다.
+        </p>
+    </header>
+
+    <div id="livePanel" class="mb-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="live-pill rounded-xl p-3" id="pill-r">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">접지 저항 R</p>
+            <p class="mt-1 text-lg font-bold"><span id="rg" class="live-num">—</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-i">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">고장 전류 I (220V / R)</p>
+            <p class="mt-1 text-lg font-bold"><span id="ig" class="live-num">—</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-grade">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">접지 저항 등급</p>
+            <p class="mt-1 text-lg font-bold"><span id="grade" style="color:#e0a458">—</span></p>
+        </div>
+        <div class="live-pill rounded-xl p-3" id="pill-pf">
+            <p class="text-[10px] tracking-widest text-slate-500 font-bold">기준 합부</p>
+            <p class="mt-1 text-sm font-bold"><span id="passfail" style="color:#5eddd6">—</span></p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div class="lg:col-span-2 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto glass rounded-2xl p-4 shadow-2xl" id="canvasCard">
+            <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
+                <span class="text-xs font-semibold text-slate-400 tracking-wide">EARTH SECTION · 접지 전극 + 대지 등전위 분포</span>
+                <div class="flex gap-2">
+                    <button data-type="rod" class="type-tab type-btn active rounded-md px-3 py-1.5 text-xs font-bold">봉형</button>
+                    <button data-type="plate" class="type-tab type-btn rounded-md px-3 py-1.5 text-xs font-bold">판형</button>
+                    <button id="resetBtn" class="reset-btn rounded-md px-3 py-1.5 text-xs font-bold">초기화</button>
+                </div>
+            </div>
+            <div class="canvas-wrap">
+                <canvas id="main"></canvas>
+            </div>
+
+            <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="chip-rho rounded-lg p-3">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>토양 저항률 ρ</span><span id="rhoVal" class="font-mono text-sm">100</span></label>
+                    <input type="range" id="rho" min="10" max="1000" step="10" value="100" class="w-full mt-2 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 mt-1 text-right">Ω·m</p>
+                </div>
+                <div class="chip-l rounded-lg p-3">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>봉 길이 L</span><span id="lVal" class="font-mono text-sm">2.0</span></label>
+                    <input type="range" id="l" min="0.5" max="5" step="0.1" value="2.0" class="w-full mt-2 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 mt-1 text-right">m</p>
+                </div>
+                <div class="chip-d rounded-lg p-3">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>봉 직경 d</span><span id="dVal" class="font-mono text-sm">14</span></label>
+                    <input type="range" id="d" min="8" max="30" value="14" class="w-full mt-2 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 mt-1 text-right">mm</p>
+                </div>
+                <div class="chip-a rounded-lg p-3">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider"><span>판 면적 A</span><span id="aVal" class="font-mono text-sm">0.9</span></label>
+                    <input type="range" id="a" min="0.3" max="3" step="0.1" value="0.9" class="w-full mt-2 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 mt-1 text-right">m² (판형)</p>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <label class="text-[11px] font-bold tracking-wider text-slate-400">접지 등급 기준</label>
+                <select id="grade-sel" class="w-full mt-1 rounded-lg px-2 py-2 text-sm">
+                    <option value="10">제1종 (10Ω 이하)</option>
+                    <option value="100" selected>제2종 (100Ω 이하)</option>
+                    <option value="100_3">제3종 (100Ω 이하)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="space-y-4" id="sideCol">
+            <div class="glass rounded-2xl p-5">
+                <h2 class="text-base font-bold flex items-center gap-2">
+                    <span style="color:#e3e9f0">봉형 접지 (단봉식)</span>
+                </h2>
+                <p class="mt-2 text-xs text-slate-400">땅에 박은 봉 전극 주위로 전류가 반구형으로 퍼짐</p>
+                <div class="math-container mt-2 text-center">
+                    $$R = \frac{\rho}{2\pi L}\ln\!\frac{4L}{d}$$
+                </div>
+                <ul class="mt-3 space-y-2 text-xs text-slate-300">
+                    <li class="feature-row rounded-lg p-2"><span class="font-bold" style="color:#5eddd6">L↑</span> · 봉이 길수록 저항 감소</li>
+                    <li class="feature-row rounded-lg p-2"><span class="font-bold" style="color:#e0a458">ρ↑</span> · 토양이 건조할수록 저항 증가</li>
+                </ul>
+            </div>
+
+            <div class="glass rounded-2xl p-5">
+                <h2 class="text-base font-bold flex items-center gap-2">
+                    <span style="color:#e3e9f0">판형 접지 (매설판)</span>
+                </h2>
+                <p class="mt-2 text-xs text-slate-400">땅속에 묻은 금속판으로 접촉 면적 확보</p>
+                <div class="math-container mt-2 text-center">
+                    $$R = \frac{\rho}{4\sqrt{A/\pi}}$$
+                </div>
+                <ul class="mt-3 space-y-2 text-xs text-slate-300">
+                    <li class="feature-row rounded-lg p-2"><span class="font-bold" style="color:#78c896">A↑</span> · 판 면적이 클수록 저항 감소</li>
+                    <li class="feature-row rounded-lg p-2"><span class="font-bold" style="color:#d97777">위험</span> · 저항 높으면 접촉·보폭전압 상승</li>
+                </ul>
+            </div>
+
+            <div class="math-card rounded-2xl p-5">
+                <h3 class="font-bold text-sm mb-2 tracking-wider text-emerald-200">대지 전위 · 안전 지표</h3>
+                <div class="math-container text-center">
+                    $$I = \frac{220}{R} \qquad V_{step} \propto I \cdot R$$
+                </div>
+                <div class="neon-divider my-3"></div>
+                <p class="text-[11px] text-slate-400">접촉전압 추정 <span id="touchVal" class="font-mono font-bold" style="color:#d97777">—</span> V · 보폭전압 추정 <span id="stepVal" class="font-mono font-bold" style="color:#e0a458">—</span> V</p>
+                <p class="text-[10px] text-slate-500 mt-1">* 표시값은 학습용 상대 추정치이며 시공 안전계산을 대체하지 않습니다.</p>
+            </div>
+
+            <div class="glass rounded-2xl p-5 text-[11px] text-slate-400 space-y-1">
+                <p><strong style="color:#5eddd6">봉형:</strong> R = ρ/(2πL)·ln(4L/d) — 단봉식 근사</p>
+                <p><strong style="color:#78c896">판형:</strong> R = ρ/(4√(A/π)) — 매설판 접지 근사</p>
+                <p>실제 시공에서는 토양 함수율, 매설 깊이, 다중 봉 보정계수가 함께 적용됩니다.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $('main');
+const ctx = canvas.getContext('2d');
+
+let type = "rod";
+let state = {
+    rho: 100, L: 2.0, d: 14, A: 0.9,
+    R: 0, I: 0, limit: 100, pass: true,
+    touch: 0, step: 0,
+    t: 0,
+    // animated display values for count-up
+    dispR: 0, dispI: 0, dispTouch: 0, dispStep: 0
+};
+
+let geo = {};
+let leakParticles = [];
+let waves = [];
+
+function resize() {
+    canvas.width = canvas.parentElement.clientWidth - 2;
+    canvas.height = 600;
+    buildGeometry();
+}
+window.addEventListener('resize', resize);
+
+function buildGeometry() {
+    const W = canvas.width, H = canvas.height;
+    geo = {
+        W, H,
+        skyH: H * 0.30,            // 지표선 y
+        cx: W * 0.5,               // 전극 중심 x
+        groundY: H * 0.30
+    };
+    // 누설 전류 입자: 전극에서 대지로 방사형으로 흐름
+    leakParticles = [];
+    for (let i = 0; i < 70; i++) {
+        leakParticles.push(spawnLeak(true));
+    }
+    waves = [];
+}
+
+function spawnLeak(initial) {
+    // 방향각: 전극 끝에서 대지로 부채꼴 확산 (아래·옆)
+    const ang = (-Math.PI * 0.5) + (Math.random() - 0.5) * Math.PI * 1.55;
+    return {
+        ang,
+        r: initial ? Math.random() * 230 : 0,
+        speed: 0.7 + Math.random() * 1.0,
+        size: 1.3 + Math.random() * 1.2,
+        life: Math.random()
+    };
+}
+
+function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+}
+
+// ---------- 계산 (물리 로직 절대 불변) ----------
+function compute() {
+    state.rho = +$("rho").value;
+    state.L = +$("l").value;
+    state.d = +$("d").value;
+    state.A = +$("a").value;
+
+    const rho = state.rho;
+    const L = state.L;
+    const d = state.d / 1000;
+    const A = state.A;
+
+    $("rhoVal").textContent = rho;
+    $("lVal").textContent = L.toFixed(1);
+    $("dVal").textContent = $("d").value;
+    $("aVal").textContent = A.toFixed(1);
+
+    let R;
+    if (type === "rod") {
+        R = (rho / (2 * Math.PI * L)) * Math.log(4 * L / d);
+    } else {
+        R = rho / (4 * Math.sqrt(A / Math.PI));
+    }
+    const I = 220 / R;
+    const limit = +$("grade-sel").value.split("_")[0];
+    const pass = R <= limit;
+
+    state.R = R;
+    state.I = I;
+    state.limit = limit;
+    state.pass = pass;
+
+    // 학습용 상대 추정치 (안전 지표 시각화용 — 합부/등급 판정에는 미사용)
+    state.touch = I * R * 0.5;
+    state.step = I * R * 0.3;
+
+    // live pills
+    $("rg").textContent = R.toFixed(1) + " Ω";
+    $("ig").textContent = I.toFixed(2) + " A";
+    $("grade").textContent = R < 10 ? "매우 우수" : R < 50 ? "양호" : R < 100 ? "보통" : "개선 필요";
+    $("grade").style.color = R < 10 ? "#5eddd6" : R < 50 ? "#78c896" : R < 100 ? "#e0a458" : "#d97777";
+
+    $("passfail").textContent = pass ? `합격 (≤${limit}Ω)` : `초과 (${limit}Ω 한도)`;
+    $("passfail").style.color = pass ? "#5eddd6" : "#d97777";
+    $("pill-pf").classList.toggle('verified', pass);
+    $("pill-pf").classList.toggle('danger', !pass);
+
+    $("touchVal").textContent = state.touch.toFixed(1);
+    $("stepVal").textContent = state.step.toFixed(1);
+}
+
+// ---------- 시각화 ----------
+function drawBg() {
+    const W = geo.W, H = geo.H, gy = geo.groundY;
+    // 하늘/대기 — 그래파이트
+    ctx.fillStyle = '#0b0f15';
+    ctx.fillRect(0, 0, W, gy);
+
+    // 대지 (토양 저항률에 따라 미묘한 톤 변화: 높을수록 약간 따뜻하게, 절제)
+    const dryness = Math.min(1, (state.rho - 10) / 990);
+    const soil = ctx.createLinearGradient(0, gy, 0, H);
+    soil.addColorStop(0, `rgba(${22 + dryness * 22}, ${24 - dryness * 4}, ${26 - dryness * 6}, 1)`);
+    soil.addColorStop(1, '#0b0f15');
+    ctx.fillStyle = soil;
+    ctx.fillRect(0, gy, W, H - gy);
+
+    // 오실로스코프 모눈 그리드 (전체)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.055)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= W; i += 20) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke(); }
+    for (let i = 0; i <= H; i += 20) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke(); }
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.10)';
+    for (let i = 0; i <= W; i += 100) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke(); }
+    for (let i = 0; i <= H; i += 100) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke(); }
+    ctx.restore();
+
+    // 지표선 (얇은 정밀선)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(94, 221, 214, 0.55)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(0, gy); ctx.lineTo(W, gy);
+    ctx.stroke();
+    ctx.restore();
+
+    // HUD 텍스트
+    ctx.save();
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = 'rgba(116, 128, 141, 0.85)';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('▮ GROUND · 대기 / 대지 단면', 12, 10);
+    ctx.fillStyle = 'rgba(94, 221, 214, 0.7)';
+    ctx.textAlign = 'right';
+    ctx.fillText(`◯ TYPE · ${type === 'rod' ? '봉형 ROD' : '판형 PLATE'}`, W - 12, 10);
+    ctx.fillStyle = 'rgba(116, 128, 141, 0.7)';
+    ctx.textAlign = 'left';
+    ctx.fillText('대기', 14, geo.groundY - 24);
+    ctx.fillStyle = 'rgba(160, 140, 110, 0.7)';
+    ctx.fillText('대지', 14, geo.groundY + 10);
+    ctx.restore();
+}
+
+// 등전위 파동 — 전극에서 동심 반타원 네온 파가 퍼지며 감쇠
+function drawEquipotential() {
+    const cx = geo.cx, cy = geo.groundY;
+    // 주기적 파동 생성: 고장전류가 클수록 빠르게
+    const interval = Math.max(14, 70 - Math.min(55, state.I * 0.6));
+    if (state.t % Math.round(interval) === 0) {
+        waves.push({ r: 8, born: state.t });
+    }
+    const maxR = Math.min(geo.W * 0.52, 360);
+    for (let i = waves.length - 1; i >= 0; i--) {
+        const w = waves[i];
+        w.r += 1.8;
+        if (w.r > maxR) { waves.splice(i, 1); continue; }
+        const k = w.r / maxR;          // 0→1
+        const alpha = (1 - k) * 0.40;  // 감쇠
+        ctx.save();
+        // 색상: 가까울수록 호박(amber) → 멀수록 청록(teal), 절제된 계측 팔레트
+        const cr = Math.round(224 - k * 130);
+        const cg = Math.round(164 + k * 57);
+        const cb = Math.round(88 + k * 126);
+        ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, ${alpha})`;
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        // 대지 안쪽 반타원 (지표선 아래만)
+        ctx.ellipse(cx, cy, w.r, w.r * 0.55, 0, 0, Math.PI);
+        ctx.stroke();
+        // 지표 위 옅은 호 (전위 상승 영역)
+        ctx.globalAlpha = alpha * 0.5;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, w.r, w.r * 0.18, 0, Math.PI, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+
+// 접촉/보폭전압 위험 히트맵 — 전극 근처 지표가 가장 위험
+function drawDangerZone() {
+    const cx = geo.cx, cy = geo.groundY;
+    const W = geo.W;
+    // 위험도: 저항·고장전류 클수록 강함
+    const danger = Math.min(1, (state.touch) / 90);
+    const reach = 60 + danger * 220;
+    ctx.save();
+    const g = ctx.createRadialGradient(cx, cy, 4, cx, cy, reach);
+    g.addColorStop(0, `rgba(217, 119, 119, ${0.16 + danger * 0.16})`);
+    g.addColorStop(0.45, `rgba(224, 164, 88, ${0.08 + danger * 0.10})`);
+    g.addColorStop(1, 'rgba(224, 164, 88, 0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, reach, reach * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 보폭전압 발 마커 (지표 위, 위험 클수록 톤 변화)
+    const footX = cx + reach * 0.62;
+    if (footX < W - 30) {
+        ctx.save();
+        ctx.font = '14px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.globalAlpha = 0.8;
+        ctx.fillText('🚶', footX, cy - 6);
+        ctx.font = 'bold 9px ui-monospace, monospace';
+        ctx.fillStyle = danger > 0.5 ? '#d97777' : '#e0a458';
+        ctx.fillText(`보폭 ${state.step.toFixed(0)}V`, footX, cy - 24);
+        ctx.restore();
+    }
+}
+
+function drawElectrode() {
+    const cx = geo.cx, gy = geo.groundY, H = geo.H;
+    // 위에서 내려오는 220V 도체 (얇은 정밀선)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(224, 164, 88, 0.85)';
+    ctx.lineWidth = 1.8;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx, 30); ctx.lineTo(cx, gy);
+    ctx.stroke();
+    ctx.restore();
+
+    // 220V 라벨
+    ctx.save();
+    ctx.font = 'bold 12px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const txt = '220V 고장점';
+    const tw = ctx.measureText(txt).width;
+    ctx.fillStyle = 'rgba(22, 29, 39, 0.95)';
+    roundRect(ctx, cx - tw / 2 - 10, 38, tw + 20, 22, 6);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(224, 164, 88, 0.55)';
+    ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#e0a458';
+    ctx.fillText(txt, cx, 49);
+    ctx.restore();
+
+    if (type === "rod") {
+        const lengthPx = Math.min(H - gy - 30, state.L * 60);
+        // 봉 (솔리드, 절제된 채움)
+        ctx.save();
+        ctx.fillStyle = 'rgba(94, 221, 214, 0.45)';
+        roundRect(ctx, cx - 5, gy, 10, lengthPx, 3);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(94, 221, 214, 0.7)';
+        ctx.lineWidth = 1.2;
+        roundRect(ctx, cx - 5, gy, 10, lengthPx, 3);
+        ctx.stroke();
+        ctx.restore();
+        // 봉 끝 점
+        ctx.save();
+        ctx.fillStyle = 'rgba(94, 221, 214, 0.9)';
+        ctx.beginPath();
+        ctx.arc(cx, gy + lengthPx, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        // 라벨
+        ctx.save();
+        ctx.font = 'bold 11px ui-monospace, monospace';
+        ctx.fillStyle = '#7fc3d8';
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(`봉 L=${state.L.toFixed(1)}m  d=${state.d}mm`, cx + 16, gy + lengthPx / 2);
+        ctx.restore();
+        geo.tip = { x: cx, y: gy + lengthPx };
+    } else {
+        const halfW = Math.min(geo.W * 0.22, Math.sqrt(state.A) * 90);
+        const plateY = gy + Math.min(H - gy - 60, 150);
+        // 연결 도체
+        ctx.save();
+        ctx.strokeStyle = 'rgba(94, 221, 214, 0.7)'; ctx.lineWidth = 2.4; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(cx, gy); ctx.lineTo(cx, plateY); ctx.stroke();
+        ctx.restore();
+        // 판
+        ctx.save();
+        ctx.fillStyle = 'rgba(120, 200, 150, 0.40)';
+        roundRect(ctx, cx - halfW, plateY, halfW * 2, 16, 4);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(120, 200, 150, 0.7)';
+        ctx.lineWidth = 1.2;
+        roundRect(ctx, cx - halfW, plateY, halfW * 2, 16, 4);
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.font = 'bold 11px ui-monospace, monospace';
+        ctx.fillStyle = '#78c896';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(`매설판 A=${state.A.toFixed(1)}m²`, cx, plateY + 36);
+        ctx.restore();
+        geo.tip = { x: cx, y: plateY + 8 };
+    }
+}
+
+// 누설/고장 전류 입자: 전극에서 대지로 방사 확산
+function drawLeakParticles() {
+    const tip = geo.tip || { x: geo.cx, y: geo.groundY + 80 };
+    const maxR = Math.min(geo.W * 0.5, 340);
+    const speedScale = 0.5 + Math.min(2.4, state.I * 0.04);
+    ctx.save();
+    for (const p of leakParticles) {
+        p.r += p.speed * speedScale;
+        if (p.r > maxR) Object.assign(p, spawnLeak(false));
+        const x = tip.x + Math.cos(p.ang) * p.r;
+        const y = tip.y + Math.abs(Math.sin(p.ang)) * p.r * 0.6 + Math.sin(p.ang) * 4;
+        // 지표선 위로 새지 않게
+        if (y < geo.groundY - 4) continue;
+        const fade = 1 - p.r / maxR;
+        // SPICE풍 절제된 흐름 점: 가까울수록 호박, 멀수록 청록
+        const cr = Math.round(224 - fade * 0);
+        ctx.fillStyle = `rgba(${cr}, ${Math.round(180 - fade * 16)}, ${Math.round(120 + (1 - fade) * 90)}, ${fade * 0.7})`;
+        ctx.beginPath();
+        ctx.arc(x, y, p.size * (0.4 + fade * 0.6), 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+function drawResultBadge() {
+    const W = geo.W;
+    const bx = W - 188, by = geo.H - 96;
+    ctx.save();
+    const ok = state.pass;
+    ctx.fillStyle = 'rgba(19, 25, 34, 0.92)';
+    roundRect(ctx, bx, by, 176, 78, 8);
+    ctx.fill();
+    ctx.strokeStyle = ok ? 'rgba(94, 221, 214, 0.5)' : 'rgba(217, 119, 119, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#74808d';
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillText('접지 저항', bx + 88, by + 16);
+    ctx.font = 'bold 24px ui-monospace, monospace';
+    ctx.fillStyle = ok ? '#5eddd6' : '#d97777';
+    ctx.fillText(`${state.dispR.toFixed(1)} Ω`, bx + 88, by + 40);
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = ok ? 'rgba(94,221,214,0.85)' : 'rgba(217,119,119,0.85)';
+    ctx.fillText(state.pass ? `합격 ≤ ${state.limit}Ω` : `초과 (${state.limit}Ω 한도)`, bx + 88, by + 62);
+    ctx.restore();
+}
+
+function flashCard() {
+    if (window.gsap) gsap.fromTo('#canvasCard',
+        { borderColor: 'rgba(94,221,214,0.35)' },
+        { borderColor: 'rgba(148,163,184,0.16)', duration: 0.7, ease: 'power2.out' });
+}
+
+// 타입 전환
+document.querySelectorAll(".type-btn").forEach(b => b.addEventListener("click", () => {
+    type = b.dataset.type;
+    document.querySelectorAll(".type-btn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    compute();
+    flashCard();
+}));
+
+["rho", "l", "d", "a", "grade-sel"].forEach(id => {
+    $(id).addEventListener("input", () => { compute(); flashCard(); });
+});
+
+$('resetBtn').addEventListener('click', () => {
+    type = "rod";
+    document.querySelectorAll(".type-btn").forEach(x => x.classList.remove("active"));
+    document.querySelector('[data-type="rod"]').classList.add("active");
+    const defaults = { rho: 100, l: 2.0, d: 14, a: 0.9 };
+    if (window.gsap) {
+        Object.keys(defaults).forEach(k => {
+            gsap.to($(k), { value: defaults[k], duration: 0.7, ease: 'power3.out', onUpdate: () => compute() });
+        });
+    } else {
+        Object.keys(defaults).forEach(k => { $(k).value = defaults[k]; });
+        compute();
+    }
+    $('grade-sel').value = '100';
+    compute();
+    flashCard();
+});
+
+function animate() {
+    state.t++;
+    // 부드러운 카운트업 (표시값만, 계산값 불변)
+    state.dispR += (state.R - state.dispR) * 0.12;
+    state.dispI += (state.I - state.dispI) * 0.12;
+    state.dispTouch += (state.touch - state.dispTouch) * 0.12;
+    state.dispStep += (state.step - state.dispStep) * 0.12;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBg();
+    drawDangerZone();
+    drawEquipotential();
+    drawElectrode();
+    drawLeakParticles();
+    drawResultBadge();
+    requestAnimationFrame(animate);
+}
+
+window.addEventListener('load', () => {
+    resize();
+    compute();
+    state.dispR = state.R; state.dispI = state.I;
+    state.dispTouch = state.touch; state.dispStep = state.step;
+    animate();
+
+    if (window.gsap) {
+        gsap.from('#hdr', { y: -10, opacity: 0, duration: 0.5, ease: 'power2.out' });
+        gsap.from('#livePanel > *', { y: 8, opacity: 0, duration: 0.45, stagger: 0.05, delay: 0.1, ease: 'power2.out' });
+        gsap.from('#canvasCard', { opacity: 0, duration: 0.55, delay: 0.15, ease: 'power2.out' });
+        gsap.from('#sideCol > *', { y: 10, opacity: 0, duration: 0.45, stagger: 0.08, delay: 0.25, ease: 'power2.out' });
+    }
+});
+</script>
+</body>
+</html>

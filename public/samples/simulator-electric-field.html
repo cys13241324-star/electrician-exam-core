@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전기기능사 - 전기장 시뮬레이터</title>
+    <link rel="stylesheet" href="/samples/_tailwind.css">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <style>
+        :root {
+            --bg-0: #0d1117;
+            --bg-1: #11161d;
+            --panel: #131922;
+            --panel-2: #161d27;
+            --border: rgba(148, 163, 184, 0.16);
+            --border-soft: rgba(148, 163, 184, 0.10);
+            --grid: rgba(125, 211, 252, 0.055);
+            --grid-strong: rgba(125, 211, 252, 0.10);
+            --teal: #5eddd6;
+            --amber: #e0a458;
+            --slate-txt: #c4ccd6;
+            --ink: #aab4c0;
+        }
+        body {
+            background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+            color: #d3dae3;
+            font-family: 'Pretendard', system-ui, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .stars { display: none; }
+
+        .canvas-wrap {
+            position: relative;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: #0b0f15;
+            overflow: hidden;
+        }
+        canvas#efCanvas {
+            display: block;
+            width: 100%;
+            height: 540px;
+            background: #0b0f15;
+            cursor: crosshair;
+            touch-action: none;
+        }
+        .bloom { filter: none; }
+
+        .glass {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
+        }
+        .neon-divider {
+            height: 1px;
+            background: var(--border-soft);
+        }
+        .pulse-dot {
+            display: inline-block;
+            width: 7px; height: 7px; border-radius: 9999px;
+            background: var(--teal);
+            box-shadow: 0 0 5px rgba(94, 221, 214, 0.55);
+        }
+        input[type=range] {
+            -webkit-appearance: none;
+            height: 4px;
+            border-radius: 9999px;
+            background: rgba(148, 163, 184, 0.22);
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px; height: 15px;
+            border-radius: 50%;
+            background: #cdd5df;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+            cursor: pointer;
+            border: 3px solid #2a3340;
+        }
+        input[type=range]:focus { outline: none; }
+        input[type=range]:focus::-webkit-slider-thumb { background: var(--teal); }
+        .chip-positive {
+            background: var(--panel-2);
+            border: 1px solid var(--border-soft);
+            border-left: 2px solid rgba(224,164,88,0.6);
+            color: var(--slate-txt);
+        }
+        .chip-negative {
+            background: var(--panel-2);
+            border: 1px solid var(--border-soft);
+            border-left: 2px solid rgba(94,221,214,0.55);
+            color: var(--slate-txt);
+        }
+        .math-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-top: 2px solid rgba(94, 221, 214, 0.35);
+        }
+        .math-container { font-size: 1.1rem; color: #cdd5df; }
+        .feature-row {
+            background: var(--panel-2);
+            border: 1px solid var(--border-soft);
+            transition: border-color 180ms;
+        }
+        .feature-row:hover { border-color: rgba(94, 221, 214, 0.30); }
+        .reset-btn {
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            color: var(--slate-txt);
+            transition: border-color 160ms, color 160ms;
+        }
+        .reset-btn:hover { border-color: rgba(94, 221, 214, 0.5); color: #d8f3f0; }
+
+        /* 라이브 데이터 패널 */
+        .live-pill {
+            background: var(--panel-2);
+            border: 1px solid var(--border-soft);
+            transition: border-color 200ms;
+        }
+        .live-pill.flash { border-color: rgba(94, 221, 214, 0.40); }
+        .live-num {
+            font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+            font-variant-numeric: tabular-nums;
+            color: #d8f3f0;
+            letter-spacing: 0.01em;
+        }
+        .mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
+        .eyebrow { color: #74808d; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto relative">
+        <header class="mb-6" id="hdr">
+            <div class="flex items-center gap-2 text-xs font-semibold tracking-widest" style="color:#7d8a97">
+                <span class="pulse-dot"></span>
+                ELECTRIC FIELD
+            </div>
+            <h1 class="mt-2 text-3xl md:text-4xl font-bold" style="color:#e3e9f0">
+                전기장 시뮬레이터
+            </h1>
+            <p class="mt-2 text-sm" style="color:#8b97a4">두 점전하의 전하량을 조절하고, 점을 드래그하면 전위·전기력선·입자 흐름이 모두 실시간으로 반응합니다.</p>
+        </header>
+
+        <!-- 라이브 데이터 패널 -->
+        <div id="livePanel" class="mb-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="live-pill rounded-xl p-3" id="pill-dist">
+                <p class="text-[10px] tracking-widest text-slate-500 font-bold">두 전하 거리</p>
+                <p class="mt-1 text-lg font-bold live-num" id="distVal">— px</p>
+            </div>
+            <div class="live-pill rounded-xl p-3" id="pill-force">
+                <p class="text-[10px] tracking-widest text-slate-500 font-bold">상호 작용 힘 |F|</p>
+                <p class="mt-1 text-lg font-bold live-num" id="forceVal">—</p>
+            </div>
+            <div class="live-pill rounded-xl p-3" id="pill-probe">
+                <p class="text-[10px] tracking-widest text-slate-500 font-bold">프로브 |E|</p>
+                <p class="mt-1 text-lg font-bold live-num" id="probeVal">—</p>
+            </div>
+            <div class="live-pill rounded-xl p-3" id="pill-mode">
+                <p class="text-[10px] tracking-widest text-slate-500 font-bold">상호 작용</p>
+                <p class="mt-1 text-lg font-bold live-num" id="modeVal">—</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <!-- 캔버스 영역 -->
+            <div class="lg:col-span-2 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto glass rounded-2xl p-4 shadow-2xl" id="canvasCard">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs font-semibold eyebrow tracking-wide mono">DRAG · 전하를 끌어 이동 · MOVE · 마우스로 전기장 측정</span>
+                    <button id="resetBtn" class="reset-btn rounded-md px-3 py-1.5 text-xs font-bold">초기화</button>
+                </div>
+                <div class="canvas-wrap">
+                    <canvas id="efCanvas"></canvas>
+                </div>
+
+                <div class="mt-5 grid grid-cols-2 gap-4">
+                    <div class="chip-positive rounded-xl p-4">
+                        <label class="block text-xs font-bold mb-2 tracking-wider">전하 1 \(Q_1\)</label>
+                        <input type="range" id="q1Range" min="-20" max="20" value="10" class="w-full cursor-pointer">
+                        <div class="text-right mt-2 font-mono text-base font-bold"><span id="q1Val">10</span> μC</div>
+                    </div>
+                    <div class="chip-negative rounded-xl p-4">
+                        <label class="block text-xs font-bold mb-2 tracking-wider">전하 2 \(Q_2\)</label>
+                        <input type="range" id="q2Range" min="-20" max="20" value="-10" class="w-full cursor-pointer">
+                        <div class="text-right mt-2 font-mono text-base font-bold"><span id="q2Val">-10</span> μC</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 정보 영역 -->
+            <div class="space-y-4" id="sideCol">
+                <div class="glass rounded-2xl p-5">
+                    <h2 class="text-base font-bold flex items-center gap-2">
+                        <span style="color:#9fb0c0">전기력선 핵심 5</span>
+                    </h2>
+                    <ul class="mt-4 space-y-2 text-xs" style="color:#9aa6b3">
+                        <li class="feature-row rounded-lg p-3"><span class="font-bold" style="color:#e0a458">1. 시작·끝</span> · <span class="font-bold" style="color:#e0a458">양(+)</span>에서 시작 → <span class="font-bold" style="color:#5eddd6">음(-)</span>에서 끝</li>
+                        <li class="feature-row rounded-lg p-3"><span class="font-bold" style="color:#9fb0c0">2. 밀도</span> · 전기력선의 밀도 = 전기장 세기</li>
+                        <li class="feature-row rounded-lg p-3"><span class="font-bold" style="color:#9fb0c0">3. 교차 금지</span> · 서로 교차하거나 굴절하지 않는다</li>
+                        <li class="feature-row rounded-lg p-3"><span class="font-bold" style="color:#9fb0c0">4. 전위 방향</span> · 높은 전위 → 낮은 전위</li>
+                        <li class="feature-row rounded-lg p-3"><span class="font-bold" style="color:#9fb0c0">5. 수직 출입</span> · 전하 표면에 항상 수직</li>
+                    </ul>
+                </div>
+
+                <div class="math-card rounded-2xl p-5">
+                    <h3 class="font-bold text-sm mb-3 tracking-wider" style="color:#9fb0c0">전기장의 세기</h3>
+                    <div class="math-container">
+                        $$E = \frac{Q}{4\pi\epsilon_0 r^2} \;\;[\text{V/m}]$$
+                    </div>
+                    <div class="neon-divider my-3"></div>
+                    <p class="text-[11px]" style="color:#8b97a4">진공 중 유전율 \(\epsilon_0 \approx 8.854 \times 10^{-12}\) F/m</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('efCanvas');
+        const ctx = canvas.getContext('2d');
+        const q1Range = document.getElementById('q1Range');
+        const q2Range = document.getElementById('q2Range');
+        const q1Val = document.getElementById('q1Val');
+        const q2Val = document.getElementById('q2Val');
+        const resetBtn = document.getElementById('resetBtn');
+        const distVal = document.getElementById('distVal');
+        const forceVal = document.getElementById('forceVal');
+        const probeVal = document.getElementById('probeVal');
+        const modeVal = document.getElementById('modeVal');
+        const pillForce = document.getElementById('pill-force');
+        const pillProbe = document.getElementById('pill-probe');
+
+        const K_FORCE = 9e9; // N·m²/C², 시각화용 상수
+
+        let charges = [
+            { x: 0, y: 0, q: 10, vx: 0, vy: 0 },
+            { x: 0, y: 0, q: -10, vx: 0, vy: 0 }
+        ];
+
+        let draggingCharge = null;
+        let hoverCharge = null;
+        let particles = [];
+        let mouse = { x: -1000, y: -1000, inside: false };
+        let t = 0;
+        let potentialBuf = null;
+        let potentialW = 0;
+        let potentialH = 0;
+        const POT_CELL = 6; // 컨투어 셀 크기 (작을수록 부드러움, 무거움)
+
+        function resize() {
+            canvas.width = canvas.parentElement.clientWidth - 2;
+            canvas.height = 540;
+            charges[0].x = canvas.width * 0.35;
+            charges[0].y = canvas.height * 0.5;
+            charges[1].x = canvas.width * 0.65;
+            charges[1].y = canvas.height * 0.5;
+            potentialW = Math.ceil(canvas.width / POT_CELL);
+            potentialH = Math.ceil(canvas.height / POT_CELL);
+            potentialBuf = ctx.createImageData(potentialW, potentialH);
+            seedParticles();
+        }
+        window.addEventListener('resize', resize);
+
+        function pointerPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const t0 = e.touches ? e.touches[0] : e;
+            return { x: t0.clientX - rect.left, y: t0.clientY - rect.top };
+        }
+        canvas.addEventListener('mousedown', e => {
+            const { x, y } = pointerPos(e);
+            for (const c of charges) {
+                if (Math.hypot(c.x - x, c.y - y) < 30) { draggingCharge = c; break; }
+            }
+        });
+        canvas.addEventListener('touchstart', e => {
+            const { x, y } = pointerPos(e);
+            for (const c of charges) {
+                if (Math.hypot(c.x - x, c.y - y) < 34) { draggingCharge = c; break; }
+            }
+        }, { passive: true });
+        canvas.addEventListener('mousemove', e => {
+            const { x, y } = pointerPos(e);
+            mouse.x = x; mouse.y = y; mouse.inside = true;
+            if (draggingCharge) {
+                draggingCharge.x = Math.max(30, Math.min(canvas.width - 30, x));
+                draggingCharge.y = Math.max(30, Math.min(canvas.height - 30, y));
+            } else {
+                hoverCharge = charges.find(c => Math.hypot(c.x - x, c.y - y) < 30) || null;
+            }
+        });
+        canvas.addEventListener('mouseleave', () => { mouse.inside = false; hoverCharge = null; });
+        window.addEventListener('touchmove', e => {
+            if (!draggingCharge) return;
+            const { x, y } = pointerPos(e);
+            draggingCharge.x = Math.max(30, Math.min(canvas.width - 30, x));
+            draggingCharge.y = Math.max(30, Math.min(canvas.height - 30, y));
+        }, { passive: true });
+        window.addEventListener('mouseup', () => draggingCharge = null);
+        window.addEventListener('touchend', () => draggingCharge = null);
+
+        q1Range.oninput = (e) => {
+            charges[0].q = parseInt(e.target.value); q1Val.innerText = e.target.value;
+            flashCanvasCard();
+        };
+        q2Range.oninput = (e) => {
+            charges[1].q = parseInt(e.target.value); q2Val.innerText = e.target.value;
+            flashCanvasCard();
+        };
+        resetBtn.onclick = () => {
+            const targets = [
+                { x: canvas.width * 0.35, y: canvas.height * 0.5 },
+                { x: canvas.width * 0.65, y: canvas.height * 0.5 }
+            ];
+            // GSAP spring 효과
+            if (window.gsap) {
+                charges.forEach((c, i) => {
+                    gsap.to(c, { x: targets[i].x, y: targets[i].y, duration: 0.9, ease: 'elastic.out(1, 0.55)' });
+                });
+                gsap.to(q1Range, { value: 10, duration: 0.5, onUpdate: () => { q1Val.innerText = Math.round(q1Range.value); charges[0].q = parseFloat(q1Range.value); } });
+                gsap.to(q2Range, { value: -10, duration: 0.5, onUpdate: () => { q2Val.innerText = Math.round(q2Range.value); charges[1].q = parseFloat(q2Range.value); } });
+            } else {
+                charges[0].x = targets[0].x; charges[0].y = targets[0].y; charges[0].q = 10;
+                charges[1].x = targets[1].x; charges[1].y = targets[1].y; charges[1].q = -10;
+                q1Range.value = 10; q2Range.value = -10;
+                q1Val.innerText = 10; q2Val.innerText = -10;
+            }
+        };
+
+        function flashCanvasCard() {
+            const cc = document.getElementById('canvasCard');
+            if (window.gsap) gsap.fromTo(cc, { borderColor: 'rgba(94,221,214,0.35)' }, { borderColor: 'rgba(148,163,184,0.16)', duration: 0.6, ease: 'power2.out' });
+        }
+
+        function getFieldAt(x, y) {
+            let ex = 0, ey = 0;
+            for (const c of charges) {
+                const dx = x - c.x, dy = y - c.y;
+                const r2 = dx * dx + dy * dy;
+                const r = Math.sqrt(r2);
+                if (r < 5) continue;
+                const field = c.q / r2;
+                ex += field * (dx / r);
+                ey += field * (dy / r);
+            }
+            return { ex, ey };
+        }
+        function getPotentialAt(x, y) {
+            let v = 0;
+            for (const c of charges) {
+                const dx = x - c.x, dy = y - c.y;
+                const r = Math.sqrt(dx * dx + dy * dy);
+                if (r < 5) continue;
+                v += c.q / r;
+            }
+            return v;
+        }
+
+        // ---------- 등전위 컨투어 (배경) ----------
+        function drawPotentialBg() {
+            const buf = potentialBuf;
+            const data = buf.data;
+            let idx = 0;
+            for (let py = 0; py < potentialH; py++) {
+                for (let px = 0; px < potentialW; px++) {
+                    const x = px * POT_CELL + POT_CELL * 0.5;
+                    const y = py * POT_CELL + POT_CELL * 0.5;
+                    const v = getPotentialAt(x, y);
+                    // v를 -1.5 ~ 1.5로 normalize
+                    const n = Math.max(-1, Math.min(1, v / 1.5));
+                    let r, g, b;
+                    if (n >= 0) {
+                        // 양전위: 호박 (계측 톤)
+                        const a = Math.pow(n, 0.6);
+                        r = Math.round(20 + 200 * a);
+                        g = Math.round(16 + 124 * a);
+                        b = Math.round(24 + 40 * a);
+                    } else {
+                        // 음전위: 청록 (계측 톤)
+                        const a = Math.pow(-n, 0.6);
+                        r = Math.round(16 + 30 * a);
+                        g = Math.round(22 + 160 * a);
+                        b = Math.round(28 + 150 * a);
+                    }
+                    data[idx++] = r;
+                    data[idx++] = g;
+                    data[idx++] = b;
+                    data[idx++] = 130; // 더 절제된 투명도
+                }
+            }
+            // 작은 buffer를 큰 canvas에 stretch
+            ctx.putImageData(buf, 0, 0);
+            // 더 큰 단위로 stretch — putImageData는 stretch 안 되므로, drawImage로 (offscreen)
+        }
+        // 더 좋은 stretch: offscreen 캔버스 사용
+        let offCanvas, offCtx;
+        function ensureOff() {
+            if (!offCanvas) {
+                offCanvas = document.createElement('canvas');
+                offCtx = offCanvas.getContext('2d');
+            }
+            offCanvas.width = potentialW;
+            offCanvas.height = potentialH;
+        }
+        function drawPotentialBgScaled() {
+            ensureOff();
+            const buf = offCtx.createImageData(potentialW, potentialH);
+            const data = buf.data;
+            let idx = 0;
+            for (let py = 0; py < potentialH; py++) {
+                for (let px = 0; px < potentialW; px++) {
+                    const x = px * POT_CELL + POT_CELL * 0.5;
+                    const y = py * POT_CELL + POT_CELL * 0.5;
+                    const v = getPotentialAt(x, y);
+                    const n = Math.max(-1, Math.min(1, v / 1.5));
+                    let r, g, b;
+                    if (n >= 0) {
+                        const a = Math.pow(n, 0.55);
+                        r = Math.round(20 + 200 * a);
+                        g = Math.round(16 + 124 * a);
+                        b = Math.round(24 + 40 * a);
+                    } else {
+                        const a = Math.pow(-n, 0.55);
+                        r = Math.round(16 + 30 * a);
+                        g = Math.round(22 + 160 * a);
+                        b = Math.round(28 + 150 * a);
+                    }
+                    data[idx++] = r;
+                    data[idx++] = g;
+                    data[idx++] = b;
+                    data[idx++] = 150;
+                }
+            }
+            offCtx.putImageData(buf, 0, 0);
+            ctx.save();
+            ctx.imageSmoothingEnabled = true;
+            ctx.globalAlpha = 0.55;
+            ctx.drawImage(offCanvas, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+        }
+
+        // ---------- 파티클 ----------
+        function seedParticles() {
+            particles = [];
+            const count = Math.floor((canvas.width * canvas.height) / 3500);
+            for (let i = 0; i < count; i++) particles.push(randomParticle());
+        }
+        function randomParticle() {
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                life: Math.random() * 140,
+                maxLife: 140 + Math.random() * 140,
+                size: 0.8 + Math.random() * 1.4,
+            };
+        }
+        function updateParticles() {
+            for (const p of particles) {
+                const f = getFieldAt(p.x, p.y);
+                const m = Math.hypot(f.ex, f.ey);
+                if (m > 0) {
+                    p.x += (f.ex / m) * 1.6;
+                    p.y += (f.ey / m) * 1.6;
+                }
+                p.life++;
+                if (p.life > p.maxLife || p.x < -10 || p.x > canvas.width + 10 || p.y < -10 || p.y > canvas.height + 10) {
+                    Object.assign(p, randomParticle(), { life: 0 });
+                }
+            }
+        }
+        function drawParticles() {
+            ctx.save();
+            for (const p of particles) {
+                const ratio = p.life / p.maxLife;
+                const alpha = Math.sin(ratio * Math.PI) * 0.65;
+                ctx.fillStyle = `rgba(207, 238, 236, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        // ---------- 전기력선 ----------
+        function drawFieldLine(startX, startY, chargeQ) {
+            const isPositive = chargeQ > 0;
+            const pts = [];
+            let x = startX, y = startY;
+            let arrowPoint = null, arrowAngle = 0, arrowDrawn = false;
+
+            for (let i = 0; i < 600; i++) {
+                const f = getFieldAt(x, y);
+                const etot = Math.hypot(f.ex, f.ey);
+                if (etot < 1e-5) break;
+                const step = isPositive ? 4 : -4;
+                x += (f.ex / etot) * step;
+                y += (f.ey / etot) * step;
+                pts.push([x, y]);
+                if (!arrowDrawn && i === 24) {
+                    arrowPoint = [x, y]; arrowAngle = Math.atan2(f.ey, f.ex); arrowDrawn = true;
+                }
+                if (x < -20 || x > canvas.width + 20 || y < -20 || y > canvas.height + 20) break;
+                let hit = false;
+                for (const c of charges) {
+                    if (Math.hypot(x - c.x, y - c.y) < 14) { hit = true; break; }
+                }
+                if (hit) break;
+            }
+            if (pts.length < 2) return;
+            ctx.save();
+            const last = pts[pts.length - 1];
+            const grad = ctx.createLinearGradient(startX, startY, last[0], last[1]);
+            grad.addColorStop(0, isPositive ? 'rgba(224, 164, 88, 0.85)' : 'rgba(94, 221, 214, 0.5)');
+            grad.addColorStop(1, isPositive ? 'rgba(224, 164, 88, 0.5)' : 'rgba(94, 221, 214, 0.85)');
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 1.5;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            for (const [px, py] of pts) ctx.lineTo(px, py);
+            ctx.stroke();
+            ctx.restore();
+            if (arrowPoint) drawArrowhead(arrowPoint[0], arrowPoint[1], arrowAngle, isPositive);
+        }
+        function drawArrowhead(x, y, angle, isPositive) {
+            ctx.save();
+            ctx.translate(x, y); ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.moveTo(3, 0); ctx.lineTo(-7, -4); ctx.lineTo(-7, 4); ctx.closePath();
+            ctx.fillStyle = isPositive ? 'rgba(233, 192, 138, 0.95)' : 'rgba(159, 233, 228, 0.95)';
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // ---------- 격자 (전위 위에 덧대기) ----------
+        function drawGrid() {
+            ctx.save();
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(125, 211, 252, 0.055)';
+            for (let i = 0; i < canvas.width; i += 20) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 20) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+            ctx.strokeStyle = 'rgba(125, 211, 252, 0.10)';
+            for (let i = 0; i < canvas.width; i += 100) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 100) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        // ---------- 마우스 프로브 ----------
+        function drawProbe() {
+            if (!mouse.inside) return;
+            const x = mouse.x, y = mouse.y;
+            // 전하 위에 있으면 프로브 안 보임
+            for (const c of charges) {
+                if (Math.hypot(c.x - x, c.y - y) < 26) return;
+            }
+            const f = getFieldAt(x, y);
+            const m = Math.hypot(f.ex, f.ey);
+            if (m < 1e-5) return;
+
+            // 작은 링
+            ctx.save();
+            ctx.strokeStyle = 'rgba(170, 180, 192, 0.7)';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.arc(x, y, 10, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+
+            // 벡터 화살표 (길이는 log 스케일)
+            const len = Math.min(70, 18 + Math.log10(m * 1000 + 1) * 25);
+            const ux = f.ex / m, uy = f.ey / m;
+            const tx = x + ux * len, ty = y + uy * len;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(224, 164, 88, 0.95)';
+            ctx.lineWidth = 2.2;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(tx, ty);
+            ctx.stroke();
+            // 화살촉
+            const ang = Math.atan2(uy, ux);
+            ctx.translate(tx, ty); ctx.rotate(ang);
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.lineTo(-9, -5); ctx.lineTo(-9, 5); ctx.closePath();
+            ctx.fillStyle = 'rgba(224, 164, 88, 0.95)';
+            ctx.fill();
+            ctx.restore();
+
+            // 값 라벨
+            const mag = (m * 1000).toFixed(2);
+            ctx.save();
+            ctx.font = 'bold 11px ui-monospace, Menlo, monospace';
+            const text = `|E| ≈ ${mag}`;
+            const tw = ctx.measureText(text).width;
+            const lx = x + 14, ly = y - 14;
+            ctx.fillStyle = 'rgba(19, 25, 34, 0.85)';
+            roundRect(ctx, lx - 6, ly - 12, tw + 12, 18, 6);
+            ctx.fill();
+            ctx.fillStyle = '#e9c08a';
+            ctx.fillText(text, lx, ly + 2);
+            ctx.restore();
+
+            probeVal.innerText = `${mag}`;
+        }
+
+        // ---------- 전하 ----------
+        function drawCharge(c) {
+            if (c.q === 0) {
+                ctx.fillStyle = '#3a4654';
+                ctx.beginPath(); ctx.arc(c.x, c.y, 20, 0, Math.PI * 2); ctx.fill();
+                return;
+            }
+            const isPos = c.q > 0;
+            const baseColor = isPos ? '#e0a458' : '#5eddd6';
+            const accent = isPos ? '#e9c08a' : '#9fe9e4';
+
+            // 본체 (계측 톤 솔리드)
+            ctx.save();
+            ctx.fillStyle = '#1a212b';
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, 22, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // 테두리 (drag/hover 시 약간 강조)
+            const hot = (draggingCharge === c || hoverCharge === c);
+            ctx.lineWidth = hot ? 2.6 : 1.8;
+            ctx.strokeStyle = baseColor;
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, 22, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 부호
+            ctx.fillStyle = accent;
+            ctx.font = 'bold 22px ui-monospace, monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(isPos ? '+' : '−', c.x, c.y + 1);
+
+            // 라벨
+            const label = `${c.q} μC`;
+            ctx.font = 'bold 11px ui-monospace, monospace';
+            const tw = ctx.measureText(label).width;
+            ctx.fillStyle = 'rgba(19, 25, 34, 0.85)';
+            const ly = c.y + 40;
+            const padX = 6;
+            roundRect(ctx, c.x - tw/2 - padX, ly - 9, tw + padX*2, 18, 6);
+            ctx.fill();
+            ctx.fillStyle = accent;
+            ctx.fillText(label, c.x, ly + 1);
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        // ---------- 라이브 데이터 갱신 ----------
+        function updateLivePanel() {
+            const c1 = charges[0], c2 = charges[1];
+            const d = Math.hypot(c1.x - c2.x, c1.y - c2.y);
+            distVal.innerText = `${Math.round(d)} px`;
+            const F = Math.abs((c1.q * c2.q) / (d * d || 1));
+            const fStr = F.toExponential(2);
+            forceVal.innerText = fStr;
+            const sameSign = (c1.q * c2.q) > 0;
+            const zero = c1.q === 0 || c2.q === 0;
+            modeVal.innerText = zero ? '—' : (sameSign ? '척력' : '인력');
+        }
+
+        // ---------- 메인 루프 ----------
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1) 등전위 컨투어 배경
+            drawPotentialBgScaled();
+
+            // 2) 격자 (살짝)
+            drawGrid();
+
+            // 3) 전기력선
+            for (const c of charges) {
+                if (c.q === 0) continue;
+                const numLines = Math.min(Math.abs(c.q) * 2.5, 50);
+                for (let i = 0; i < numLines; i++) {
+                    const angle = (i / numLines) * Math.PI * 2 + (t * 0.05);
+                    drawFieldLine(c.x + Math.cos(angle) * 18, c.y + Math.sin(angle) * 18, c.q);
+                }
+            }
+
+            // 4) 파티클
+            drawParticles();
+
+            // 5) 마우스 프로브
+            drawProbe();
+
+            // 6) 전하
+            for (const c of charges) drawCharge(c);
+        }
+
+        function animate() {
+            t += 0.016;
+            updateParticles();
+            draw();
+            updateLivePanel();
+            requestAnimationFrame(animate);
+        }
+
+        // 초기화 + GSAP 등장 애니메이션
+        window.addEventListener('load', () => {
+            resize();
+            animate();
+
+            if (window.gsap) {
+                gsap.from('#hdr', { y: -20, opacity: 0, duration: 0.7, ease: 'power3.out' });
+                gsap.from('#livePanel .live-pill', { y: 14, opacity: 0, duration: 0.6, stagger: 0.08, delay: 0.15, ease: 'power3.out' });
+                gsap.from('#canvasCard', { scale: 0.97, opacity: 0, duration: 0.8, delay: 0.2, ease: 'power3.out' });
+                gsap.from('#sideCol > *', { x: 30, opacity: 0, duration: 0.6, stagger: 0.12, delay: 0.35, ease: 'power3.out' });
+            }
+        });
+    </script>
+</body>
+</html>

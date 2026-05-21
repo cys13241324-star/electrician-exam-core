@@ -505,6 +505,410 @@ export const simulators: Simulator[] = [
       why: "유도성 부하의 무효전력을 콘덴서로 보상해 역률을 개선하는 원리와 전력 삼각형 $S = \\sqrt{P^2+Q^2}$ 관계는 전기이론 교류회로에서 역률 개선 문제로 자주 출제됩니다.",
     },
   },
+  // ── 빈 챕터 보강 (전기설비·전기기기·전기이론 빈 곳) ──
+  {
+    id: "electric-field",
+    title: "전기력선",
+    description:
+      "두 점전하에 의한 전기력선의 분포와 전기장의 세기를 마우스로 조작하며 시각적으로 익혀보세요.",
+    subject: "전기이론",
+    topic: "정전기",
+    status: "available",
+    htmlPath: "/samples/simulator-electric-field.html",
+    emoji: "⚡",
+    formula: [
+      {
+        name: "쿨롱의 법칙",
+        expression: "$F = k \\cdot \\dfrac{Q_1 \\cdot Q_2}{r^2}$",
+        meaning: "두 점전하 사이의 힘. $k = 9 \\times 10^9$ [N·m²/C²]",
+      },
+      {
+        name: "전기장의 세기",
+        expression: "$E = \\dfrac{F}{q} = \\dfrac{kQ}{r^2}$",
+        meaning: "단위 양전하가 받는 힘. 단위 [V/m]",
+      },
+    ],
+    example: {
+      question:
+        "거리가 0.1 m 떨어진 두 점전하 $Q_1 = 2\\ \\mu\\text{C}$, $Q_2 = 3\\ \\mu\\text{C}$ 사이에 작용하는 정전기력은 몇 N인가?",
+      given: [
+        "$Q_1 = 2 \\times 10^{-6}$ C",
+        "$Q_2 = 3 \\times 10^{-6}$ C",
+        "$r = 0.1$ m",
+        "$k = 9 \\times 10^9$ N·m²/C²",
+      ],
+      solution: [
+        "$F = k \\cdot \\dfrac{Q_1 \\cdot Q_2}{r^2}$",
+        "$F = (9 \\times 10^9) \\times \\dfrac{2 \\times 10^{-6} \\cdot 3 \\times 10^{-6}}{0.1^2}$",
+        "$F = (9 \\times 10^9) \\times \\dfrac{6 \\times 10^{-12}}{0.01}$",
+        "$F = 5.4$ N",
+      ],
+      answer: "$F = 5.4$ N",
+    },
+  },
+  {
+    id: "parallel-wires",
+    title: "평행도선의 자기력",
+    description:
+      "평행하게 놓인 두 도선에 흐르는 전류의 방향과 크기에 따라 변하는 자기력 작용을 확인합니다.",
+    subject: "전기이론",
+    topic: "자기·자기회로",
+    status: "available",
+    htmlPath: "/samples/simulator-parallel-wires.html",
+    emoji: "🧲",
+    formula: [
+      {
+        name: "단위 길이당 힘",
+        expression: "$\\dfrac{F}{L} = \\dfrac{\\mu_0 \\cdot I_1 \\cdot I_2}{2\\pi \\cdot d}$",
+        meaning:
+          "$\\mu_0 = 4\\pi \\times 10^{-7}$ H/m. 같은 방향 → 흡인, 반대 → 반발",
+      },
+    ],
+    example: {
+      question:
+        "거리 0.5 m 떨어진 두 평행 도선에 각각 10 A씩 같은 방향으로 흐를 때, 단위 길이당 작용하는 힘은?",
+      given: ["$I_1 = I_2 = 10$ A", "$d = 0.5$ m", "$\\mu_0 = 4\\pi \\times 10^{-7}$ H/m"],
+      solution: [
+        "$\\dfrac{F}{L} = \\dfrac{\\mu_0 I_1 I_2}{2\\pi d}$",
+        "$\\dfrac{F}{L} = \\dfrac{4\\pi \\times 10^{-7} \\times 10 \\times 10}{2\\pi \\times 0.5}$",
+        "$\\dfrac{F}{L} = \\dfrac{4 \\times 10^{-5}}{1}$",
+        "$\\dfrac{F}{L} = 4 \\times 10^{-5}$ N/m (흡인)",
+      ],
+      answer: "$\\dfrac{F}{L} = 4 \\times 10^{-5}$ N/m (흡인)",
+    },
+  },
+  {
+    id: "faraday-law",
+    title: "패러데이 전자유도 법칙",
+    description:
+      "코일 안의 자속 변화가 만들어내는 유도 기전력의 방향과 크기를 시각적으로 확인합니다.",
+    subject: "전기이론",
+    topic: "전자기 유도",
+    status: "available",
+    htmlPath: "/samples/simulator-faraday-law.html",
+    emoji: "🧲",
+    formula: [
+      {
+        name: "유도 기전력",
+        expression: "$e = -N \\dfrac{d\\Phi}{dt}$",
+        meaning: "$N$ 권수, 자속 변화율에 비례. 부호는 렌츠 법칙",
+      },
+      {
+        name: "운동 기전력",
+        expression: "$e = B L v$",
+        meaning: "자장 $B$ 내 길이 $L$ 도체가 속도 $v$로 운동",
+      },
+    ],
+    example: {
+      question:
+        "100회 감긴 코일을 통과하는 자속이 0.05초 동안 0.02 Wb에서 0.06 Wb로 증가했을 때 유도 기전력의 크기는?",
+      given: ["$N = 100$", "$d\\Phi = 0.04$ Wb", "$dt = 0.05$ s"],
+      solution: [
+        "$|e| = N \\dfrac{d\\Phi}{dt}$",
+        "$|e| = 100 \\times \\dfrac{0.04}{0.05}$",
+        "$|e| = 100 \\times 0.8 = 80$ V",
+      ],
+      answer: "$|e| = 80$ V",
+    },
+  },
+  {
+    id: "transformer-connection",
+    title: "변압기 결선 (Y/Δ)",
+    description:
+      "Y(성형)·Δ(삼각) 결선의 선간/상 전압·전류 관계를 그림과 함께 비교합니다.",
+    subject: "전기기기",
+    topic: "변압기",
+    status: "available",
+    htmlPath: "/samples/simulator-transformer-connection.html",
+    emoji: "🔺",
+    formula: [
+      {
+        name: "Y 결선 (성형)",
+        expression: "$V_L = \\sqrt{3} \\cdot V_p$, $I_L = I_p$",
+        meaning: "선간전압이 상전압의 $\\sqrt{3}$ 배",
+      },
+      {
+        name: "Δ 결선 (삼각)",
+        expression: "$V_L = V_p$, $I_L = \\sqrt{3} \\cdot I_p$",
+        meaning: "선전류가 상전류의 $\\sqrt{3}$ 배",
+      },
+      {
+        name: "3상 전력",
+        expression: "$P = \\sqrt{3} \\cdot V_L \\cdot I_L \\cdot \\cos\\varphi$",
+        meaning: "결선 방식과 무관하게 동일",
+      },
+    ],
+    example: {
+      question:
+        "Y 결선된 3상 변압기에서 상전압 $V_p = 220$ V일 때 선간전압 $V_L$은?",
+      given: ["$V_p = 220$ V", "결선: Y"],
+      solution: [
+        "$V_L = \\sqrt{3} \\times V_p$",
+        "$V_L = 1.732 \\times 220 \\approx 381$ V",
+      ],
+      answer: "$V_L \\approx 381$ V",
+    },
+  },
+  {
+    id: "dc-machine",
+    title: "직류기 동작 원리",
+    description:
+      "직류 발전기와 전동기의 회전 자장과 정류 동작을 애니메이션으로 따라가며 이해합니다.",
+    subject: "전기기기",
+    topic: "직류기",
+    status: "available",
+    htmlPath: "/samples/simulator-dc-machine.html",
+    emoji: "⚙️",
+    formula: [
+      {
+        name: "유도 기전력",
+        expression: "$e = B \\cdot L \\cdot v \\cdot \\sin\\theta$",
+        meaning: "회전 코일 한 변에 유기되는 전압",
+      },
+      {
+        name: "직류 출력 (정류 후)",
+        expression: "$E_{avg} = \\dfrac{2}{\\pi} \\cdot E_{max}$",
+        meaning: "정류자가 매 반회전마다 극성을 뒤집어 직류로",
+      },
+    ],
+    example: {
+      question:
+        "$B = 1.2$ T 자기장 속에서 길이 0.1 m 도체가 2 m/s 속도로 자기장과 수직으로 움직일 때 유도 기전력은?",
+      given: ["$B = 1.2$ T", "$L = 0.1$ m", "$v = 2$ m/s", "$\\theta = 90°$"],
+      solution: [
+        "$e = B \\cdot L \\cdot v \\cdot \\sin\\theta$",
+        "$e = 1.2 \\times 0.1 \\times 2 \\times \\sin 90°$",
+        "$e = 0.24 \\times 1 = 0.24$ V",
+      ],
+      answer: "$e = 0.24$ V",
+    },
+  },
+  {
+    id: "synchronous",
+    title: "동기기 위상 (P-δ 곡선)",
+    description:
+      "동기 발전기의 부하각 변화에 따른 출력 전력과 동기 한계를 시각화합니다.",
+    subject: "전기기기",
+    topic: "동기기",
+    status: "available",
+    htmlPath: "/samples/simulator-synchronous.html",
+    emoji: "⚙️",
+    formula: [
+      {
+        name: "출력 전력",
+        expression: "$P = \\dfrac{E \\cdot V}{X_s} \\cdot \\sin\\delta$",
+        meaning: "$\\delta$ = 부하각 ($E$와 $V$ 사이의 위상차)",
+      },
+      {
+        name: "최대 출력",
+        expression: "$P_{max} = \\dfrac{E \\cdot V}{X_s}$",
+        meaning: "$\\delta = 90°$에서 발생, 동기 한계",
+      },
+    ],
+    example: {
+      question:
+        "유기 기전력 $E = 220$ V, 단자 전압 $V = 200$ V, 동기 임피던스 $X_s = 5\\ \\Omega$, 부하각 $\\delta = 30°$일 때 출력 전력은?",
+      given: ["$E = 220$ V", "$V = 200$ V", "$X_s = 5\\ \\Omega$", "$\\delta = 30°$"],
+      solution: [
+        "$P = \\dfrac{E \\cdot V}{X_s} \\cdot \\sin\\delta$",
+        "$P = \\dfrac{220 \\times 200}{5} \\times \\sin 30°$",
+        "$P = 8800 \\times 0.5 = 4400$ W $= 4.4$ kW",
+      ],
+      answer: "$P \\approx 4.4$ kW",
+    },
+  },
+  {
+    id: "grounding",
+    title: "접지 저항 측정",
+    description:
+      "전극 배치와 토양 저항률에 따른 접지 저항 값의 변화를 시뮬레이션으로 확인합니다.",
+    subject: "전기설비",
+    topic: "접지",
+    status: "available",
+    htmlPath: "/samples/simulator-grounding.html",
+    emoji: "🌍",
+    formula: [
+      {
+        name: "봉형 접지 저항",
+        expression: "$R = \\dfrac{\\rho}{2\\pi L} \\cdot \\ln\\dfrac{4L}{d}$",
+        meaning: "$\\rho$ [Ω·m] 토양 저항률, $L$ 길이, $d$ 직경",
+      },
+      {
+        name: "판형 접지 저항",
+        expression: "$R = \\dfrac{\\rho}{4\\sqrt{A/\\pi}}$",
+        meaning: "$A$ 판 면적 [m²]",
+      },
+    ],
+    example: {
+      question:
+        "토양 저항률 $\\rho = 100\\ \\Omega \\cdot$m, 길이 2 m, 직경 14 mm 봉형 접지 전극의 접지 저항은? (자연로그 ln 사용)",
+      given: ["$\\rho = 100\\ \\Omega \\cdot$m", "$L = 2$ m", "$d = 0.014$ m"],
+      solution: [
+        "$R = \\dfrac{\\rho}{2\\pi L} \\cdot \\ln\\dfrac{4L}{d}$",
+        "$R = \\dfrac{100}{12.57} \\times \\ln\\dfrac{8}{0.014}$",
+        "$R \\approx 7.96 \\times \\ln(571)$",
+        "$R \\approx 7.96 \\times 6.35 \\approx 50.5\\ \\Omega$",
+      ],
+      answer: "$R \\approx 50.5\\ \\Omega$",
+    },
+  },
+  {
+    id: "circuit-breaker",
+    title: "차단기 동작",
+    description:
+      "과전류·단락 상황에서 차단기와 누전차단기가 어떻게 회로를 보호하는지 단계별로 살펴봅니다.",
+    subject: "전기설비",
+    topic: "차단기·보호장치",
+    status: "available",
+    htmlPath: "/samples/simulator-circuit-breaker.html",
+    emoji: "🛡️",
+    formula: [
+      {
+        name: "역시간 특성",
+        expression: "$t = \\dfrac{K}{(I/I_n)^2 - 1}$",
+        meaning: "$I$ 측정 전류, $I_n$ 정격, $K$ 차단기 종류별 상수",
+      },
+      {
+        name: "단락 즉시 차단",
+        expression: "$t \\leq 0.02$ s ($I/I_n \\geq 8$)",
+        meaning: "정격의 8배 이상 단락 전류 시 즉시 트립",
+      },
+    ],
+    example: {
+      question:
+        "정격 전류 20 A인 MCCB에 60 A (3배)의 과전류가 흐를 때 트립 예상 시간은? ($K = 60$)",
+      given: ["$I_n = 20$ A", "$I = 60$ A → $I/I_n = 3$", "$K = 60$"],
+      solution: [
+        "$t = \\dfrac{K}{(I/I_n)^2 - 1}$",
+        "$t = \\dfrac{60}{3^2 - 1} = \\dfrac{60}{8}$",
+        "$t = 7.5$ 초",
+      ],
+      answer: "$t = 7.5$ 초",
+    },
+  },
+  {
+    id: "multimeter",
+    title: "디지털 멀티미터",
+    description:
+      "디지털 멀티미터의 DC전압·AC전압·전류·저항·도통·다이오드 측정 모드와 단자 사용법을 익힙니다.",
+    subject: "전기설비",
+    topic: "배선재료·공구",
+    status: "available",
+    htmlPath: "/samples/simulator-multimeter.html",
+    emoji: "📏",
+    formula: [
+      {
+        name: "저항 측정 (옴의 법칙)",
+        expression: "$R = \\dfrac{V}{I}$",
+        meaning: "내부 정전류 $I$를 흘려 양단 전압 $V$를 읽어 환산",
+      },
+      {
+        name: "측정 단자",
+        expression: "$\\text{COM} + \\text{V}\\Omega / \\text{mA} / \\text{10A}$",
+        meaning: "전류는 직렬, 전압·저항은 병렬. 단자 위치 오결선 시 퓨즈 단선",
+      },
+      {
+        name: "AC 실효값 표시",
+        expression: "$V_{\\text{rms}} = \\dfrac{V_m}{\\sqrt{2}}$",
+        meaning: "True RMS 미터는 비정현파도 정확, 평균응답형은 정현파 가정",
+      },
+    ],
+    example: {
+      question:
+        "DMM의 저항 모드에서 미지의 저항 양단에 1 mA의 정전류가 흐를 때 표시 전압이 4.7 V로 측정되었다면 저항값은?",
+      given: ["$I = 1$ mA $= 10^{-3}$ A", "$V = 4.7$ V"],
+      solution: [
+        "$R = \\dfrac{V}{I}$",
+        "$R = \\dfrac{4.7}{10^{-3}}$",
+        "$R = 4{,}700\\ \\Omega = 4.7\\ k\\Omega$",
+      ],
+      answer: "$R = 4.7\\ k\\Omega$",
+    },
+  },
+  {
+    id: "wire-size",
+    title: "전선 굵기 선정 (KEC)",
+    description:
+      "허용 전류·전압 강하·기계적 강도 기준으로 KEC 표준 굵기(1.5/2.5/4/6/10/16/25 sq)를 선정합니다.",
+    subject: "전기설비",
+    topic: "전선·케이블",
+    status: "available",
+    htmlPath: "/samples/simulator-wire-size.html",
+    emoji: "🔌",
+    formula: [
+      {
+        name: "전압 강하 (단상 2선식)",
+        expression: "$e = \\dfrac{35.6 \\cdot L \\cdot I}{1{,}000 \\cdot A}$",
+        meaning: "$L$ [m] 거리, $I$ [A] 전류, $A$ [mm²] 단면적, $e$ [V] 전압 강하",
+      },
+      {
+        name: "3상 3선식 전압 강하",
+        expression: "$e = \\dfrac{30.8 \\cdot L \\cdot I}{1{,}000 \\cdot A}$",
+        meaning: "선간 전압 강하 기준 (KEC 기준식)",
+      },
+      {
+        name: "허용 강하율",
+        expression: "$\\dfrac{e}{V} \\leq 0.02 \\sim 0.05$",
+        meaning: "옥내 2 % 이내, 인입까지 합쳐 5 % 이내가 일반 권장",
+      },
+    ],
+    example: {
+      question:
+        "단상 2선식 220 V 회로에서 부하 전류 20 A, 배선 거리 30 m일 때 전압 강하 4 V 이내가 되도록 하는 최소 전선 굵기는?",
+      given: [
+        "$V = 220$ V (단상 2선식)",
+        "$I = 20$ A",
+        "$L = 30$ m",
+        "$e \\leq 4$ V",
+      ],
+      solution: [
+        "$A \\geq \\dfrac{35.6 \\cdot L \\cdot I}{1{,}000 \\cdot e}$",
+        "$A \\geq \\dfrac{35.6 \\times 30 \\times 20}{1{,}000 \\times 4}$",
+        "$A \\geq \\dfrac{21{,}360}{4{,}000} = 5.34$ mm²",
+        "KEC 표준 굵기 → 6 sq 선정",
+      ],
+      answer: "최소 6 mm² (6 sq) 선정",
+    },
+  },
+  {
+    id: "wiring-practice",
+    title: "옥내 배선 실기",
+    description:
+      "단로 스위치·3로 스위치·콘센트 배선의 결선 도식과 동작 원리. 분전반 차단기 트립 시뮬.",
+    subject: "전기설비",
+    topic: "배선공사",
+    status: "available",
+    htmlPath: "/samples/simulator-wiring-practice.html",
+    emoji: "💡",
+    formula: [
+      {
+        name: "3로 스위치 점등 조건",
+        expression: "$\\text{ON} \\iff S_1 = S_2$",
+        meaning: "두 스위치 상태가 일치(둘 다 위 또는 둘 다 아래)할 때 점등",
+      },
+      {
+        name: "분기 회로 부하",
+        expression: "$P_{\\text{total}} = \\sum V \\cdot I_k \\leq P_{\\text{breaker}}$",
+        meaning: "분기 차단기 정격 초과 시 트립. 단상 220 V × 16 A = 3.52 kW 기준",
+      },
+    ],
+    example: {
+      question:
+        "단상 220 V 분기회로(차단기 정격 20 A)에 1.5 kW 전열기 2대와 300 W 조명을 동시에 사용하면 차단기 트립 여부는?",
+      given: [
+        "$V = 220$ V",
+        "$P = 1{,}500 \\times 2 + 300 = 3{,}300$ W",
+        "차단기 정격 $I_n = 20$ A",
+      ],
+      solution: [
+        "$I = \\dfrac{P}{V} = \\dfrac{3{,}300}{220}$",
+        "$I = 15$ A",
+        "$15 < 20$ A → 정상 사용 (트립 없음)",
+        "(주: 기동전류·역률 고려 시 마진 필요)",
+      ],
+      answer: "$I = 15$ A → 정상 동작 (트립 없음)",
+    },
+  },
 ];
 
 export function getSimulator(id: string): Simulator | undefined {

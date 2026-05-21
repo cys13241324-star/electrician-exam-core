@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전선 굵기 선정 시뮬레이터 (KEC)</title>
+<link rel="stylesheet" href="/samples/_tailwind.css">
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+
+
+.canvas-wrap {
+    position: relative;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #0b0f15;
+    overflow: hidden;
+}
+canvas#main {
+    display: block;
+    width: 100%;
+    height: 520px;
+    border-radius: 9px;
+    background:
+        linear-gradient(rgba(125,211,252,0.10) 1px, transparent 1px) 0 0 / 100px 100px,
+        linear-gradient(90deg, rgba(125,211,252,0.10) 1px, transparent 1px) 0 0 / 100px 100px,
+        linear-gradient(rgba(125,211,252,0.055) 1px, transparent 1px) 0 0 / 20px 20px,
+        linear-gradient(90deg, rgba(125,211,252,0.055) 1px, transparent 1px) 0 0 / 20px 20px,
+        #0b0f15;
+}
+.glass {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
+}
+
+input[type=range] {
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.22);
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: #cdd5df;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+    cursor: pointer;
+    border: 3px solid #2a3340;
+}
+input[type=range]:focus { outline: none; }
+input[type=range]:focus::-webkit-slider-thumb { background: var(--teal); }
+.chip-a   { background: linear-gradient(135deg, rgba(94, 221, 214,0.22), rgba(94, 221, 214,0.06)); border: 1px solid rgba(94, 221, 214,0.5); color: #9fb0c0; }
+.chip-i   { background: linear-gradient(135deg, rgba(224, 164, 88,0.22), rgba(224, 164, 88,0.06)); border: 1px solid rgba(224, 164, 88,0.5); color: #e0a458; }
+.chip-vd  { background: linear-gradient(135deg, rgba(207, 147, 63,0.22), rgba(207, 147, 63,0.06)); border: 1px solid rgba(207, 147, 63,0.5); color: #e0a458; }
+.chip-ok  { background: linear-gradient(135deg, rgba(58, 111, 106,0.22), rgba(58, 111, 106,0.06)); border: 1px solid rgba(58, 111, 106,0.5); color: #5eddd6; }
+.chip-bad { background: linear-gradient(135deg, rgba(224, 133, 133,0.22), rgba(224, 133, 133,0.06)); border: 1px solid rgba(224, 133, 133,0.5); color: #e0a458; }
+.radio-pill {
+    background: rgba(148, 163, 184, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #cbd5e1;
+    transition: all 200ms;
+    cursor: pointer;
+}
+.radio-pill:hover { background: rgba(148, 163, 184, 0.18); }
+.radio-pill.active {
+    background: linear-gradient(135deg, rgba(207, 147, 63,0.3), rgba(94, 221, 214,0.25));
+    border-color: rgba(94, 221, 214, 0.6);
+    color: white;
+    box-shadow: 0 0 20px rgba(94, 221, 214, 0.4);
+}
+.live-pill {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+}
+.live-num {
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(135deg, #fde68a, #5eddd6, #7fc3d8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.law-card {
+    background: linear-gradient(135deg, rgba(94, 221, 214,0.18), rgba(207, 147, 63,0.08)), rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(94, 221, 214,0.35);
+}
+.verdict-ok {
+    background: linear-gradient(135deg, rgba(58, 111, 106,0.28), rgba(94, 221, 214,0.10));
+    border-color: rgba(58, 111, 106,0.6);
+    color: #9fe9e4;
+    box-shadow: 0 0 30px rgba(58, 111, 106,0.35);
+}
+.verdict-bad {
+    background: linear-gradient(135deg, rgba(224, 133, 133,0.30), rgba(190,18,60,0.10));
+    border-color: rgba(224, 133, 133,0.6);
+    color: #fecdd3;
+    box-shadow: 0 0 30px rgba(224, 133, 133,0.35);
+}
+</style>
+</head>
+<body class="p-4 md:p-8">
+<div class="max-w-6xl mx-auto relative">
+    <header class="mb-6" id="hdr">
+        <div class="flex items-center gap-2 text-xs font-semibold tracking-widest text-emerald-300">
+            <span class="status-dot"></span>
+            INTERACTIVE · WIRE SIZE (KEC)
+        </div>
+        <h1 class="mt-2 text-3xl md:text-4xl font-bold " style="color:#e3e9f0">
+            🔌 전선 굵기 선정 시뮬레이터
+        </h1>
+        <p class="mt-2 text-slate-400 text-sm">허용 전류 · 전압 강하(3% 이하) · 기계적 강도 — KEC 기준 표준 굵기(sq) 선정</p>
+    </header>
+
+    <!-- 라이브 4칩 -->
+    <div id="livePanel" class="mb-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="chip-a live-pill rounded-xl p-3">
+            <p class="text-[10px] tracking-widest font-bold opacity-80">단면적 A</p>
+            <p class="mt-1 text-2xl font-bold"><span id="aDisp" class="live-num">2.5</span> <span class="text-xs opacity-70 font-normal">sq</span></p>
+        </div>
+        <div class="chip-i live-pill rounded-xl p-3">
+            <p class="text-[10px] tracking-widest font-bold opacity-80">허용 전류</p>
+            <p class="mt-1 text-2xl font-bold"><span id="iaDisp" class="live-num">27</span> <span class="text-xs opacity-70 font-normal">A</span></p>
+        </div>
+        <div class="chip-vd live-pill rounded-xl p-3">
+            <p class="text-[10px] tracking-widest font-bold opacity-80">전압 강하</p>
+            <p class="mt-1 text-2xl font-bold"><span id="vdDisp" class="live-num">3.5</span> <span class="text-xs opacity-70 font-normal">V</span> <span id="vdPctDisp" class="text-xs opacity-70 font-normal">(1.6%)</span></p>
+        </div>
+        <div id="verdictChip" class="chip-ok live-pill rounded-xl p-3">
+            <p class="text-[10px] tracking-widest font-bold opacity-80">적합 여부</p>
+            <p class="mt-1 text-2xl font-bold"><span id="verdictDisp">✓ 적합</span></p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <!-- 캔버스 -->
+        <div class="lg:col-span-2 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto glass rounded-2xl p-4 shadow-2xl" id="canvasCard">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-xs font-semibold text-slate-400 tracking-wide">CROSS SECTION · 전선 단면도 — 굵기에 따른 전류 밀도와 허용 한계</span>
+            </div>
+            <div class="canvas-wrap">
+                <canvas id="main"></canvas>
+            </div>
+            <div class="law-card rounded-xl p-4 mt-4">
+                <p class="text-[10px] uppercase tracking-widest text-emerald-300 mb-2 font-bold">📐 핵심 공식 (KEC · 단상 2선식)</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <p>$$ e = \frac{35.6 \cdot L \cdot I}{1000 \cdot A} \;\text{[V]} $$</p>
+                    <p>$$ e_{\%} = \frac{e}{V} \times 100 \le 3\% $$</p>
+                </div>
+                <p class="mt-2 text-[11px] text-slate-400">L: 회로 길이(m) · I: 부하 전류(A) · A: 단면적(sq=mm²) · 동선 기준</p>
+            </div>
+        </div>
+
+        <!-- 컨트롤 -->
+        <div class="glass rounded-2xl p-5 space-y-5 h-fit" id="controlPanel">
+            <div>
+                <h2 class="font-bold text-sm tracking-wider text-amber-200">표준 굵기 (sq)</h2>
+                <p class="text-[11px] text-slate-500 mt-1">KEC 표준 단면적 [mm²]</p>
+                <div class="mt-3 grid grid-cols-4 gap-2" id="sqGroup">
+                    <button class="radio-pill rounded-lg py-2 text-xs font-bold" data-sq="1.5">1.5</button>
+                    <button class="radio-pill rounded-lg py-2 text-xs font-bold" data-sq="2.5">2.5</button>
+                    <button class="radio-pill rounded-lg py-2 text-xs font-bold" data-sq="4">4</button>
+                    <button class="radio-pill rounded-lg py-2 text-xs font-bold" data-sq="6">6</button>
+                    <button class="radio-pill rounded-lg py-2 text-xs font-bold" data-sq="10">10</button>
+                    <button class="radio-pill rounded-lg py-2 text-xs font-bold" data-sq="16">16</button>
+                    <button class="radio-pill rounded-lg py-2 text-xs font-bold" data-sq="25">25</button>
+                    <button class="radio-pill rounded-lg py-2 text-xs font-bold" data-sq="35">35</button>
+                </div>
+            </div>
+
+            <div class="space-y-2 chip-i rounded-lg p-3">
+                <label class="flex justify-between text-[11px] font-bold tracking-wider">
+                    <span>부하 전류 I</span><span id="iVal" class="font-mono text-base">20</span><span class="opacity-70">A</span>
+                </label>
+                <input type="range" id="i" min="1" max="120" step="1" value="20" class="w-full cursor-pointer">
+            </div>
+
+            <div class="space-y-2 chip-vd rounded-lg p-3">
+                <label class="flex justify-between text-[11px] font-bold tracking-wider">
+                    <span>회로 길이 L</span><span id="lVal" class="font-mono text-base">30</span><span class="opacity-70">m</span>
+                </label>
+                <input type="range" id="l" min="5" max="200" step="5" value="30" class="w-full cursor-pointer">
+            </div>
+
+            <div class="space-y-2 chip-a rounded-lg p-3">
+                <label class="flex justify-between text-[11px] font-bold tracking-wider">
+                    <span>입력 전압 V</span><span id="vVal" class="font-mono text-base">220</span><span class="opacity-70">V</span>
+                </label>
+                <input type="range" id="v" min="100" max="380" step="10" value="220" class="w-full cursor-pointer">
+            </div>
+
+            <div class="rounded-lg p-3 border border-slate-700/60 bg-slate-900/40 text-[11px] text-slate-400 leading-relaxed">
+                <p class="font-bold text-slate-300 mb-1">💡 학습 포인트</p>
+                <p>전류가 크면 <span class="text-pink-300 font-semibold">굵게</span>, 거리가 멀면 <span class="text-amber-300 font-semibold">굵게</span>.</p>
+                <p class="mt-1">기계적 강도 최소: <span class="text-emerald-300">옥내 1.5 sq</span> 이상.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('main');
+const ctx = canvas.getContext('2d');
+const $ = id => document.getElementById(id);
+
+// KEC 허용 전류 (절연전선 · 공중배선 · 동선 · 기중 30℃ 기준 근사값)
+// 실제 KEC 표는 시설 방법별로 다르나 학습용 대표값 채택
+const KEC_TABLE = {
+    1.5:  { Iallow: 19,  minMech: true },
+    2.5:  { Iallow: 27,  minMech: true },
+    4:    { Iallow: 36,  minMech: true },
+    6:    { Iallow: 46,  minMech: true },
+    10:   { Iallow: 65,  minMech: true },
+    16:   { Iallow: 87,  minMech: true },
+    25:   { Iallow: 115, minMech: true },
+    35:   { Iallow: 143, minMech: true },
+};
+
+let state = {
+    sq: 2.5,    // 단면적 (sq = mm²)
+    I: 20,      // 부하 전류 (A)
+    L: 30,      // 회로 길이 (m)
+    V: 220,     // 입력 전압 (V)
+    t: 0,
+};
+let particles = [];
+
+function resize() {
+    canvas.width = canvas.parentElement.clientWidth - 2;
+    canvas.height = 520;
+    seedParticles();
+}
+window.addEventListener('resize', resize);
+
+function radiusFromSq(sq) {
+    // 표시 반지름: A=πr² → r∝√A. 가독성을 위해 스케일.
+    // sq=1.5 → ~32px, sq=35 → ~155px
+    return 26 * Math.sqrt(sq / 1.5);
+}
+
+function seedParticles() {
+    particles = [];
+    // 입자 수 = 전류 밀도 비례 (절제: 최대 ~180)
+    const density = state.I / state.sq; // A/mm²
+    const count = Math.max(20, Math.min(180, Math.round(density * 18)));
+    const r = radiusFromSq(state.sq);
+    for (let k = 0; k < count; k++) {
+        // 단면 원 안의 균일 분포 (rejection 대신 r·sqrt(u))
+        const u = Math.random(), th = Math.random() * Math.PI * 2;
+        const rr = r * Math.sqrt(u);
+        particles.push({
+            x0: Math.cos(th) * rr,
+            y0: Math.sin(th) * rr,
+            phase: Math.random() * Math.PI * 2,
+            speed: 0.04 + Math.random() * 0.05,
+            size: 1.2 + Math.random() * 1.2,
+        });
+    }
+}
+
+function drawWire(cx, cy) {
+    const r = radiusFromSq(state.sq);
+    const density = state.I / state.sq;
+    // 허용 전류 밀도 ≈ Iallow / sq 비교
+    const Iallow = KEC_TABLE[state.sq].Iallow;
+    const overload = state.I > Iallow;
+    const heatRatio = Math.min(1.4, state.I / Iallow);  // 1 초과 시 위험
+
+    // 발열 외곽 글로우
+    ctx.save();
+    const glowGrad = ctx.createRadialGradient(cx, cy, r * 0.6, cx, cy, r * 1.9);
+    if (overload) {
+        glowGrad.addColorStop(0, `rgba(224, 133, 133, ${0.35 + 0.25 * Math.sin(state.t * 0.12)})`);
+        glowGrad.addColorStop(1, 'rgba(224, 133, 133, 0)');
+    } else {
+        glowGrad.addColorStop(0, `rgba(94, 221, 214, ${0.10 + heatRatio * 0.20})`);
+        glowGrad.addColorStop(1, 'rgba(94, 221, 214, 0)');
+    }
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath(); ctx.arc(cx, cy, r * 1.9, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // 절연 피복
+    ctx.save();
+    ctx.shadowBlur = 4;
+    ctx.shadowColor = overload ? 'rgba(224, 133, 133, 0.7)' : 'rgba(127, 195, 216, 0.6)';
+    const insGrad = ctx.createRadialGradient(cx - r * 0.4, cy - r * 0.4, r * 0.2, cx, cy, r * 1.18);
+    insGrad.addColorStop(0, overload ? '#7f1d1d' : '#161d27');
+    insGrad.addColorStop(1, overload ? '#450a0a' : '#0b1224');
+    ctx.fillStyle = insGrad;
+    ctx.beginPath(); ctx.arc(cx, cy, r * 1.18, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = overload ? 'rgba(224, 133, 133, 0.8)' : 'rgba(148, 163, 184, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // 동선 단면 (구리)
+    ctx.save();
+    const copperGrad = ctx.createRadialGradient(cx - r * 0.45, cy - r * 0.45, r * 0.1, cx, cy, r);
+    copperGrad.addColorStop(0, '#fed7aa');
+    copperGrad.addColorStop(0.5, '#fb923c');
+    copperGrad.addColorStop(1, '#9a3412');
+    ctx.fillStyle = copperGrad;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 237, 213, 0.6)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
+
+    // 입자 (전류) — 안에서 표류
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const drift = state.t * 0.012 * (state.I / 20);
+    for (const p of particles) {
+        // 약한 회전 + 미세 진동
+        const ang = drift + p.phase * 0.05;
+        const cos = Math.cos(ang), sin = Math.sin(ang);
+        const x = cx + p.x0 * cos - p.y0 * sin + Math.sin(state.t * p.speed + p.phase) * 0.6;
+        const y = cy + p.x0 * sin + p.y0 * cos + Math.cos(state.t * p.speed + p.phase) * 0.6;
+        ctx.fillStyle = overload ? 'rgba(254, 226, 226, 0.95)' : 'rgba(216, 243, 240, 0.9)';
+        ctx.shadowBlur = overload ? 10 : 6;
+        ctx.shadowColor = overload ? '#e08585' : '#e0a458';
+        ctx.beginPath();
+        ctx.arc(x, y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+
+    // 허용 전류 한계 원 (붉은 점선) — 동선 외곽 약간 안쪽
+    ctx.save();
+    ctx.setLineDash([6, 5]);
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = overload ? 'rgba(224, 133, 133, 0.95)' : 'rgba(224, 133, 133, 0.55)';
+    ctx.shadowBlur = overload ? 12 : 4;
+    ctx.shadowColor = '#e08585';
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // 라벨: sq + 허용
+    ctx.save();
+    ctx.font = 'bold 13px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const labelY = cy + r * 1.18 + 28;
+    const lab1 = `${state.sq} sq · ⌀ ${(2*Math.sqrt(state.sq/Math.PI)).toFixed(2)} mm`;
+    const lab1w = ctx.measureText(lab1).width;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    roundRect(ctx, cx - lab1w/2 - 8, labelY - 11, lab1w + 16, 22, 11);
+    ctx.fill();
+    ctx.fillStyle = '#e0a458';
+    ctx.fillText(lab1, cx, labelY);
+
+    ctx.font = 'bold 11px ui-monospace, monospace';
+    const lab2 = `허용 ${Iallow} A`;
+    const lab2w = ctx.measureText(lab2).width;
+    ctx.fillStyle = overload ? 'rgba(127, 29, 29, 0.85)' : 'rgba(15, 23, 42, 0.92)';
+    roundRect(ctx, cx - lab2w/2 - 8, labelY + 16, lab2w + 16, 20, 10);
+    ctx.fill();
+    ctx.fillStyle = overload ? '#e8b3b3' : '#e0a458';
+    ctx.fillText(lab2, cx, labelY + 26);
+    ctx.restore();
+
+    return { r, overload, heatRatio };
+}
+
+function drawCircuitDiagram() {
+    // 우측 회로 모식도: 전원 → 길이 L 라인 → 부하
+    const W = canvas.width, H = canvas.height;
+    const x0 = W - 280, x1 = W - 30;
+    const y = 70;
+
+    ctx.save();
+    // 배경 카드
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.18)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, x0 - 10, y - 28, x1 - x0 + 20, 160, 12);
+    ctx.fill(); ctx.stroke();
+
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = '#8b97a4';
+    ctx.textAlign = 'left';
+    ctx.fillText('CIRCUIT', x0 - 4, y - 12);
+
+    // 전원
+    ctx.strokeStyle = '#7fc3d8'; ctx.lineWidth = 3; ctx.shadowBlur = 4; ctx.shadowColor = '#3a6f6a';
+    ctx.beginPath();
+    ctx.moveTo(x0, y + 10); ctx.lineTo(x0, y + 60);
+    ctx.stroke();
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(x0 - 12, y + 22); ctx.lineTo(x0 + 12, y + 22); ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x0 - 8, y + 48); ctx.lineTo(x0 + 8, y + 48); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 11px ui-monospace, monospace'; ctx.fillStyle = '#7fc3d8'; ctx.textAlign = 'center';
+    ctx.fillText(`${state.V} V`, x0, y + 82);
+
+    // 전선 (길이 L)
+    ctx.strokeStyle = state.I > KEC_TABLE[state.sq].Iallow ? '#e08585' : '#e0a458';
+    ctx.lineWidth = 2 + Math.min(8, Math.sqrt(state.sq) * 1.8);
+    ctx.shadowBlur = 4; ctx.shadowColor = state.I > KEC_TABLE[state.sq].Iallow ? '#e08585' : '#e0a458';
+    ctx.beginPath();
+    ctx.moveTo(x0, y); ctx.lineTo(x1, y);
+    ctx.stroke();
+    // 길이 라벨
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = '#c4ccd6'; ctx.textAlign = 'center';
+    ctx.fillText(`L = ${state.L} m`, (x0 + x1) / 2, y - 8);
+
+    // 부하
+    ctx.strokeStyle = '#5eddd6'; ctx.lineWidth = 2; ctx.shadowBlur = 4; ctx.shadowColor = '#3a6f6a';
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x1, y + 20); ctx.stroke();
+    roundRect(ctx, x1 - 22, y + 20, 44, 28, 6);
+    ctx.fillStyle = 'rgba(58, 111, 106, 0.15)';
+    ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#5eddd6'; ctx.textAlign = 'center';
+    ctx.fillText('LOAD', x1, y + 38);
+    ctx.fillText(`${state.I} A`, x1, y + 60);
+
+    // 길이 화살표
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x0 + 8, y + 100); ctx.lineTo(x1 - 8, y + 100);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x0 + 8, y + 100); ctx.lineTo(x0 + 14, y + 96); ctx.lineTo(x0 + 14, y + 104); ctx.closePath();
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.6)'; ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x1 - 8, y + 100); ctx.lineTo(x1 - 14, y + 96); ctx.lineTo(x1 - 14, y + 104); ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+}
+
+function drawScaleBar() {
+    // 좌측 상단: 1.5 ~ 35 sq 비교 미니 단면
+    const W = canvas.width;
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.18)';
+    roundRect(ctx, 16, 16, 220, 60, 12);
+    ctx.fill(); ctx.stroke();
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillStyle = '#8b97a4'; ctx.textAlign = 'left';
+    ctx.fillText('SCALE · sq 비교', 24, 32);
+
+    const sizes = [1.5, 2.5, 4, 6, 10, 16, 25, 35];
+    const startX = 30; const cy = 56; let x = startX;
+    for (const sq of sizes) {
+        const rr = 2 + Math.sqrt(sq) * 1.6;
+        ctx.beginPath();
+        ctx.arc(x + rr, cy, rr, 0, Math.PI * 2);
+        if (sq === state.sq) {
+            ctx.fillStyle = '#e0a458';
+            ctx.shadowBlur = 4; ctx.shadowColor = '#cf933f';
+        } else {
+            ctx.fillStyle = 'rgba(251, 146, 60, 0.35)';
+            ctx.shadowBlur = 0;
+        }
+        ctx.fill();
+        x += rr * 2 + 4;
+    }
+    ctx.restore();
+}
+
+function drawCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const cx = canvas.width * 0.32;
+    const cy = canvas.height * 0.52;
+
+    drawWire(cx, cy);
+    drawCircuitDiagram();
+    drawScaleBar();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+
+function calc() {
+    state.sq = +document.querySelector('[data-sq].active')?.dataset.sq || state.sq;
+    state.I = +$('i').value;
+    state.L = +$('l').value;
+    state.V = +$('v').value;
+
+    const Iallow = KEC_TABLE[state.sq].Iallow;
+    // 단상 2선식 동선 전압강하 (간이식): e = 35.6 · L · I / (1000 · A)
+    const e = (35.6 * state.L * state.I) / (1000 * state.sq);
+    const ePct = (e / state.V) * 100;
+    const okI = state.I <= Iallow;
+    const okV = ePct <= 3.0;
+    const okMech = state.sq >= 1.5;
+    const ok = okI && okV && okMech;
+
+    $('iVal').textContent = state.I;
+    $('lVal').textContent = state.L;
+    $('vVal').textContent = state.V;
+    $('aDisp').textContent = state.sq;
+    $('iaDisp').textContent = Iallow;
+    $('vdDisp').textContent = e.toFixed(2);
+    $('vdPctDisp').textContent = `(${ePct.toFixed(2)}%)`;
+
+    const verdictChip = $('verdictChip');
+    const verdictDisp = $('verdictDisp');
+    verdictChip.classList.remove('chip-ok', 'chip-bad', 'verdict-ok', 'verdict-bad');
+    if (ok) {
+        verdictChip.classList.add('chip-ok', 'verdict-ok');
+        verdictDisp.textContent = '✓ 적합';
+    } else {
+        verdictChip.classList.add('chip-bad', 'verdict-bad');
+        const fail = !okI ? '허용 초과' : !okV ? '강하 > 3%' : '강도 부족';
+        verdictDisp.textContent = `✗ ${fail}`;
+    }
+}
+
+function updateSqUI() {
+    document.querySelectorAll('[data-sq]').forEach(b => {
+        b.classList.toggle('active', +b.dataset.sq === state.sq);
+    });
+}
+
+function flashCard() {
+    if (window.gsap) gsap.fromTo('#canvasCard',
+        { boxShadow: '0 0 0 0 rgba(94, 221, 214, 0.5)' },
+        { boxShadow: '0 0 60px 4px rgba(94, 221, 214, 0)', duration: 0.6 });
+}
+
+document.querySelectorAll('[data-sq]').forEach(b => {
+    b.addEventListener('click', () => {
+        state.sq = +b.dataset.sq;
+        updateSqUI();
+        calc();
+        seedParticles();
+        flashCard();
+    });
+});
+['i', 'l', 'v'].forEach(id => $(id).addEventListener('input', () => {
+    calc();
+    if (id === 'i') seedParticles();
+    flashCard();
+}));
+
+let lastDraw = 0;
+function animate(ts) {
+    // 절제: ~40fps 캡
+    if (ts - lastDraw > 24) {
+        state.t++;
+        drawCanvas();
+        lastDraw = ts;
+    }
+    requestAnimationFrame(animate);
+}
+
+window.onload = () => {
+    resize();
+    updateSqUI();
+    calc();
+    requestAnimationFrame(animate);
+    if (window.gsap) {
+        gsap.from('#hdr', { y: -20, opacity: 0, duration: 0.7, ease: 'power3.out' });
+        gsap.from('#livePanel > *', { y: 14, opacity: 0, duration: 0.6, stagger: 0.08, delay: 0.15, ease: 'power3.out' });
+        gsap.from('#canvasCard', { scale: 0.97, opacity: 0, duration: 0.8, delay: 0.2, ease: 'power3.out' });
+        gsap.from('#controlPanel', { x: 30, opacity: 0, duration: 0.7, delay: 0.3, ease: 'power3.out' });
+    }
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>옥내 배선 실기 시뮬레이터</title>
+<link rel="stylesheet" href="/samples/_tailwind.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+  window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }, svg: { fontCache: 'global' } };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+
+
+
+.canvas-wrap {
+    position: relative;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #0b0f15;
+    overflow: hidden;
+}
+canvas#stage {
+    display: block;
+    width: 100%;
+    height: 460px;
+    border-radius: 9px;
+    background:
+        linear-gradient(rgba(125,211,252,0.10) 1px, transparent 1px) 0 0 / 100px 100px,
+        linear-gradient(90deg, rgba(125,211,252,0.10) 1px, transparent 1px) 0 0 / 100px 100px,
+        linear-gradient(rgba(125,211,252,0.055) 1px, transparent 1px) 0 0 / 20px 20px,
+        linear-gradient(90deg, rgba(125,211,252,0.055) 1px, transparent 1px) 0 0 / 20px 20px,
+        #0b0f15;
+}
+#schema {
+    background:
+        linear-gradient(rgba(125,211,252,0.10) 1px, transparent 1px) 0 0 / 100px 100px,
+        linear-gradient(90deg, rgba(125,211,252,0.10) 1px, transparent 1px) 0 0 / 100px 100px,
+        linear-gradient(rgba(125,211,252,0.055) 1px, transparent 1px) 0 0 / 20px 20px,
+        linear-gradient(90deg, rgba(125,211,252,0.055) 1px, transparent 1px) 0 0 / 20px 20px,
+        #0b0f15;
+}
+.glass {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
+}
+
+
+.chip-state { background: linear-gradient(135deg, rgba(224, 164, 88,0.22), rgba(224, 164, 88,0.06)); border: 1px solid rgba(224, 164, 88,0.5); color: #fde68a; }
+.chip-i { background: linear-gradient(135deg, rgba(58, 111, 106,0.22), rgba(58, 111, 106,0.06)); border: 1px solid rgba(58, 111, 106,0.5); color: #5eddd6; }
+.chip-p { background: linear-gradient(135deg, rgba(94, 221, 214,0.22), rgba(94, 221, 214,0.06)); border: 1px solid rgba(94, 221, 214,0.5); color: #9fb0c0; }
+.chip-safe { background: linear-gradient(135deg, rgba(94, 221, 214,0.22), rgba(94, 221, 214,0.06)); border: 1px solid rgba(94, 221, 214,0.5); color: #9fe9e4; }
+.chip-safe.danger { background: linear-gradient(135deg, rgba(224, 133, 133,0.28), rgba(224, 133, 133,0.08)); border-color: rgba(224, 133, 133,0.7); color: #e0a458; }
+
+.live-pill {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+}
+.live-num {
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(135deg, #fde68a, #9fb0c0, #e0a458);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.radio-pill {
+    background: rgba(148, 163, 184, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #cbd5e1;
+    transition: all 200ms;
+    cursor: pointer;
+}
+.radio-pill:hover { background: rgba(148, 163, 184, 0.18); }
+.radio-pill.active {
+    background: linear-gradient(135deg, rgba(224, 164, 88,0.32), rgba(224, 164, 88,0.22));
+    border-color: rgba(224, 164, 88, 0.6);
+    color: white;
+    box-shadow: 0 0 22px rgba(224, 164, 88, 0.4);
+}
+.sw-btn {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #e2e8f0;
+    transition: all 180ms;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+.sw-btn:hover { background: rgba(30, 41, 59, 0.85); transform: translateY(-1px); }
+.sw-btn.on {
+    background: linear-gradient(135deg, rgba(224, 164, 88,0.45), rgba(251,146,60,0.30));
+    border-color: rgba(224, 164, 88, 0.75);
+    color: #fff8e7;
+    box-shadow: 0 0 18px rgba(224, 164, 88, 0.45);
+}
+.law-card {
+    background: linear-gradient(135deg, rgba(224, 164, 88,0.16), rgba(94, 221, 214,0.08)), rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(224, 164, 88,0.32);
+}
+.tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    background: rgba(94, 221, 214, 0.18);
+    color: #c7d2fe;
+    border: 1px solid rgba(94, 221, 214, 0.32);
+}
+.legend-dot {
+    display: inline-block;
+    width: 10px; height: 10px; border-radius: 9999px;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+input[type=range] {
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.22);
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: #cdd5df;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+    cursor: pointer;
+    border: 3px solid #2a3340;
+}
+input[type=range]:focus { outline: none; }
+input[type=range]:focus::-webkit-slider-thumb { background: var(--teal); }
+.note-warn {
+    background: linear-gradient(135deg, rgba(224, 133, 133,0.16), rgba(251,146,60,0.10));
+    border: 1px solid rgba(224, 133, 133, 0.4);
+    color: #fecdd3;
+}
+</style>
+</head>
+<body class="p-4 md:p-8">
+<div class="max-w-6xl mx-auto relative">
+    <header class="mb-6" id="hdr">
+        <div class="flex items-center gap-2 text-xs font-semibold tracking-widest text-amber-300">
+            <span class="status-dot"></span>
+            INTERACTIVE · INDOOR WIRING
+            <span class="tag ml-2">실기 결선</span>
+        </div>
+        <h1 class="mt-2 text-3xl md:text-4xl font-bold " style="color:#e3e9f0">
+            옥내 배선 실기 시뮬레이터
+        </h1>
+        <p class="mt-2 text-slate-400 text-sm">단로/3로 스위치, 콘센트 분기 회로를 평면도 위에서 결선·조작해 보세요. 분전반에서 부하까지 전류가 흐릅니다.</p>
+    </header>
+
+    <!-- 라이브 4칩 -->
+    <div id="livePanel" class="mb-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="chip-state live-pill rounded-xl p-3">
+            <p class="text-[10px] tracking-widest font-bold opacity-80">회로 상태</p>
+            <p class="mt-1 text-2xl font-bold"><span id="stDisp" class="live-num">OFF</span></p>
+        </div>
+        <div class="chip-i live-pill rounded-xl p-3">
+            <p class="text-[10px] tracking-widest font-bold opacity-80">부하 전류 I</p>
+            <p class="mt-1 text-2xl font-bold"><span id="iDisp" class="live-num">0.00</span> <span class="text-xs opacity-70 font-normal">A</span></p>
+        </div>
+        <div class="chip-p live-pill rounded-xl p-3">
+            <p class="text-[10px] tracking-widest font-bold opacity-80">부하 전력 P</p>
+            <p class="mt-1 text-2xl font-bold"><span id="pDisp" class="live-num">0</span> <span class="text-xs opacity-70 font-normal">W</span></p>
+        </div>
+        <div class="chip-safe live-pill rounded-xl p-3" id="safeChip">
+            <p class="text-[10px] tracking-widest font-bold opacity-80">안전 (브레이커)</p>
+            <p class="mt-1 text-2xl font-bold"><span id="safeDisp" class="live-num">정상</span></p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <!-- 시각화 -->
+        <div class="lg:col-span-2 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto glass rounded-2xl p-4 shadow-2xl" id="canvasCard">
+            <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
+                <span class="text-xs font-semibold text-slate-400 tracking-wide">평면도 · 분전반(브레이커) → 부하 (전등·콘센트)</span>
+                <div class="text-[11px] text-slate-400 flex items-center gap-3">
+                    <span><span class="legend-dot" style="background:#e0a458"></span>전압선</span>
+                    <span><span class="legend-dot" style="background:#5eddd6"></span>중성선</span>
+                    <span><span class="legend-dot" style="background:#e0a458"></span>스위치선</span>
+                </div>
+            </div>
+            <div class="canvas-wrap">
+                <canvas id="stage"></canvas>
+            </div>
+
+            <!-- 회로 도식 (실제 배선 비교) -->
+            <div class="mt-4 rounded-xl border border-slate-700/50 bg-slate-900/40 p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] uppercase tracking-widest text-indigo-300 font-bold">회로 도식 (Schematic)</span>
+                    <span class="text-[11px] text-slate-500" id="schemaTitle">단로 스위치 + 전등</span>
+                </div>
+                <svg id="schema" viewBox="0 0 720 180" class="w-full h-auto"></svg>
+            </div>
+
+            <div class="law-card rounded-xl p-4 mt-4">
+                <p class="text-[10px] uppercase tracking-widest text-amber-300 mb-2 font-bold">학습 포인트 · 3로 스위치 동작 원리</p>
+                <p class="text-sm text-slate-200">3로 스위치는 <strong class="text-amber-200">2개의 위치</strong>(예: 계단 아래·위)에서 같은 등을 켜고 끌 수 있습니다. 각 스위치는 <strong>공통 단자(COM)</strong> 1개와 <strong>여행선(L1, L2)</strong> 2개를 가집니다.</p>
+                <p class="mt-2 text-sm text-slate-300">두 스위치의 여행선 연결이 <em>일치</em>하면 회로가 닫혀 점등, <em>엇갈리면</em> 회로가 끊겨 소등됩니다. 즉 어느 한쪽 스위치를 토글해도 상태가 반전됩니다.</p>
+                <p class="mt-2 font-mono text-xs text-slate-300">$\text{ON} \iff S_1 = S_2 \quad (\text{여행선 일치})$</p>
+            </div>
+        </div>
+
+        <!-- 컨트롤 -->
+        <div class="glass rounded-2xl p-5 space-y-5 h-fit" id="controlPanel">
+            <div>
+                <h2 class="font-bold text-sm tracking-wider text-amber-200">회로 종류</h2>
+                <p class="text-[11px] text-slate-500 mt-1">실기에서 자주 다루는 3가지</p>
+                <div class="mt-3 grid grid-cols-1 gap-2">
+                    <button class="radio-pill rounded-lg py-2 px-3 text-xs font-bold text-left" data-circuit="single">단로 스위치 + 전등 1구</button>
+                    <button class="radio-pill rounded-lg py-2 px-3 text-xs font-bold text-left" data-circuit="three-way">3로 스위치 (계단 등)</button>
+                    <button class="radio-pill rounded-lg py-2 px-3 text-xs font-bold text-left" data-circuit="outlet">콘센트 + 분기 회로</button>
+                </div>
+            </div>
+
+            <div id="swPanel" class="space-y-3">
+                <h2 class="font-bold text-sm tracking-wider text-pink-200">스위치 조작</h2>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="sw1" class="sw-btn rounded-lg py-3 text-sm">S1 · OFF</button>
+                    <button id="sw2" class="sw-btn rounded-lg py-3 text-sm">S2 · OFF</button>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1" id="swHint">단로 회로에서는 S1만 사용</p>
+            </div>
+
+            <div id="loadPanel" class="space-y-3">
+                <h2 class="font-bold text-sm tracking-wider text-indigo-200">부하 설정</h2>
+                <div class="space-y-2 chip-p rounded-lg p-3">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider">
+                        <span>전등 / 부하 전력</span><span><span id="pwVal" class="font-mono text-base">100</span> W</span>
+                    </label>
+                    <input type="range" id="pw" min="20" max="2000" step="10" value="100" class="w-full cursor-pointer">
+                </div>
+                <div class="space-y-2 chip-state rounded-lg p-3">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider">
+                        <span>공급 전압</span><span><span id="vVal" class="font-mono text-base">220</span> V</span>
+                    </label>
+                    <input type="range" id="v" min="100" max="240" step="10" value="220" class="w-full cursor-pointer">
+                </div>
+                <div class="space-y-2 chip-safe rounded-lg p-3">
+                    <label class="flex justify-between text-[11px] font-bold tracking-wider">
+                        <span>차단기 정격 (A)</span><span><span id="brVal" class="font-mono text-base">15</span> A</span>
+                    </label>
+                    <input type="range" id="br" min="5" max="30" step="1" value="15" class="w-full cursor-pointer">
+                </div>
+            </div>
+
+            <div class="note-warn rounded-lg p-3 text-[12px] leading-relaxed">
+                <p class="font-bold text-rose-200 mb-1">안전 체크</p>
+                <p>부하 전류가 차단기 정격을 넘으면 <strong>트립</strong>되어 회로가 차단됩니다. 콘센트 회로에서 다구 사용 시 합산 부하에 주의하세요.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 결선 가이드 -->
+    <div class="glass rounded-2xl p-5 mt-6" id="guideCard">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-base text-amber-200">결선 가이드 · <span id="guideTitle">단로 스위치 + 전등</span></h3>
+            <span class="tag">STEP-BY-STEP</span>
+        </div>
+        <ol id="guideList" class="space-y-2 text-sm text-slate-200 list-decimal list-inside marker:text-amber-300 marker:font-bold"></ol>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+const $ = id => document.getElementById(id);
+
+let circuit = 'single';     // 'single' | 'three-way' | 'outlet'
+let sw1 = false, sw2 = false;
+let t = 0;
+let pulse = 0;              // breaker trip flash
+let lastTrip = false;
+
+// path animation (전류 흐름 입자)
+let paths = [];
+let particles = [];
+
+const GUIDES = {
+    single: [
+        '분전반(차단기) 출구 → 전압선(L)·중성선(N) 분리.',
+        '전압선(L)을 스위치 입력 단자로 연결.',
+        '스위치 출력 단자 → 전등(소켓)의 한쪽 단자로 결선.',
+        '전등 반대쪽 단자 ↔ 중성선(N)으로 폐회로 완성.',
+        '스위치 ON → L–스위치–전등–N 경로로 전류, 전등 점등.',
+    ],
+    'three-way': [
+        '3로 스위치 2개 준비 (COM/L1/L2).',
+        '차단기 L → S1의 COM 단자.',
+        'S1의 L1 ↔ S2의 L1 (여행선 1).',
+        'S1의 L2 ↔ S2의 L2 (여행선 2).',
+        'S2의 COM → 전등 → 중성선(N).',
+        '두 스위치의 여행선이 일치할 때만 점등. 어느 쪽에서나 토글로 ON/OFF.',
+    ],
+    outlet: [
+        '분전반에서 콘센트 회로 전용 차단기를 분기 (예: 20A).',
+        'L → 콘센트의 활선 단자(짧은 구멍, 통상 황색/금색).',
+        'N → 콘센트의 중성 단자(긴 구멍, 통상 은색).',
+        '접지(E) → 콘센트 접지 단자 (안전).',
+        '플러그 부하 전력 합산이 차단기 정격을 넘지 않도록 확인.',
+        '동일 분기에 다른 전등 회로를 묶을 경우 합산 전류 계산.',
+    ],
+};
+
+// ============ 캔버스 그리기 ============
+function resize() {
+    canvas.width = canvas.parentElement.clientWidth - 2;
+    canvas.height = 460;
+    rebuildPaths();
+}
+window.addEventListener('resize', resize);
+
+function rebuildPaths() {
+    paths = [];
+    const W = canvas.width;
+    // 평면도 좌표계: 분전반 (왼쪽 중상단), 전등/콘센트 (오른쪽)
+    const panel = { x: 70, y: 80 };
+    const sw1Pos = { x: W * 0.42, y: 360 };
+    const sw2Pos = { x: W * 0.72, y: 360 };
+    const lamp = { x: W * 0.78, y: 120 };
+    const outlet = { x: W * 0.70, y: 360 };
+
+    if (circuit === 'single') {
+        // 분전반 → 스위치 → 전등 → 중성선 복귀
+        paths.push({
+            color: '#e0a458',
+            on: () => sw1,
+            pts: [
+                { x: panel.x + 30, y: panel.y + 60 },
+                { x: panel.x + 30, y: 280 },
+                { x: sw1Pos.x, y: 280 },
+                { x: sw1Pos.x, y: sw1Pos.y - 20 },
+                // 스위치 통과 시
+                { x: sw1Pos.x + 30, y: sw1Pos.y - 20 },
+                { x: sw1Pos.x + 30, y: 180 },
+                { x: lamp.x, y: 180 },
+                { x: lamp.x, y: lamp.y + 30 },
+            ],
+        });
+        paths.push({
+            color: '#5eddd6',
+            on: () => true,
+            pts: [
+                { x: panel.x + 60, y: panel.y + 60 },
+                { x: panel.x + 60, y: 220 },
+                { x: lamp.x + 30, y: 220 },
+                { x: lamp.x + 30, y: lamp.y + 30 },
+            ],
+        });
+    } else if (circuit === 'three-way') {
+        const lit = (sw1 === sw2);
+        // L → S1 COM
+        paths.push({
+            color: '#e0a458',
+            on: () => true,
+            pts: [
+                { x: panel.x + 30, y: panel.y + 60 },
+                { x: panel.x + 30, y: 280 },
+                { x: sw1Pos.x, y: 280 },
+                { x: sw1Pos.x, y: sw1Pos.y - 20 },
+            ],
+        });
+        // 여행선 1, 2 (S1 → S2)
+        paths.push({
+            color: '#e0a458',
+            on: () => lit && !sw1,
+            pts: [
+                { x: sw1Pos.x + 22, y: sw1Pos.y - 20 },
+                { x: sw1Pos.x + 22, y: 230 },
+                { x: sw2Pos.x - 22, y: 230 },
+                { x: sw2Pos.x - 22, y: sw2Pos.y - 20 },
+            ],
+        });
+        paths.push({
+            color: '#e0a458',
+            on: () => lit && sw1,
+            pts: [
+                { x: sw1Pos.x + 38, y: sw1Pos.y - 20 },
+                { x: sw1Pos.x + 38, y: 250 },
+                { x: sw2Pos.x - 6, y: 250 },
+                { x: sw2Pos.x - 6, y: sw2Pos.y - 20 },
+            ],
+        });
+        // S2 COM → 전등
+        paths.push({
+            color: '#e0a458',
+            on: () => lit,
+            pts: [
+                { x: sw2Pos.x + 16, y: sw2Pos.y - 20 },
+                { x: sw2Pos.x + 16, y: 180 },
+                { x: lamp.x, y: 180 },
+                { x: lamp.x, y: lamp.y + 30 },
+            ],
+        });
+        // N
+        paths.push({
+            color: '#5eddd6',
+            on: () => true,
+            pts: [
+                { x: panel.x + 60, y: panel.y + 60 },
+                { x: panel.x + 60, y: 220 },
+                { x: lamp.x + 30, y: 220 },
+                { x: lamp.x + 30, y: lamp.y + 30 },
+            ],
+        });
+    } else {
+        // 콘센트
+        paths.push({
+            color: '#e0a458',
+            on: () => true,
+            pts: [
+                { x: panel.x + 30, y: panel.y + 60 },
+                { x: panel.x + 30, y: 300 },
+                { x: outlet.x - 8, y: 300 },
+                { x: outlet.x - 8, y: outlet.y - 30 },
+            ],
+        });
+        paths.push({
+            color: '#5eddd6',
+            on: () => true,
+            pts: [
+                { x: panel.x + 60, y: panel.y + 60 },
+                { x: panel.x + 60, y: 320 },
+                { x: outlet.x + 18, y: 320 },
+                { x: outlet.x + 18, y: outlet.y - 30 },
+            ],
+        });
+        // 접지 (회색)
+        paths.push({
+            color: '#8b97a4',
+            on: () => true,
+            pts: [
+                { x: panel.x + 90, y: panel.y + 60 },
+                { x: panel.x + 90, y: 340 },
+                { x: outlet.x + 6, y: 340 },
+                { x: outlet.x + 6, y: outlet.y - 12 },
+            ],
+        });
+    }
+
+    // 입자 시드
+    particles = [];
+    for (const p of paths) {
+        const lens = [];
+        let total = 0;
+        for (let i = 0; i < p.pts.length - 1; i++) {
+            const a = p.pts[i], b = p.pts[i + 1];
+            const L = Math.hypot(b.x - a.x, b.y - a.y);
+            lens.push({ start: total, len: L, a, b });
+            total += L;
+        }
+        p.segs = lens;
+        p.total = total;
+        const n = Math.max(8, Math.round(total / 26));
+        for (let i = 0; i < n; i++) {
+            particles.push({ path: p, prog: (i / n) * total, size: 1.4 + Math.random() * 0.9 });
+        }
+    }
+}
+
+function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+}
+
+function drawWires() {
+    for (const p of paths) {
+        ctx.save();
+        ctx.strokeStyle = p.color;
+        ctx.globalAlpha = p.on() ? 0.85 : 0.22;
+        ctx.shadowBlur = p.on() ? 10 : 0;
+        ctx.shadowColor = p.color;
+        ctx.lineWidth = 2.4;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(p.pts[0].x, p.pts[0].y);
+        for (let i = 1; i < p.pts.length; i++) ctx.lineTo(p.pts[i].x, p.pts[i].y);
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+
+function drawParticles(currentSpeed, breakerTripped) {
+    if (breakerTripped) return;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const pt of particles) {
+        if (!pt.path.on()) continue;
+        pt.prog = (pt.prog + currentSpeed) % pt.path.total;
+        let target = null;
+        for (const s of pt.path.segs) {
+            if (pt.prog <= s.start + s.len) {
+                const r = (pt.prog - s.start) / s.len;
+                target = { x: s.a.x + (s.b.x - s.a.x) * r, y: s.a.y + (s.b.y - s.a.y) * r };
+                break;
+            }
+        }
+        if (!target) continue;
+        ctx.fillStyle = pt.path.color;
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = pt.path.color;
+        ctx.beginPath();
+        ctx.arc(target.x, target.y, pt.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+function drawHouseOutline() {
+    const W = canvas.width;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(148, 163, 184,0.18)';
+    ctx.setLineDash([6, 6]);
+    ctx.lineWidth = 1;
+    roundRect(ctx, 30, 30, W - 60, 400, 14);
+    ctx.stroke();
+    // 방 구분선 (3로일 때 계단처럼)
+    if (circuit === 'three-way') {
+        ctx.beginPath();
+        ctx.moveTo(W * 0.55, 30);
+        ctx.lineTo(W * 0.55, 430);
+        ctx.stroke();
+    }
+    ctx.restore();
+
+    // 라벨
+    ctx.save();
+    ctx.fillStyle = 'rgba(148, 163, 184,0.45)';
+    ctx.font = '11px ui-monospace, monospace';
+    ctx.fillText('PLAN VIEW · 평면도', 42, 50);
+    if (circuit === 'three-way') {
+        ctx.fillText('1F · 아래', 50, 420);
+        ctx.fillText('2F · 위', W * 0.55 + 14, 420);
+    }
+    ctx.restore();
+}
+
+function drawPanel() {
+    const x = 50, y = 60;
+    ctx.save();
+    ctx.shadowBlur = 4;
+    ctx.shadowColor = 'rgba(94, 221, 214,0.45)';
+    ctx.fillStyle = 'rgba(30,41,59,0.85)';
+    roundRect(ctx, x, y, 70, 90, 10);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(159, 176, 192,0.6)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
+
+    // 브레이커 핸들
+    const tripped = lastTrip;
+    ctx.save();
+    ctx.fillStyle = tripped ? '#e0a458' : '#9fe9e4';
+    ctx.shadowBlur = tripped ? 16 + Math.sin(t * 0.4) * 6 : 8;
+    ctx.shadowColor = tripped ? '#e08585' : '#3a6f6a';
+    roundRect(ctx, x + 14, y + 18, 42, 22, 4);
+    ctx.fill();
+    ctx.fillStyle = '#0b1224';
+    ctx.font = 'bold 11px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(tripped ? 'TRIP' : 'ON', x + 35, y + 33);
+    ctx.restore();
+
+    // 라벨
+    ctx.save();
+    ctx.fillStyle = '#c4ccd6';
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('PANEL', x + 35, y - 6);
+    ctx.fillText('분전반', x + 35, y + 105);
+    ctx.fillStyle = '#e0a458';
+    ctx.fillText('L', x + 30, y + 70);
+    ctx.fillStyle = '#5eddd6';
+    ctx.fillText('N', x + 50, y + 70);
+    ctx.fillStyle = '#8b97a4';
+    if (circuit === 'outlet') ctx.fillText('E', x + 70, y + 70);
+    ctx.restore();
+}
+
+function drawSwitch(x, y, on, label, type) {
+    ctx.save();
+    ctx.shadowBlur = on ? 14 : 4;
+    ctx.shadowColor = on ? '#e0a458' : 'rgba(148, 163, 184,0.4)';
+    ctx.fillStyle = 'rgba(30,41,59,0.85)';
+    roundRect(ctx, x - 22, y - 20, 44, 50, 8);
+    ctx.fill();
+    ctx.strokeStyle = on ? 'rgba(253,230,138,0.85)' : 'rgba(148, 163, 184,0.5)';
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    ctx.restore();
+
+    // 스위치 토글 핸들
+    ctx.save();
+    ctx.fillStyle = on ? '#fde68a' : '#2a3340';
+    roundRect(ctx, x - 12, on ? y - 16 : y + 4, 24, 14, 4);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = '#d3dae3';
+    ctx.font = 'bold 11px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x, y + 46);
+    if (type === '3way') {
+        ctx.fillStyle = '#9fb0c0';
+        ctx.font = '9px ui-monospace, monospace';
+        ctx.fillText('3로', x, y - 26);
+    }
+    ctx.restore();
+}
+
+function drawLamp(x, y, on, brightness) {
+    // 빛 글로우
+    if (on) {
+        const grad = ctx.createRadialGradient(x, y, 4, x, y, 90);
+        grad.addColorStop(0, `rgba(253, 224, 71, ${0.65 * brightness})`);
+        grad.addColorStop(0.5, `rgba(224, 164, 88, ${0.20 * brightness})`);
+        grad.addColorStop(1, 'rgba(224, 164, 88, 0)');
+        ctx.save();
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(x, y, 90, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // 전등 본체
+    ctx.save();
+    ctx.shadowBlur = on ? 26 : 6;
+    ctx.shadowColor = on ? '#fde68a' : 'rgba(148, 163, 184,0.4)';
+    ctx.fillStyle = on ? '#fef3c7' : '#161d27';
+    ctx.strokeStyle = on ? '#e0a458' : 'rgba(148, 163, 184,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(x, y, 18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    // 필라멘트
+    ctx.strokeStyle = on ? '#cf933f' : 'rgba(148, 163, 184,0.5)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x - 8, y);
+    ctx.bezierCurveTo(x - 4, y - 6, x + 4, y + 6, x + 8, y);
+    ctx.stroke();
+    ctx.restore();
+
+    // 소켓
+    ctx.save();
+    ctx.fillStyle = '#252e3a';
+    roundRect(ctx, x - 12, y + 16, 24, 14, 3);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = '#c4ccd6';
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(on ? 'ON' : 'OFF', x, y + 52);
+    ctx.restore();
+}
+
+function drawOutlet(x, y, currentRatio, tripped) {
+    ctx.save();
+    ctx.shadowBlur = 4;
+    ctx.shadowColor = tripped ? '#e08585' : '#9fb0c0';
+    ctx.fillStyle = 'rgba(30,41,59,0.92)';
+    roundRect(ctx, x - 28, y - 30, 56, 60, 10);
+    ctx.fill();
+    ctx.strokeStyle = tripped ? 'rgba(224, 133, 133,0.8)' : 'rgba(159, 176, 192,0.6)';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    ctx.restore();
+
+    // 슬롯
+    ctx.save();
+    ctx.fillStyle = '#0b1224';
+    roundRect(ctx, x - 14, y - 16, 6, 18, 2);
+    ctx.fill();
+    roundRect(ctx, x + 8, y - 16, 6, 18, 2);
+    ctx.fill();
+    // 접지 슬롯
+    ctx.beginPath();
+    ctx.arc(x, y + 12, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 부하 게이지 (콘센트 옆)
+    ctx.save();
+    ctx.fillStyle = '#161d27';
+    roundRect(ctx, x + 38, y - 30, 8, 60, 4);
+    ctx.fill();
+    const h = Math.max(0, Math.min(1, currentRatio)) * 56;
+    const color = tripped ? '#e08585' : (currentRatio > 0.8 ? '#f97316' : '#9fe9e4');
+    ctx.fillStyle = color;
+    ctx.shadowBlur = 4;
+    ctx.shadowColor = color;
+    roundRect(ctx, x + 39, y + 28 - h, 6, h, 3);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = '#c4ccd6';
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('콘센트', x, y + 50);
+    ctx.restore();
+}
+
+function drawScene() {
+    const W = canvas.width;
+    ctx.clearRect(0, 0, W, canvas.height);
+    drawHouseOutline();
+    drawWires();
+
+    // 부하 계산
+    const V = +$('v').value;
+    const P = +$('pw').value;
+    const Brk = +$('br').value;
+    const I = P / V;
+    const tripped = I > Brk;
+    lastTrip = tripped;
+
+    const on = (() => {
+        if (tripped) return false;
+        if (circuit === 'single') return sw1;
+        if (circuit === 'three-way') return sw1 === sw2;
+        if (circuit === 'outlet') return true;
+        return false;
+    })();
+
+    const speed = on ? Math.min(7, 0.6 + I * 0.4) : 0;
+    drawParticles(speed, tripped);
+
+    drawPanel();
+
+    if (circuit === 'single') {
+        drawSwitch(W * 0.42, 360, sw1, 'S1', 'single');
+        drawLamp(W * 0.78, 120, on, Math.min(1, P / 200));
+    } else if (circuit === 'three-way') {
+        drawSwitch(W * 0.42, 360, sw1, 'S1', '3way');
+        drawSwitch(W * 0.72, 360, sw2, 'S2', '3way');
+        drawLamp(W * 0.78, 120, on, Math.min(1, P / 200));
+    } else {
+        const ratio = I / Brk;
+        drawOutlet(W * 0.70, 360, ratio, tripped);
+        // 콘센트 회로에는 부하 표시 (드라이어/가전 아이콘)
+        ctx.save();
+        ctx.fillStyle = '#c4ccd6';
+        ctx.font = 'bold 11px ui-monospace, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`부하 ${P} W`, W * 0.70, 280);
+        ctx.restore();
+    }
+
+    return { I, P, V, Brk, tripped, on };
+}
+
+// ============ 회로 도식 (Schematic SVG) ============
+function renderSchema() {
+    const svg = $('schema');
+    let body = '';
+    const STROKE = '#8b97a4', ON = '#e0a458', N = '#5eddd6';
+    const lit = (() => {
+        if (circuit === 'single') return sw1;
+        if (circuit === 'three-way') return sw1 === sw2;
+        return true;
+    })();
+
+    if (circuit === 'single') {
+        $('schemaTitle').textContent = '단로 스위치 + 전등';
+        // L 전선
+        body += `<line x1="60" y1="50" x2="240" y2="50" stroke="${lit ? ON : STROKE}" stroke-width="2.2"/>`;
+        // 스위치
+        const swX = 260, swY = 50;
+        body += `<circle cx="${swX}" cy="${swY}" r="4" fill="${STROKE}"/>`;
+        body += `<circle cx="${swX + 60}" cy="${swY}" r="4" fill="${STROKE}"/>`;
+        const ang = sw1 ? 0 : -22;
+        body += `<line x1="${swX}" y1="${swY}" x2="${swX + 60 * Math.cos(ang * Math.PI / 180)}" y2="${swY + 60 * Math.sin(ang * Math.PI / 180)}" stroke="${sw1 ? ON : STROKE}" stroke-width="2.4" stroke-linecap="round"/>`;
+        body += `<text x="${swX + 30}" y="${swY - 14}" text-anchor="middle" font-size="11" fill="#c4ccd6" font-weight="bold">S1</text>`;
+        // 전등
+        body += `<line x1="${swX + 60}" y1="50" x2="500" y2="50" stroke="${lit ? ON : STROKE}" stroke-width="2.2"/>`;
+        body += `<circle cx="540" cy="50" r="20" fill="${lit ? '#fef3c7' : 'none'}" stroke="${lit ? '#e0a458' : STROKE}" stroke-width="2"/>`;
+        body += `<line x1="528" y1="38" x2="552" y2="62" stroke="${lit ? '#cf933f' : STROKE}" stroke-width="1.5"/>`;
+        body += `<line x1="552" y1="38" x2="528" y2="62" stroke="${lit ? '#cf933f' : STROKE}" stroke-width="1.5"/>`;
+        body += `<text x="540" y="92" text-anchor="middle" font-size="11" fill="#c4ccd6">LAMP</text>`;
+        // N 전선
+        body += `<line x1="560" y1="50" x2="640" y2="50" stroke="${N}" stroke-width="2.2"/>`;
+        body += `<line x1="640" y1="50" x2="640" y2="130" stroke="${N}" stroke-width="2.2"/>`;
+        body += `<line x1="640" y1="130" x2="60" y2="130" stroke="${N}" stroke-width="2.2"/>`;
+        body += `<line x1="60" y1="50" x2="60" y2="130" stroke="${STROKE}" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+        body += `<text x="40" y="55" text-anchor="middle" font-size="11" font-weight="bold" fill="${ON}">L</text>`;
+        body += `<text x="40" y="135" text-anchor="middle" font-size="11" font-weight="bold" fill="${N}">N</text>`;
+    } else if (circuit === 'three-way') {
+        $('schemaTitle').textContent = '3로 스위치 (계단 등)';
+        // L
+        body += `<line x1="60" y1="50" x2="180" y2="50" stroke="${ON}" stroke-width="2.2"/>`;
+        // S1: COM 왼쪽, L1/L2 오른쪽
+        const s1x = 200, s1y = 50;
+        body += `<circle cx="${s1x}" cy="${s1y}" r="4" fill="${STROKE}"/>`;
+        body += `<text x="${s1x - 14}" y="${s1y + 4}" font-size="10" fill="#c4ccd6">COM</text>`;
+        body += `<circle cx="${s1x + 60}" cy="${s1y - 18}" r="4" fill="${STROKE}"/>`;
+        body += `<circle cx="${s1x + 60}" cy="${s1y + 18}" r="4" fill="${STROKE}"/>`;
+        body += `<text x="${s1x + 80}" y="${s1y - 14}" font-size="10" fill="#c4ccd6">L1</text>`;
+        body += `<text x="${s1x + 80}" y="${s1y + 22}" font-size="10" fill="#c4ccd6">L2</text>`;
+        // S1 토글: sw1=false → L1, sw1=true → L2
+        const s1target = sw1 ? { x: s1x + 60, y: s1y + 18 } : { x: s1x + 60, y: s1y - 18 };
+        body += `<line x1="${s1x}" y1="${s1y}" x2="${s1target.x}" y2="${s1target.y}" stroke="${ON}" stroke-width="2.4" stroke-linecap="round"/>`;
+        body += `<text x="${s1x + 30}" y="${s1y + 44}" text-anchor="middle" font-size="11" font-weight="bold" fill="#fde68a">S1</text>`;
+        // 여행선 (S1 L1 ↔ S2 L1)
+        const s2x = 420, s2y = 50;
+        const trav1Color = (lit && !sw1) ? '#e0a458' : STROKE;
+        const trav2Color = (lit && sw1) ? '#e0a458' : STROKE;
+        body += `<line x1="${s1x + 60}" y1="${s1y - 18}" x2="${s2x - 60}" y2="${s2y - 18}" stroke="${trav1Color}" stroke-width="2"/>`;
+        body += `<line x1="${s1x + 60}" y1="${s1y + 18}" x2="${s2x - 60}" y2="${s2y + 18}" stroke="${trav2Color}" stroke-width="2"/>`;
+        // S2: L1/L2 왼쪽, COM 오른쪽
+        body += `<circle cx="${s2x - 60}" cy="${s2y - 18}" r="4" fill="${STROKE}"/>`;
+        body += `<circle cx="${s2x - 60}" cy="${s2y + 18}" r="4" fill="${STROKE}"/>`;
+        body += `<circle cx="${s2x}" cy="${s2y}" r="4" fill="${STROKE}"/>`;
+        body += `<text x="${s2x - 78}" y="${s2y - 14}" font-size="10" fill="#c4ccd6">L1</text>`;
+        body += `<text x="${s2x - 78}" y="${s2y + 22}" font-size="10" fill="#c4ccd6">L2</text>`;
+        body += `<text x="${s2x + 14}" y="${s2y + 4}" font-size="10" fill="#c4ccd6">COM</text>`;
+        const s2target = sw2 ? { x: s2x - 60, y: s2y + 18 } : { x: s2x - 60, y: s2y - 18 };
+        body += `<line x1="${s2x}" y1="${s2y}" x2="${s2target.x}" y2="${s2target.y}" stroke="${lit ? ON : STROKE}" stroke-width="2.4" stroke-linecap="round"/>`;
+        body += `<text x="${s2x - 30}" y="${s2y + 44}" text-anchor="middle" font-size="11" font-weight="bold" fill="#fde68a">S2</text>`;
+        // S2 COM → 전등
+        body += `<line x1="${s2x}" y1="${s2y}" x2="520" y2="50" stroke="${lit ? ON : STROKE}" stroke-width="2.2"/>`;
+        body += `<circle cx="560" cy="50" r="20" fill="${lit ? '#fef3c7' : 'none'}" stroke="${lit ? '#e0a458' : STROKE}" stroke-width="2"/>`;
+        body += `<line x1="548" y1="38" x2="572" y2="62" stroke="${lit ? '#cf933f' : STROKE}" stroke-width="1.5"/>`;
+        body += `<line x1="572" y1="38" x2="548" y2="62" stroke="${lit ? '#cf933f' : STROKE}" stroke-width="1.5"/>`;
+        body += `<text x="560" y="92" text-anchor="middle" font-size="11" fill="#c4ccd6">LAMP</text>`;
+        // N
+        body += `<line x1="580" y1="50" x2="660" y2="50" stroke="${N}" stroke-width="2.2"/>`;
+        body += `<line x1="660" y1="50" x2="660" y2="140" stroke="${N}" stroke-width="2.2"/>`;
+        body += `<line x1="660" y1="140" x2="60" y2="140" stroke="${N}" stroke-width="2.2"/>`;
+        body += `<text x="40" y="55" text-anchor="middle" font-size="11" font-weight="bold" fill="${ON}">L</text>`;
+        body += `<text x="40" y="145" text-anchor="middle" font-size="11" font-weight="bold" fill="${N}">N</text>`;
+    } else {
+        $('schemaTitle').textContent = '콘센트 + 분기 회로';
+        body += `<line x1="60" y1="50" x2="380" y2="50" stroke="${ON}" stroke-width="2.2"/>`;
+        body += `<line x1="60" y1="130" x2="380" y2="130" stroke="${N}" stroke-width="2.2"/>`;
+        body += `<line x1="60" y1="90" x2="380" y2="90" stroke="#8b97a4" stroke-width="1.6" stroke-dasharray="4 4"/>`;
+        body += `<text x="40" y="55" text-anchor="middle" font-size="11" font-weight="bold" fill="${ON}">L</text>`;
+        body += `<text x="40" y="135" text-anchor="middle" font-size="11" font-weight="bold" fill="${N}">N</text>`;
+        body += `<text x="40" y="95" text-anchor="middle" font-size="11" font-weight="bold" fill="#8b97a4">E</text>`;
+        // 차단기 (분기)
+        body += `<rect x="200" y="20" width="40" height="22" rx="4" fill="rgba(94, 221, 214,0.2)" stroke="#9fe9e4" stroke-width="1.4"/>`;
+        body += `<text x="220" y="35" text-anchor="middle" font-size="10" fill="#9fe9e4" font-weight="bold">CB</text>`;
+        body += `<line x1="220" y1="42" x2="220" y2="50" stroke="${ON}" stroke-width="2"/>`;
+        // 콘센트 (벽 마크)
+        body += `<rect x="420" y="40" width="80" height="100" rx="10" fill="rgba(30,41,59,0.85)" stroke="rgba(159, 176, 192,0.6)" stroke-width="1.5"/>`;
+        body += `<rect x="440" y="60" width="6" height="18" rx="2" fill="#0b1224"/>`;
+        body += `<rect x="474" y="60" width="6" height="18" rx="2" fill="#0b1224"/>`;
+        body += `<circle cx="460" cy="100" r="4" fill="#0b1224"/>`;
+        body += `<text x="460" y="160" text-anchor="middle" font-size="11" fill="#c4ccd6">콘센트 (활선·중성·접지)</text>`;
+        // 연결선
+        body += `<line x1="380" y1="50" x2="420" y2="50" stroke="${ON}" stroke-width="2.2"/>`;
+        body += `<line x1="380" y1="130" x2="420" y2="130" stroke="${N}" stroke-width="2.2"/>`;
+        body += `<line x1="380" y1="90" x2="420" y2="90" stroke="#8b97a4" stroke-width="1.6"/>`;
+        body += `<line x1="420" y1="50" x2="440" y2="60" stroke="${ON}" stroke-width="1.8"/>`;
+        body += `<line x1="420" y1="130" x2="480" y2="78" stroke="${N}" stroke-width="1.8"/>`;
+        body += `<line x1="420" y1="90" x2="460" y2="96" stroke="#8b97a4" stroke-width="1.6"/>`;
+        // 부하
+        body += `<rect x="540" y="60" width="120" height="60" rx="8" fill="rgba(94, 221, 214,0.16)" stroke="rgba(159, 176, 192,0.6)" stroke-width="1.4"/>`;
+        body += `<text x="600" y="95" text-anchor="middle" font-size="11" fill="#9fb0c0" font-weight="bold">LOAD</text>`;
+        body += `<text x="600" y="112" text-anchor="middle" font-size="10" fill="#c4ccd6" id="loadW">${$('pw').value} W</text>`;
+        body += `<line x1="500" y1="80" x2="540" y2="80" stroke="${ON}" stroke-width="2"/>`;
+        body += `<line x1="500" y1="100" x2="540" y2="100" stroke="${N}" stroke-width="2"/>`;
+    }
+
+    svg.innerHTML = body;
+}
+
+// ============ 라이브 4칩 업데이트 ============
+function updateLive(r) {
+    const stateText = r.tripped ? '차단' : (r.on ? 'ON' : 'OFF');
+    $('stDisp').textContent = stateText;
+    $('iDisp').textContent = (r.on ? r.I : 0).toFixed(2);
+    $('pDisp').textContent = r.on ? Math.round(r.P) : 0;
+    const ratio = r.I / r.Brk;
+    let safeText, danger = false;
+    if (r.tripped) { safeText = '트립'; danger = true; }
+    else if (ratio > 0.85) { safeText = '경고'; danger = true; }
+    else { safeText = '정상'; }
+    $('safeDisp').textContent = safeText;
+    $('safeChip').classList.toggle('danger', danger);
+}
+
+// ============ 컨트롤 핸들러 ============
+function setCircuit(c) {
+    circuit = c;
+    document.querySelectorAll('[data-circuit]').forEach(b => b.classList.toggle('active', b.dataset.circuit === c));
+    if (c === 'single') {
+        sw1 = false; sw2 = false;
+        $('swHint').textContent = '단로 회로에서는 S1만 사용';
+        $('sw2').style.opacity = '0.4';
+        $('sw2').style.pointerEvents = 'none';
+        $('swPanel').style.display = '';
+        $('loadPanel').style.display = '';
+    } else if (c === 'three-way') {
+        sw1 = false; sw2 = false;
+        $('swHint').textContent = '두 스위치 일치 → 점등. 어느 쪽 토글이든 상태 반전.';
+        $('sw2').style.opacity = '';
+        $('sw2').style.pointerEvents = '';
+        $('swPanel').style.display = '';
+        $('loadPanel').style.display = '';
+    } else {
+        $('swHint').textContent = '콘센트 회로는 항시 통전 (플러그 부하 발생 시 전류 흐름)';
+        $('swPanel').style.display = 'none';
+        $('loadPanel').style.display = '';
+    }
+    updateSwBtns();
+    renderGuide();
+    rebuildPaths();
+    renderSchema();
+    if (window.gsap) {
+        gsap.fromTo('#schema', { opacity: 0.2 }, { opacity: 1, duration: 0.4 });
+        gsap.fromTo('#guideCard', { y: 8, opacity: 0.6 }, { y: 0, opacity: 1, duration: 0.4 });
+    }
+}
+
+function updateSwBtns() {
+    $('sw1').textContent = `S1 · ${sw1 ? 'ON' : 'OFF'}`;
+    $('sw2').textContent = `S2 · ${sw2 ? 'ON' : 'OFF'}`;
+    $('sw1').classList.toggle('on', sw1);
+    $('sw2').classList.toggle('on', sw2);
+}
+
+function renderGuide() {
+    $('guideTitle').textContent = circuit === 'single' ? '단로 스위치 + 전등'
+        : circuit === 'three-way' ? '3로 스위치 (계단 등)' : '콘센트 + 분기 회로';
+    $('guideList').innerHTML = GUIDES[circuit].map(s => `<li>${s}</li>`).join('');
+}
+
+document.querySelectorAll('[data-circuit]').forEach(b => {
+    b.addEventListener('click', () => setCircuit(b.dataset.circuit));
+});
+
+$('sw1').addEventListener('click', () => {
+    sw1 = !sw1;
+    updateSwBtns();
+    rebuildPaths();
+    renderSchema();
+    if (window.gsap) gsap.fromTo('#sw1', { scale: 0.95 }, { scale: 1, duration: 0.2, ease: 'back.out(2)' });
+});
+$('sw2').addEventListener('click', () => {
+    if (circuit !== 'three-way') return;
+    sw2 = !sw2;
+    updateSwBtns();
+    rebuildPaths();
+    renderSchema();
+    if (window.gsap) gsap.fromTo('#sw2', { scale: 0.95 }, { scale: 1, duration: 0.2, ease: 'back.out(2)' });
+});
+
+['v', 'pw', 'br'].forEach(id => {
+    $(id).addEventListener('input', () => {
+        $('vVal').textContent = $('v').value;
+        $('pwVal').textContent = $('pw').value;
+        $('brVal').textContent = $('br').value;
+        renderSchema();
+    });
+});
+
+// ============ 루프 ============
+function loop() {
+    t++;
+    const r = drawScene();
+    updateLive(r);
+    requestAnimationFrame(loop);
+}
+
+window.onload = () => {
+    resize();
+    setCircuit('single');
+    loop();
+    if (window.gsap) {
+        gsap.from('#hdr', { y: -20, opacity: 0, duration: 0.7, ease: 'power3.out' });
+        gsap.from('#livePanel > *', { y: 14, opacity: 0, duration: 0.6, stagger: 0.08, delay: 0.15, ease: 'power3.out' });
+        gsap.from('#canvasCard', { scale: 0.97, opacity: 0, duration: 0.8, delay: 0.2, ease: 'power3.out' });
+        gsap.from('#controlPanel', { x: 30, opacity: 0, duration: 0.7, delay: 0.3, ease: 'power3.out' });
+        gsap.from('#guideCard', { y: 20, opacity: 0, duration: 0.7, delay: 0.45, ease: 'power3.out' });
+    }
+};
+</script>
+</body>
+</html>
