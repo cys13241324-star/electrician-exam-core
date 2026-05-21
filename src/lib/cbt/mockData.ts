@@ -177,7 +177,8 @@ function buildSharedQuestions(): Question[] {
 
 const sharedQuestions = buildSharedQuestions();
 
-export const mockExams: Exam[] = Array.from({ length: 5 }, (_, idx) => {
+// 연도별 보기용 가데이터: 4회/년 기준 2026 → 2019 (8년 × 4회)
+export const mockExams: Exam[] = Array.from({ length: 32 }, (_, idx) => {
   const round = idx + 1;
   return {
     id: `exam-${round}`,
