@@ -110,27 +110,51 @@ export default function CustomAudiobook() {
 
   useEffect(() => {
     const a = audioRef.current;
-    if (!a) return;
-    if (playing) a.play().catch(() => setPlaying(false));
-    else a.pause();
-  }, [playing, activeId]);
-
-  useEffect(() => {
-    const a = audioRef.current;
     if (a) a.playbackRate = rate;
   }, [rate, activeId]);
 
   // 큐가 비면 select 모드로 복귀
   useEffect(() => {
     if (mode !== "play") return;
-    if (!active && queue.length > 0) {
-      setActiveId(queue[0].chapterId);
-    } else if (!active && queue.length === 0) {
+    if (!active && queue.length === 0) {
       setMode("select");
       setActiveId(null);
       setPlaying(false);
     }
   }, [queue, active, mode]);
+
+  // iOS Safari 호환: src 변경 + play 호출을 click 핸들러 동기 흐름 안에서.
+  function playChapter(chapter: Chapter) {
+    const a = audioRef.current;
+    if (!a) return;
+    const absolute =
+      typeof window !== "undefined"
+        ? new URL(chapter.src, window.location.origin).href
+        : chapter.src;
+    if (a.src !== absolute) {
+      a.src = chapter.src;
+      a.playbackRate = rate;
+      a.load();
+    }
+    const p = a.play();
+    if (p) {
+      p.then(() => setPlaying(true)).catch(() => setPlaying(false));
+    } else {
+      setPlaying(true);
+    }
+    try {
+      window.localStorage.setItem(LAST_PLAYED_KEY, chapter.chapterId);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function pauseAudio() {
+    const a = audioRef.current;
+    if (!a) return;
+    a.pause();
+    setPlaying(false);
+  }
 
   function toggleOne(id: string) {
     setSelectedIds((prev) => {
@@ -178,21 +202,25 @@ export default function CustomAudiobook() {
     if (queue.length === 0) return;
     setMode("play");
     setActiveId(queue[0].chapterId);
-    setPlaying(true);
+    setProgress(0);
+    playChapter(queue[0]);
   }
   function backToSelect() {
+    pauseAudio();
     setMode("select");
-    setPlaying(false);
+  }
+  function togglePlay() {
+    const a = audioRef.current;
+    if (!a || !active) return;
+    if (a.paused) playChapter(active);
+    else pauseAudio();
   }
   function jumpTo(id: string) {
+    const chapter = queue.find((c) => c.chapterId === id);
+    if (!chapter) return;
     setActiveId(id);
     setProgress(0);
-    setPlaying(true);
-    try {
-      window.localStorage.setItem(LAST_PLAYED_KEY, id);
-    } catch {
-      /* ignore */
-    }
+    playChapter(chapter);
   }
   function goNext() {
     if (activeIdx < 0) return;
@@ -434,7 +462,7 @@ export default function CustomAudiobook() {
               duration={duration}
               playing={playing}
               rate={rate}
-              onTogglePlay={() => setPlaying((p) => !p)}
+              onTogglePlay={togglePlay}
               onPrev={goPrev}
               onNext={goNext}
               onSkip={skip}
@@ -446,17 +474,18 @@ export default function CustomAudiobook() {
           )
         )}
 
-        {active && (
-          <audio
-            ref={audioRef}
-            src={active.src}
-            preload="metadata"
-            onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
-            onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-            onEnded={goNext}
-            onError={() => setPlaying(false)}
-          />
-        )}
+        {/* 단일 audio element — src 는 imperative 로만 관리 (iOS Safari 대응) */}
+        <audio
+          ref={audioRef}
+          preload="none"
+          playsInline
+          onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
+          onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onEnded={goNext}
+          onError={() => setPlaying(false)}
+        />
       </aside>
     </div>
   );

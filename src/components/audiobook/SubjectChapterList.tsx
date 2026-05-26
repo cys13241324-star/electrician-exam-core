@@ -27,38 +27,57 @@ export default function SubjectChapterList({
 
   const active = chapters.find((c) => c.chapterId === activeId) ?? null;
 
-  useEffect(() => {
-    if (!active) return;
-    setProgress(0);
-    try {
-      window.localStorage.setItem(LAST_PLAYED_KEY, active.chapterId);
-    } catch {
-      /* ignore */
-    }
-  }, [active]);
-
-  useEffect(() => {
-    const a = audioRef.current;
-    if (!a) return;
-    if (playing) {
-      a.play().catch(() => setPlaying(false));
-    } else {
-      a.pause();
-    }
-  }, [playing, activeId]);
-
+  // 배속 변경은 user gesture 무관 — 안전
   useEffect(() => {
     const a = audioRef.current;
     if (a) a.playbackRate = rate;
   }, [rate, activeId]);
 
-  function selectChapter(id: string) {
-    if (id === activeId) {
-      setPlaying((p) => !p);
+  // iOS Safari 호환: src 변경 + play 호출을 모두 click 핸들러 동기 흐름 안에서.
+  function playChapter(chapter: Chapter, fromUser: boolean) {
+    const a = audioRef.current;
+    if (!a) return;
+    if (a.src !== absoluteUrl(chapter.src)) {
+      a.src = chapter.src;
+      a.playbackRate = rate;
+      a.load();
+    }
+    const p = a.play();
+    if (p) {
+      p.then(() => setPlaying(true)).catch(() => {
+        // fromUser 가 아닌데 거부됐다면 조용히 정지 (autoplay 정책)
+        setPlaying(false);
+      });
+    } else {
+      setPlaying(true);
+    }
+    try {
+      window.localStorage.setItem(LAST_PLAYED_KEY, chapter.chapterId);
+    } catch {
+      /* ignore */
+    }
+    void fromUser;
+  }
+
+  function pauseAudio() {
+    const a = audioRef.current;
+    if (!a) return;
+    a.pause();
+    setPlaying(false);
+  }
+
+  function selectChapter(chapter: Chapter) {
+    if (chapter.chapterId === activeId) {
+      // 토글
+      const a = audioRef.current;
+      if (!a) return;
+      if (a.paused) playChapter(chapter, true);
+      else pauseAudio();
       return;
     }
-    setActiveId(id);
-    setPlaying(true);
+    setActiveId(chapter.chapterId);
+    setProgress(0);
+    playChapter(chapter, true);
   }
 
   function handleSeek(e: React.ChangeEvent<HTMLInputElement>) {
@@ -82,9 +101,10 @@ export default function SubjectChapterList({
     const next = chapters[idx + 1];
     if (next) {
       setActiveId(next.chapterId);
-      setPlaying(true);
+      setProgress(0);
+      playChapter(next, false);
     } else {
-      setPlaying(false);
+      pauseAudio();
     }
   }
   function goPrev() {
@@ -93,7 +113,8 @@ export default function SubjectChapterList({
     const prev = chapters[idx - 1];
     if (prev) {
       setActiveId(prev.chapterId);
-      setPlaying(true);
+      setProgress(0);
+      playChapter(prev, true);
     }
   }
 
@@ -101,6 +122,19 @@ export default function SubjectChapterList({
 
   return (
     <>
+      {/* 단일 audio element — src 는 imperative 로만 관리 (iOS Safari 대응) */}
+      <audio
+        ref={audioRef}
+        preload="none"
+        playsInline
+        onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
+        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onEnded={goNext}
+        onError={() => setPlaying(false)}
+      />
+
       <ul className="mt-6 space-y-2">
         {chapters.map((c) => {
           const isActive = c.chapterId === activeId;
@@ -115,7 +149,7 @@ export default function SubjectChapterList({
               >
                 <button
                   type="button"
-                  onClick={() => selectChapter(c.chapterId)}
+                  onClick={() => selectChapter(c)}
                   aria-label={`${c.no}강 ${c.title} ${isActive && playing ? "일시정지" : "재생"}`}
                   className="flex w-full items-start gap-4 px-5 py-4 text-left"
                 >
@@ -178,7 +212,7 @@ export default function SubjectChapterList({
                       <button
                         type="button"
                         aria-label={playing ? "일시정지" : "재생"}
-                        onClick={() => setPlaying((p) => !p)}
+                        onClick={() => selectChapter(c)}
                         className="flex h-11 w-11 items-center justify-center rounded-full bg-zinc-900 text-white shadow-sm transition hover:bg-zinc-800"
                       >
                         {playing ? <PauseIcon big /> : <PlayIcon big />}
@@ -246,20 +280,6 @@ export default function SubjectChapterList({
                         )}
                       </span>
                     </div>
-
-                    <audio
-                      ref={audioRef}
-                      src={c.src}
-                      preload="metadata"
-                      onTimeUpdate={(e) =>
-                        setProgress(e.currentTarget.currentTime)
-                      }
-                      onLoadedMetadata={(e) =>
-                        setDuration(e.currentTarget.duration)
-                      }
-                      onEnded={goNext}
-                      onError={() => setPlaying(false)}
-                    />
                   </div>
                 )}
               </div>
@@ -273,6 +293,15 @@ export default function SubjectChapterList({
       </p>
     </>
   );
+}
+
+function absoluteUrl(src: string): string {
+  if (typeof window === "undefined") return src;
+  try {
+    return new URL(src, window.location.origin).href;
+  } catch {
+    return src;
+  }
 }
 
 function PlayIcon({ big }: { big?: boolean }) {
