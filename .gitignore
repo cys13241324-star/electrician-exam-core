@@ -68,3 +68,6 @@ next-env.d.ts
 /tools/hub-verification/
 /tools/mobile-check/
 /tools/audit-report.json
+
+# Audiobook 음성 파일은 Supabase Storage 에서 서빙 (로컬 폴백/백업만 보관)
+/public/audio/audiobook/
