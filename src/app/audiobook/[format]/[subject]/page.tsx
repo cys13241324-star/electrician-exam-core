@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header";
@@ -160,8 +161,10 @@ export default async function AudiobookFormatSubjectPage({
           </div>
         </header>
 
-        {/* Chapter list (client) */}
-        <SubjectChapterList chapters={list} themeBar={subjectTheme.bar} />
+        {/* Chapter list (client) — useSearchParams 가 prerender 시 Suspense 필요 */}
+        <Suspense fallback={null}>
+          <SubjectChapterList chapters={list} themeBar={subjectTheme.bar} />
+        </Suspense>
 
         {/* Bottom nav */}
         <div className="mt-12 flex flex-wrap justify-center gap-2">
