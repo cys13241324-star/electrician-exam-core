@@ -34,6 +34,8 @@ const SRC_OVERRIDES: Record<string, string> = {
   // 폴더 컨벤션: <format>/<topic-id>.m4a 권장.
   // 지금은 Supabase 버킷 루트에 올라가 있어 폴더 없이 매핑.
   "theory-01--podcast": "theory-01.m4a",
+  // 5분 핵심요약 — 전기이론 1강. (TODO: summary/theory-01.m4a 로 정리 권장)
+  "theory-01--summary": "podcast/test1.m4a",
 };
 
 function resolveSrc(chapterId: string): string {
