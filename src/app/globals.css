@@ -140,6 +140,19 @@ body {
   @keyframes hintEnter { from { opacity: 0 } to { opacity: 1 } }
 }
 
+/* v2 메인 — 4단계 감정 곡선 부드러운 떠다님 */
+@keyframes journeyFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.animate-journey-float {
+  animation: journeyFloat 2.6s ease-in-out infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-journey-float { animation: none; }
+}
+
 /* KaTeX 분수·루트 들어간 줄 행간 보강 — 좁아 보이는 문제 해결 */
 .katex-inline {
   display: inline-block;
