@@ -56,7 +56,15 @@ const CARDS: HubCard[] = [
   },
 ];
 
-export default function CbtHub() {
+/**
+ * @param showLauncher 4-카드 런처 + "무엇부터 시작할까요" 헤더 표시 여부.
+ *   v3 등에서 자체 진입 섹션을 따로 구성하고 대시보드만 재사용할 때 false.
+ */
+export default function CbtHub({
+  showLauncher = true,
+}: {
+  showLauncher?: boolean;
+} = {}) {
   const [stats, setStats] = useState<LearningStats | null>(null);
 
   useEffect(() => {
@@ -69,52 +77,56 @@ export default function CbtHub() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
-      <header className="mb-6">
-        <p className="text-xs font-semibold tracking-wide text-blue-600">
-          addto 온라인 · 전기기능사
-        </p>
-        <h1 className="mt-1 text-xl font-bold text-zinc-900 sm:text-2xl">
-          무엇부터 시작할까요?
-        </h1>
-      </header>
+      {showLauncher && (
+        <>
+          <header className="mb-6">
+            <p className="text-xs font-semibold tracking-wide text-blue-600">
+              addto 온라인 · 전기기능사
+            </p>
+            <h1 className="mt-1 text-xl font-bold text-zinc-900 sm:text-2xl">
+              무엇부터 시작할까요?
+            </h1>
+          </header>
 
-      {/* 진입 카드 4개 — 메인 액션 영역 (살짝 다른 톤의 wrapper 로 그루핑) */}
-      <section className="rounded-3xl bg-zinc-100/50 p-3 ring-1 ring-zinc-200/60 sm:p-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {CARDS.map((card) => (
-          <Link
-            key={card.no}
-            href={card.href}
-            className="group relative flex flex-col rounded-2xl border border-zinc-200 bg-white p-7 pb-12 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg"
-          >
-            <div className="flex items-start gap-4 pr-8">
-              <span
-                className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border text-2xl ${card.accent}`}
-              >
-                {card.icon}
-              </span>
-              <div className="min-w-0">
-                <h2 className="text-lg font-bold text-zinc-900">
-                  {card.title}
-                </h2>
-                <p className="mt-1.5 text-[15px] leading-relaxed text-zinc-600">
-                  {card.desc}
-                </p>
-              </div>
+          {/* 진입 카드 4개 — 메인 액션 영역 (살짝 다른 톤의 wrapper 로 그루핑) */}
+          <section className="rounded-3xl bg-zinc-100/50 p-3 ring-1 ring-zinc-200/60 sm:p-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {CARDS.map((card) => (
+                <Link
+                  key={card.no}
+                  href={card.href}
+                  className="group relative flex flex-col rounded-2xl border border-zinc-200 bg-white p-7 pb-12 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg"
+                >
+                  <div className="flex items-start gap-4 pr-8">
+                    <span
+                      className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border text-2xl ${card.accent}`}
+                    >
+                      {card.icon}
+                    </span>
+                    <div className="min-w-0">
+                      <h2 className="text-lg font-bold text-zinc-900">
+                        {card.title}
+                      </h2>
+                      <p className="mt-1.5 text-[15px] leading-relaxed text-zinc-600">
+                        {card.desc}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="absolute bottom-5 right-5 inline-flex items-center gap-1 text-sm font-semibold text-zinc-500 transition group-hover:text-zinc-900">
+                    바로가기
+                    <span className="transition group-hover:translate-x-1">→</span>
+                  </span>
+                </Link>
+              ))}
             </div>
-            <span className="absolute bottom-5 right-5 inline-flex items-center gap-1 text-sm font-semibold text-zinc-500 transition group-hover:text-zinc-900">
-              바로가기
-              <span className="transition group-hover:translate-x-1">→</span>
-            </span>
-          </Link>
-        ))}
-      </div>
-      </section>
+          </section>
+        </>
+      )}
 
       {/* 4-카드 ↔ 대시보드 시각적 분리 — chip 형태 divider */}
       <div
         aria-hidden
-        className="my-12 flex items-center gap-4"
+        className={`flex items-center gap-4 ${showLauncher ? "my-12" : "mb-8"}`}
       >
         <span className="h-px flex-1 bg-zinc-200" />
         <span className="rounded-full border border-zinc-200 bg-white px-4 py-1.5 text-[13px] font-bold uppercase tracking-[0.18em] text-zinc-600 shadow-sm">

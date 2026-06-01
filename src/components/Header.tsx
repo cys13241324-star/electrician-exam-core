@@ -75,8 +75,8 @@ export default function Header() {
               rel={cat.external ? "noreferrer" : undefined}
               className={
                 cat.active
-                  ? "relative px-4 py-2 text-sm font-semibold text-blue-600 after:absolute after:inset-x-3 after:-bottom-[17px] after:h-0.5 after:bg-blue-600"
-                  : "px-4 py-2 text-sm font-medium text-zinc-700 hover:text-zinc-900"
+                  ? "relative whitespace-nowrap px-4 py-2 text-sm font-semibold text-blue-600 after:absolute after:inset-x-3 after:-bottom-[17px] after:h-0.5 after:bg-blue-600"
+                  : "whitespace-nowrap px-4 py-2 text-sm font-medium text-zinc-700 hover:text-zinc-900"
               }
             >
               {cat.name}
@@ -97,24 +97,6 @@ export default function Header() {
           >
             <span aria-hidden="true">🔍</span>
           </button>
-          <Link
-            href="/flashcards"
-            className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"
-          >
-            🃏 암기카드
-          </Link>
-          <Link
-            href="/simulator"
-            className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"
-          >
-            ⚡ 시뮬레이터
-          </Link>
-          <Link
-            href="/cbt"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-          >
-            CBT 응시
-          </Link>
         </div>
 
         {/* Mobile hamburger */}

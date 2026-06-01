@@ -3,8 +3,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { presetCards } from "@/lib/flashcards/data";
-import { ALL_SUBJECTS, CHAPTER_DEFS } from "@/lib/flashcards/chapters";
 import FreeLaunchModal from "@/components/v3/FreeLaunchModal";
 import TheorySection from "@/components/v3/TheorySection";
 
@@ -15,20 +13,22 @@ export const metadata: Metadata = {
 };
 
 export default function V3HomePage() {
-  const totalCards = presetCards.length;
-  const totalChapters = ALL_SUBJECTS.reduce(
-    (sum, s) => sum + CHAPTER_DEFS[s].length,
-    0,
-  );
-
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div className="min-h-screen bg-gradient-to-b from-violet-50/40 via-zinc-50 to-rose-50/30">
       <Header />
       <FreeLaunchModal />
 
       {/* ============ HERO ============ */}
-      <section className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
+      <section className="relative overflow-hidden border-b border-zinc-200 bg-gradient-to-br from-violet-50 via-white to-rose-50">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 12% 18%, rgba(139,92,246,0.18) 0px, transparent 45%), radial-gradient(circle at 88% 30%, rgba(244,63,94,0.16) 0px, transparent 48%)",
+          }}
+        />
+        <div className="relative mx-auto max-w-5xl px-6 py-20 sm:py-24">
           <p className="text-xs font-bold tracking-[0.22em] text-zinc-500">
             독끝 · 전기기능사 필기
           </p>
@@ -45,21 +45,6 @@ export default function V3HomePage() {
             </strong>{" "}
             학습하고, 기출 회독으로 마무리하면 충분합니다.
           </p>
-          <div className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-zinc-500">
-            <span className="inline-flex items-center gap-1.5">
-              <span aria-hidden>🃏</span>
-              {totalCards}+ 핵심 카드
-            </span>
-            <span aria-hidden className="text-zinc-300">·</span>
-            <span className="inline-flex items-center gap-1.5">
-              <span aria-hidden>📚</span>
-              {totalChapters} 챕터
-            </span>
-            <span aria-hidden className="text-zinc-300">·</span>
-            <span className="inline-flex items-center gap-1.5">
-              <span aria-hidden>🎯</span>3 과목 커버
-            </span>
-          </div>
         </div>
       </section>
 
@@ -72,11 +57,16 @@ export default function V3HomePage() {
               HOW TO USE
             </p>
             <h2 className="mt-4 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
-              두 묶음을 자유롭게 오가며
+              합격하는 방법에는 여러 가지가 있어요
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-[15px] leading-relaxed text-zinc-600">
-              부족한 이론을 메우는 PART A와 실전으로 굳히는 PART B. 정해진 순서는
-              없어요. 막히는 쪽을 자유롭게 오가며 서로 채워주면 됩니다.
+            <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-zinc-700 sm:text-xl">
+              부족한 이론을 메우는{" "}
+              <strong className="font-bold text-violet-700">PART A</strong>와
+              실전으로 굳히는{" "}
+              <strong className="font-bold text-rose-700">PART B</strong>. 정해진
+              순서는 없어요. 막히는 쪽을{" "}
+              <strong className="font-bold text-zinc-900">자유롭게 오가며</strong>{" "}
+              서로 채워주면 됩니다.
             </p>
 
             {/* A ⇄ B 비주얼 — 순서가 아니라 상호 보완 */}
@@ -105,11 +95,11 @@ export default function V3HomePage() {
               <h3 className="mt-3 text-xl font-bold leading-tight tracking-tight text-zinc-900 sm:text-2xl">
                 부족한 부분, 여러 방법으로 메우기
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-600">
-                교재만으로 잘 안 외워지던 부분을 카드·오디오·시뮬 세 가지로
-                채워보세요. 같은 개념도 방법을 바꾸면 다르게 들어와요. 실전이
-                궁금해지면 언제든 PART B로 건너가도 괜찮아요 — 둘은 서로를
-                채워주니까요.
+              <p className="mt-2 text-[15px] leading-relaxed text-zinc-600">
+                책으로만 공부하려니 어렵고 막막한 부분,{" "}
+                <Hl>눈으로 보고</Hl> <Hl>귀로 듣고</Hl>{" "}
+                <Hl>직접 만져보며</Hl> 이해해보세요. 같은 개념도 방법을 바꾸면
+                다르게 들어와요.
               </p>
 
               <div className="mt-6">
@@ -217,8 +207,6 @@ export default function V3HomePage() {
                   <FlowChip label="PART A" tone="a" />
                   <FlowArrow two />
                   <FlowChip label="PART B" tone="b" />
-                  <FlowArrow two />
-                  <FlowChip label="다음 단원" tone="neutral" />
                 </div>
               </article>
 
@@ -243,8 +231,6 @@ export default function V3HomePage() {
                 </p>
                 {/* 흐름 칩 */}
                 <div className="mt-5 flex flex-wrap items-center gap-2 text-sm font-bold">
-                  <FlowChip label="PART B" tone="b" />
-                  <FlowArrow />
                   <FlowChip label="PART B" tone="b" />
                   <FlowArrow />
                   <FlowChip label="약점만 A" tone="a" />
@@ -302,6 +288,16 @@ export default function V3HomePage() {
   );
 }
 
+/* ─────────────── 특장점 하이라이트 ─────────────── */
+
+function Hl({ children }: { children: ReactNode }) {
+  return (
+    <span className="rounded-md bg-violet-100 px-1.5 py-0.5 font-bold text-violet-800">
+      {children}
+    </span>
+  );
+}
+
 /* ─────────────── 활용 가이드 흐름 칩 ─────────────── */
 
 function FlowChip({
@@ -338,27 +334,40 @@ function FlowArrow({ two = false }: { two?: boolean }) {
 
 function ExchangeVisual() {
   return (
-    <div
-      className="mx-auto mt-8 flex w-fit items-center gap-3 sm:gap-4"
-      aria-hidden
-    >
+    <div className="mx-auto mt-10 flex w-fit items-start justify-center gap-5 sm:gap-9">
       {/* PART A 노드 */}
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-base font-black text-white shadow-md sm:h-14 sm:w-14">
-        A
-      </span>
+      <div className="flex flex-col items-center">
+        <span className="grid h-20 w-20 place-items-center rounded-[1.4rem] bg-gradient-to-br from-violet-500 to-fuchsia-500 text-3xl font-black text-white shadow-lg sm:h-24 sm:w-24 sm:text-4xl">
+          A
+        </span>
+        <span className="mt-3 text-base font-extrabold text-violet-700 sm:text-lg">
+          PART A
+        </span>
+        <span className="text-xs font-semibold text-zinc-500 sm:text-sm">
+          이론 보조학습
+        </span>
+      </div>
 
       {/* 양방향 화살표 */}
-      <span className="flex flex-col items-center text-zinc-400">
-        <span className="text-lg leading-none sm:text-xl">⇄</span>
-        <span className="mt-1 text-[10px] font-bold tracking-wider text-zinc-400">
+      <div className="flex flex-col items-center pt-5 text-zinc-400 sm:pt-7">
+        <span className="text-3xl leading-none sm:text-5xl">⇄</span>
+        <span className="mt-1.5 text-xs font-bold tracking-wider sm:text-sm">
           자유롭게
         </span>
-      </span>
+      </div>
 
       {/* PART B 노드 */}
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-500 text-base font-black text-white shadow-md sm:h-14 sm:w-14">
-        B
-      </span>
+      <div className="flex flex-col items-center">
+        <span className="grid h-20 w-20 place-items-center rounded-[1.4rem] bg-gradient-to-br from-rose-500 to-pink-500 text-3xl font-black text-white shadow-lg sm:h-24 sm:w-24 sm:text-4xl">
+          B
+        </span>
+        <span className="mt-3 text-base font-extrabold text-rose-700 sm:text-lg">
+          PART B
+        </span>
+        <span className="text-xs font-semibold text-zinc-500 sm:text-sm">
+          실전 학습
+        </span>
+      </div>
     </div>
   );
 }
@@ -454,7 +463,7 @@ const TOOL_SHOWCASE: ToolShowcase[] = [
       "즐겨찾기·취약 카드 모아보기",
     ],
     cta: "카드 학습 시작",
-    href: "/flashcards",
+    href: "/v3/cards",
     gradient: "from-amber-500 via-orange-500 to-rose-500",
     partClass: "bg-violet-50 text-violet-700 ring-violet-100",
     visual: <CardMock />,
@@ -473,7 +482,7 @@ const TOOL_SHOWCASE: ToolShowcase[] = [
       "백그라운드 재생 지원",
     ],
     cta: "오디오 들어보기",
-    href: "/audiobook",
+    href: "/v3/audiobook",
     gradient: "from-rose-500 via-pink-500 to-fuchsia-500",
     partClass: "bg-violet-50 text-violet-700 ring-violet-100",
     visual: <AudioMock />,
@@ -492,7 +501,7 @@ const TOOL_SHOWCASE: ToolShowcase[] = [
       "기출 개념과 연계",
     ],
     cta: "시뮬레이터 둘러보기",
-    href: "/simulator",
+    href: "/v3/simulator",
     gradient: "from-sky-500 via-blue-500 to-indigo-500",
     partClass: "bg-violet-50 text-violet-700 ring-violet-100",
     visual: <SimMock />,

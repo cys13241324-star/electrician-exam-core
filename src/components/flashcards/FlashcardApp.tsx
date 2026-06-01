@@ -44,6 +44,13 @@ export type FlashcardAppProps = {
   header?: FlashcardAppHeader;
   /** 초기 진입 시 "다시보기" 필터 ON (복습 모드용) */
   initialDueOnly?: boolean;
+  /** 초기 진입 시 "별 카드(즐겨찾기)" 필터 ON */
+  initialStarredOnly?: boolean;
+  /**
+   * 간소화 모드: 필터바에서 과목 칩·검색·셔플·챕터·랜덤 출제와 학습 가이드를
+   * 감추고 "별 카드(즐겨찾기)"·"다시보기" 토글과 카드만 남긴다.
+   */
+  simplified?: boolean;
   /** 초기 진입 뷰 */
   initialView?: View;
   /** cards 가 비어 있을 때 학습 영역 대신 표시 */
@@ -72,16 +79,18 @@ export default function FlashcardApp({
   mode = "all",
   header,
   initialDueOnly = false,
+  initialStarredOnly = false,
   initialView = "study",
   emptyState,
   topSlot,
+  simplified = false,
 }: FlashcardAppProps = {}) {
   const cards = cardsProp ?? presetCards;
   const [view, setView] = useState<View>(initialView);
   // 과목·챕터 다중 선택. 과목 셋이 비면 = 전체. 챕터 셋이 비면 = 과목 전체.
   const [subjects, setSubjects] = useState<Set<Subject>>(new Set());
   const [chapters, setChapters] = useState<Set<string>>(new Set());
-  const [starredOnly, setStarredOnly] = useState(false);
+  const [starredOnly, setStarredOnly] = useState(initialStarredOnly);
   const [dueOnly, setDueOnly] = useState(initialDueOnly);
   const [shuffleOn, setShuffleOn] = useState(false);
   const [query, setQuery] = useState("");
@@ -339,19 +348,23 @@ export default function FlashcardApp({
         className="sticky top-2 z-20 mb-7 rounded-2xl border border-zinc-100 bg-white/85 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/70 sm:p-4"
       >
         <div className="flex flex-wrap items-center gap-2">
-          <Chip active={subjects.size === 0} onClick={clearSubjects}>
-            전체
-          </Chip>
-          {ALL_SUBJECTS.map((s) => (
-            <Chip
-              key={s}
-              active={subjects.has(s)}
-              onClick={() => toggleSubject(s)}
-            >
-              {s}
-            </Chip>
-          ))}
-          <span className="mx-1 hidden h-5 w-px bg-zinc-200 sm:inline-block" />
+          {!simplified && (
+            <>
+              <Chip active={subjects.size === 0} onClick={clearSubjects}>
+                전체
+              </Chip>
+              {ALL_SUBJECTS.map((s) => (
+                <Chip
+                  key={s}
+                  active={subjects.has(s)}
+                  onClick={() => toggleSubject(s)}
+                >
+                  {s}
+                </Chip>
+              ))}
+              <span className="mx-1 hidden h-5 w-px bg-zinc-200 sm:inline-block" />
+            </>
+          )}
           <Toggle
             on={starredOnly}
             onClick={() => setStarredOnly((v) => !v)}
@@ -366,26 +379,30 @@ export default function FlashcardApp({
           >
             다시보기
           </Toggle>
-          <Toggle on={shuffleOn} onClick={() => setShuffleOn((v) => !v)} icon="🔀">
-            셔플
-          </Toggle>
+          {!simplified && (
+            <Toggle on={shuffleOn} onClick={() => setShuffleOn((v) => !v)} icon="🔀">
+              셔플
+            </Toggle>
+          )}
 
-          <div className="relative ml-auto w-full sm:w-56">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
-              ⌕
-            </span>
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="카드 검색…"
-              aria-label="카드 검색"
-              className="w-full rounded-full border border-zinc-200 bg-zinc-50 py-1.5 pl-8 pr-3 text-sm text-zinc-800 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-2 focus:ring-blue-100"
-            />
-          </div>
+          {!simplified && (
+            <div className="relative ml-auto w-full sm:w-56">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                ⌕
+              </span>
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="카드 검색…"
+                aria-label="카드 검색"
+                className="w-full rounded-full border border-zinc-200 bg-zinc-50 py-1.5 pl-8 pr-3 text-sm text-zinc-800 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+          )}
         </div>
 
-        {chapterGroups.length > 0 && (
+        {!simplified && chapterGroups.length > 0 && (
           <div className="mt-3 space-y-2.5 rounded-xl bg-zinc-50 px-3 py-2.5 ring-1 ring-zinc-100">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold text-zinc-700">📚 챕터</span>
@@ -448,6 +465,7 @@ export default function FlashcardApp({
         )}
 
         {/* 랜덤 출제 — 현재 조건 풀에서 무작위 N장 */}
+        {!simplified && (
         <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-blue-50/60 px-3 py-2.5 ring-1 ring-blue-100">
           <span className="text-xs font-bold text-blue-700" aria-hidden>
             🎲 랜덤 출제
@@ -543,6 +561,7 @@ export default function FlashcardApp({
             </p>
           )}
         </div>
+        )}
 
         <div className="mt-2.5 flex items-center gap-2 px-1 text-xs text-zinc-500">
           <span>
@@ -625,7 +644,7 @@ export default function FlashcardApp({
       </div>
 
       {/* 학습 가이드 — 모드별 다른 내용 */}
-      <StudyGuide mode={mode} />
+      {!simplified && <StudyGuide mode={mode} />}
         </>
       )}
     </main>

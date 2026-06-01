@@ -45,12 +45,11 @@ export default async function V3SubjectCardsPage({
       <FlashcardApp
         cards={subjectCards}
         mode="subjects"
-        initialView="list"
+        initialView="study"
         header={{
           eyebrow: `FLIP CARD · ${subj}`,
           title: `${subj} 카드 학습`,
-          subtitle:
-            "위쪽 챕터 칩으로 학습 범위를 좁히고, 카드를 눌러 학습을 시작하세요.",
+          subtitle: `${subj} ${subjectCards.length}장을 바로 넘기며 회독해요. 위쪽 챕터 칩으로 범위를 좁힐 수도 있어요.`,
         }}
         topSlot={
           <div className="mb-4 flex items-center gap-3 text-xs">
