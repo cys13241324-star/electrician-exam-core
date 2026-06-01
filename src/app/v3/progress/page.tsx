@@ -11,7 +11,7 @@ import type { Subject } from "@/lib/flashcards/types";
 export const metadata: Metadata = {
   title: "학습 현황 — 독끝 전기기능사 필기",
   description:
-    "플립 암기카드·5분 핵심 오디오북·이론 시뮬레이터를 어디까지 학습했는지 한눈에.",
+    "플립 암기카드·5분 핵심 요약 오디오북·이론 시뮬레이터를 어디까지 학습했는지 한눈에.",
 };
 
 type ToolBlock = {
@@ -41,7 +41,7 @@ const TOOL_BLOCKS: ToolBlock[] = [
   {
     key: "audio",
     emoji: "🎧",
-    name: "5분 핵심 오디오북",
+    name: "5분 핵심 요약 오디오북",
     unit: "챕터",
     gradient: "from-rose-500 via-pink-500 to-fuchsia-500",
     ringBg: "from-rose-50 to-white",

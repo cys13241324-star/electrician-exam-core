@@ -6,9 +6,9 @@ import CbtHub from "@/components/cbt/CbtHub";
 import CustomExamBuilder from "@/components/cbt/CustomExamBuilder";
 
 export const metadata: Metadata = {
-  title: "마무리 학습 · 점수 코칭 — 독끝 전기기능사 필기",
+  title: "마무리 학습 · CBT 모의고사 — 독끝 전기기능사 필기",
   description:
-    "회차별·과목별·빈출도순 콘텐츠는 그대로, 학습 대시보드와 나만의 시험 빌더로 약점을 찍어 점수를 굳혀요.",
+    "회차별·과목별·빈출도순 콘텐츠는 그대로, 학습 현황 대시보드와 나만의 시험 빌더로 약점을 찍어 점수를 굳혀요.",
 };
 
 export default function V3CbtPage() {
@@ -36,19 +36,19 @@ export default function V3CbtPage() {
               B
             </span>
             <p className="text-[11px] font-bold tracking-[0.22em] text-rose-600">
-              STEP B · 마무리 학습
+              PART B · 실전 학습
             </p>
           </div>
 
           <h1 className="mt-4 text-3xl font-bold leading-[1.2] tracking-tight text-zinc-900 sm:text-4xl">
-            점수, 코칭부터 받아볼까요
+            점수, 약점부터 좁혀볼까요
           </h1>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-zinc-600">
-            이론 학습은 가볍게 하셨어요. 이제{" "}
+            이론은 PART A에서 가볍게 다지셨어요. 이제{" "}
             <strong className="font-semibold text-zinc-800">
-              약점을 찍어 점수를 굳히는 단계
+              약점을 찍어 점수를 굳히는 묶음
             </strong>
-            예요. 오늘까지의 학습 추이를 먼저 보고, 필요하면 ‘나만의 시험’으로
+            이에요. 오늘까지의 학습 추이를 먼저 보고, 필요하면 ‘나만의 시험’으로
             좁혀 풀어요.
           </p>
 
@@ -59,7 +59,7 @@ export default function V3CbtPage() {
               className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-3 py-1.5 font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50"
             >
               <span aria-hidden>📈</span>
-              학습 코칭 대시보드
+              학습 현황 대시보드
             </a>
             <a
               href="#customize"
@@ -72,7 +72,7 @@ export default function V3CbtPage() {
         </div>
       </section>
 
-      {/* 학습 코칭 영역 — CbtHub 임베드
+      {/* 학습 현황 영역 — CbtHub 임베드
           · 4-카드: 회차별 / 과목별(=study) / 오답노트 / 나만의 시험
           · 대시보드 스트립: 평균 정답률·응시 회차·누적 학습·취약 영역·D-Day
           · 학습 곡선 + 최근 응시 */}

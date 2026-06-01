@@ -94,7 +94,7 @@ export default async function V3SubjectPage({
     {
       emoji: "🎧",
       eyebrow: "TOOL 02",
-      title: "5분 핵심 오디오북",
+      title: "5분 핵심 요약 오디오북",
       summary:
         "한 챕터를 5분으로 압축한 핵심 요약. 출퇴근·산책 중 한 챕터씩 흘려듣기만 해도 합격 키워드가 머리에 남아요.",
       features: [
